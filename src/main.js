@@ -5,7 +5,7 @@ import DrawingController from "./controller/DrawingController.js";
 import ToolController from "./controller/ToolController.js";
 
 window.onload = () => {
-  const canvas = document.getElementById("myCanvas");
+  const canvas = document.getElementById("canvas");
   const model = new DrawingModel();
   const canvasView = new CanvasView(canvas);
   const toolbarView = new ToolbarView();

@@ -9,33 +9,61 @@ export default class CanvasView {
     paper.project.activeLayer.removeChildren();
   }
 
-  render(shapes) {
+  render(curves) {
     this.clear();
-    shapes.forEach((shape) => this._drawShape(shape));
+    curves.forEach((pt) => this._drawShape(pt));
+
     paper.view.update();
   }
 
-  _drawShape(shape) {
-    let item;
-    switch (shape.type) {
-      case "path":
-        item = new paper.Path(shape.points);
-        break;
-      case "rectangle":
-        item = new paper.Path.Rectangle(shape.from, shape.to);
-        break;
-      case "circle":
-        item = new paper.Path.Circle(shape.center, shape.radius);
-        break;
-    }
-    item.strokeColor = shape.color;
-    item.strokeWidth = shape.strokeWidth || 2;
-    // clic sur l'objet
-    item.onClick = () => {
-      if (this.onShapeClick) this.onShapeClick({ shapeData: shape, item });
-    };
+  _drawShape(pt) {
+    //console.log("draw point", pt.pointsHandles);
+    const path = new paper.Path();
+    //path.fullySelected = true;
 
-    return item;
+    pt.pointsHandles.forEach((p) => path.add(p.pt));
+    path.segments.forEach((seg) => {
+      seg.handleOut = new paper.Point(50, 0);
+      seg.handleIn = new paper.Point(-50, 0);
+
+      pt.pointsHandles.forEach((p) =>
+        this.makeHandle(p.pt, "#ff0000", p.id, "circle")
+      );
+      this.makeHandle(seg.point.add(seg.handleIn), "#00ff00", seg.id, "bezier");
+      this.makeHandle(
+        seg.point.add(seg.handleOut),
+        "#0000ff",
+        seg.id,
+        "bezier"
+      );
+
+      const lineIn = new paper.Path.Line({
+        from: seg.point,
+        to: seg.point.add(seg.handleIn),
+        strokeColor: "#00ff00",
+        strokeWidth: 1,
+      });
+
+      const lineOut = new paper.Path.Line({
+        from: seg.point,
+        to: seg.point.add(seg.handleOut),
+        strokeColor: "#0000ff",
+        strokeWidth: 1,
+      });
+    });
+
+    path.strokeColor = "#000000";
+    path.strokeWidth = pt.currentStrokeWidth || 2;
+    //console.log("path", path);
+  }
+
+  // Crée un cercle interactif
+  makeHandle(point, color, id, type) {
+    const c = new paper.Path.Circle(point, 4);
+    c.fillColor = color;
+    c.data.type = type;
+    c.data.id = id;
+    return c;
   }
 
   highlightShape(item) {
