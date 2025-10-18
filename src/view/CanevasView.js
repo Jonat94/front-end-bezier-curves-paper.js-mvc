@@ -41,22 +41,23 @@ export default class CanvasView {
         p.segt.point.add(p.segt.handleIn),
         "#1e25fbff",
         p.inPointId,
-        "bezier"
+        "bezier_in"
       );
 
       this.makeShape(
         p.segt.point.add(p.segt.handleOut),
         "#1e25fbff",
-        p.inPointId,
-        "bezier"
+        p.outPointId,
+        "bezier_out"
       );
     });
+    this.updateHandleLines(curve);
     //console.log("path", path);
   }
 
   // Crée un cercle interactif
   makeShape(point, color, id, type, inPtId, outPtId) {
-    console.log("aaaaa", point);
+    //console.log("aaaaa", point);
     const c = new paper.Path.Circle(point, 8);
     c.fillColor = color;
     c.data.type = type;
@@ -90,6 +91,36 @@ export default class CanvasView {
   renderCurves(curves, visibility) {
     this.clear();
     curves.forEach((curve) => this.drawShape(curve, visibility));
+    paper.view.update();
+  }
+
+  // Met à jour les lignes de handles
+  updateHandleLines(curve) {
+    //curve.handleLines.forEach((line) => line.remove());
+    //curve.handleLines = [];
+
+    for (let i = 0; i < curve.pointsHandles.length; i++) {
+      const point = curve.pointsHandles[i].position;
+      const [hIn, hOut] = curve.bezierHandles[i];
+
+      const lineIn = new paper.Path.Line({
+        from: point,
+        to: hIn.position,
+        strokeColor: "gray",
+        strokeWidth: 1,
+        dashArray: [4, 4],
+      });
+      const lineOut = new paper.Path.Line({
+        from: point,
+        to: hOut.position,
+        strokeColor: "gray",
+        strokeWidth: 1,
+        dashArray: [4, 4],
+      });
+
+      curve.handleLines.push(lineIn, lineOut);
+    }
+
     paper.view.update();
   }
 }
