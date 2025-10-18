@@ -1,6 +1,5 @@
 export default class ToolbarView {
   constructor() {
-    this.clearBtn = document.getElementById("clearBtn");
     this.toggleHandlesBtn = document.getElementById("toggleHandlesBtn");
     this.deletePointBtn = document.getElementById("deletePointBtn");
     this.deleteBtn = document.getElementById("deleteBtn");
@@ -25,7 +24,7 @@ export default class ToolbarView {
 
   bindDeletePoint(handler) {
     this.deletePointBtn.addEventListener("click", handler);
-    console.log("clic delete");
+    //console.log("clic delete");
   }
 
   bindDeleteCurve(handler) {
@@ -50,26 +49,4 @@ export default class ToolbarView {
   setSelectedCurve(index) {
     this.curveSelect.value = index;
   }
-
-  // bindToolChange(handler) {
-  //   this.toolButtons.forEach((btn) => {
-  //     btn.addEventListener("click", () => {
-  //       this.toolButtons.forEach((b) => b.classList.remove("active"));
-  //       btn.classList.add("active");
-  //       handler(btn.dataset.tool);
-  //     });
-  //   });
-  // }
-
-  // bindColorChange(handler) {
-  //   this.colorPicker.addEventListener("input", (e) => handler(e.target.value));
-  // }
-
-  // bindClear(handler) {
-  //   this.clearBtn.addEventListener("click", handler);
-  // }
-
-  // bindDelete(handler) {
-  //   this.deleteBtn.addEventListener("click", handler);
-  // }
 }
