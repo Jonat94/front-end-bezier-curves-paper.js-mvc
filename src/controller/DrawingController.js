@@ -54,15 +54,19 @@ export default class DrawingController {
       ) {
         if (hit.item.data.type == "bezier") {
           //console.log("Clic sur un handle bezier, pas encore géré");
-          console.log(hit.item);
+          console.log("item clické", hit.item);
           this.selectedItem = hit.item;
-          console.log("Handle Bézier sélectionné :", hit.item);
+          // console.log(
+          //   "Handle id sélectionné :",
+          //   hit.item.curve.bezierHandles.id
+          // );
+          console.log("Handle Bézier sélectionné parmi :", curve.bezierHandles);
 
           return;
         }
         // Si un élément a été cliqué
         const item = hit.item;
-        console.log("Tu as cliqué sur :", item.data.id);
+        console.log("Tu as cliqué sur :", item);
 
         this.selectedItem = item;
         this.dragOffset = event.point.subtract(this.selectedItem.position);
@@ -83,6 +87,7 @@ export default class DrawingController {
           id: idShape,
           pt: [new Point(-50, 0), new Point(50, 0)],
         });
+        console.log("eeeeeeeee", curve.bezierHandles);
 
         console.log("Clic vide, nouveau point ajouté à", curve);
       }
@@ -125,23 +130,39 @@ export default class DrawingController {
         this.selectedItem.position = event.point.subtract(this.dragOffset);
         //console.log("Drag en cours :", curve.pointsHandles[1].pt);
 
-        console.log("ggggggggg", this.selectedItem.data.id);
+        console.log("ggggggggg", this.selectedItem.data);
         let indexPoint = -1;
-        curve.pointsHandles.forEach((h, index) => {
-          if (h.id === this.selectedItem.data.id) {
-            console.log("trouvé", index);
-            indexPoint = index;
-          }
-        });
+        if (this.selectedItem.data.type == "circle") {
+          curve.pointsHandles.forEach((h, index) => {
+            console.log("handle id ", h.id);
+            if (h.id === this.selectedItem.data.id) {
+              console.log("trouvé", index);
+              indexPoint = index;
+            }
+          });
+          curve.pointsHandles[indexPoint].pt = event.point;
+        } else if (this.selectedItem.data.type == "bezier") {
+          console.log("tttttttt", curve.bezierHandles);
+          curve.bezierHandles.forEach((bh, index) => {
+            if (
+              bh.id + "-in" == this.selectedItem.data.id ||
+              bh.id + "-out" == this.selectedItem.data.id
+            ) {
+              console.log("trouvé", index);
+              indexPoint = index;
+            }
+          });
+          curve.bezierHandles[indexPoint].pt[0] = event.point;
+        }
 
         // for (let sh of curve.pointsHandles) {
         //   console.log("aaaaaaaaaaaa", sh.id);
         // }
 
-        curve.pointsHandles[indexPoint].pt = event.point;
+        //curve.pointsHandles[indexPoint].pt = event.point;
         //console.log("Drag en cours :", curve.pointsHandles[1]);
         //console.log("Objet déplacé :", this.selectedItem.position);
-        this.view.renderCurves(this.model.curves, this.model.curves);
+        this.view.renderCurves(this.model.curves, this.model.handlesVisible);
       }
     };
 

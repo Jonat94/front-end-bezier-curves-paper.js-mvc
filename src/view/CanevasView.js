@@ -15,27 +15,32 @@ export default class CanvasView {
   //   paper.view.update();
   // }
 
-  _drawShape(pt, visibility = true) {
+  _drawShape(curve, visibility = true) {
     //console.log("draw point", pt.pointsHandles);
     const path = new paper.Path();
     //path.fullySelected = true;
 
-    pt.pointsHandles.forEach((p) => path.add(p.pt));
+    curve.pointsHandles.forEach((p) => path.add(p.pt));
 
     path.segments.forEach((seg) => {
       seg.handleOut = new paper.Point(50, 0);
       seg.handleIn = new paper.Point(-50, 0);
       if (visibility) {
-        pt.pointsHandles.forEach((p) =>
-          this.makeHandle(p.pt, "#ff0000", p.id, "circle")
-        );
-        this.makeHandle(seg.point.add(seg.handleIn), "#blue", seg.id, "bezier");
-        this.makeHandle(
-          seg.point.add(seg.handleOut),
-          "#0000ff",
-          seg.id,
-          "bezier"
-        );
+        curve.pointsHandles.forEach((p, index) => {
+          this.makeHandle(p.pt, "#ff0000", p.id, "circle");
+          this.makeHandle(
+            seg.point.add(curve.bezierHandles[index].pt[0]),
+            "#blue",
+            p.id + "-in",
+            "bezier"
+          );
+          this.makeHandle(
+            seg.point.add(curve.bezierHandles[index].pt[1]),
+            "#0000ff",
+            p.id + "-out",
+            "bezier"
+          );
+        });
 
         const lineIn = new paper.Path.Line({
           from: seg.point,
@@ -56,13 +61,13 @@ export default class CanvasView {
     });
 
     path.strokeColor = "#000000";
-    path.strokeWidth = pt.currentStrokeWidth || 2;
+    path.strokeWidth = curve.currentStrokeWidth || 2;
     //console.log("path", path);
   }
 
   // Crée un cercle interactif
   makeHandle(point, color, id, type) {
-    const c = new paper.Path.Circle(point, 4);
+    const c = new paper.Path.Circle(point, 8);
     c.fillColor = color;
     c.data.type = type;
     c.data.id = id;
