@@ -60,7 +60,7 @@ export default class DrawingController {
           //   "Handle id sélectionné :",
           //   hit.item.curve.bezierHandles.id
           // );
-          console.log("Handle Bézier sélectionné parmi :", curve.bezierHandles);
+          console.log("Handle Bézier sélectionné parmi :", curve.handles);
 
           return;
         }
@@ -76,19 +76,23 @@ export default class DrawingController {
       } else {
         // Si on clique ailleurs, créer un petit point
 
-        if (this.selectedItem)
-          this.selectedItem.fillColor = this.selectedItem.data.originalColor;
+        //if (this.selectedItem)
+        // this.selectedItem.fillColor = this.selectedItem.data.originalColor;
         this.selectedItem = null;
         this.dragOffset = null;
         let idShape = this.model.generateId();
-        curve.pointsHandles.push({ id: idShape, pt: event.point });
-
-        curve.bezierHandles.push({
+        let idIn = this.model.generateId();
+        let idOut = this.model.generateId();
+        curve.handles.push({
           id: idShape,
-          pt: [new Point(-50, 0), new Point(50, 0)],
+          segt: new paper.Segment(
+            new paper.Point(event.point.x, event.point.y),
+            new paper.Point(50, 0),
+            new paper.Point(-50, 0)
+          ),
+          inPointId: idIn,
+          outPointId: idOut,
         });
-        console.log("eeeeeeeee", curve.bezierHandles);
-
         console.log("Clic vide, nouveau point ajouté à", curve);
       }
     };
@@ -152,7 +156,7 @@ export default class DrawingController {
               indexPoint = index;
             }
           });
-          curve.bezierHandles[indexPoint].pt[0] = event.point;
+          curve.bezierHandles[indexPoint].pt = event.point;
         }
 
         // for (let sh of curve.pointsHandles) {

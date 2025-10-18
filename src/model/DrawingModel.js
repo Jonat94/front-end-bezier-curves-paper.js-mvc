@@ -8,7 +8,7 @@ export default class DrawingModel {
     //this.selectedShape = null;
     this.currentStrokeWidth = 20; // ← ajout pour la taille du trait
     this.currentCurveIndex = -1;
-    this.curves = []; // tableau de courbes { path, pointsHandles, bezierHandles, handleLines }
+    this.curves = []; // tableau de courbes { path, handles, handleLines }
     this._idCounter = 0;
     this.curveCounter = 0;
     this.handlesVisible = true;
@@ -49,15 +49,14 @@ export default class DrawingModel {
 
   createNewCurve(name = `Courbe ${++this.curveCounter}`) {
     const path = new paper.Path({ strokeColor: "black", strokeWidth: 1 });
-    const pointsHandles = [];
-    const bezierHandles = [];
+    //const pointsHandles = [];
+    const handles = [];
     //const handleLines = [];
 
     this.curves.push({
       name,
       path,
-      pointsHandles,
-      bezierHandles,
+      handles,
       //handleLines,
       selectedPointIndex: null,
     });
