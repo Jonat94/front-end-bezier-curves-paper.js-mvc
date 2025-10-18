@@ -12,9 +12,24 @@ export default class DrawingModel {
     this._idCounter = 0;
     this.curveCounter = 0;
     this.handlesVisible = true;
+    this.selectedItem;
   }
   setStrokeWidth(width) {
     this.currentStrokeWidth = width;
+  }
+  deletePoint() {
+    let tab;
+    console.log("lllllll", this.selectedItem);
+    console.log("eeeeee", this.curves);
+    console.log("ffffff", this.curves[this.currentCurveIndex].handles);
+    tab = this.curves[this.currentCurveIndex].handles.filter((h) => {
+      return h.id == this.selectedItem.data.id;
+    });
+    console.log(tab);
+    let index = this.curves[this.currentCurveIndex].handles.indexOf(tab[0]);
+    console.log(index);
+    this.curves[this.currentCurveIndex].handles.splice(index, 1);
+    console.log(this.curves);
   }
   addShape(shape) {
     this.shapes.push(shape);
@@ -58,7 +73,7 @@ export default class DrawingModel {
       path,
       handles,
       //handleLines,
-      selectedPointIndex: null,
+      //selectedPointIndex: null,
     });
     this.currentCurveIndex = this.curves.length - 1; // mettre à jour l'index de la courbe courante
 

@@ -46,6 +46,12 @@ export default class ToolController {
       );
     });
 
+    this.toolbarView.bindDeletePoint(() => {
+      console.log("Supprimer un point");
+      this.model.deletePoint();
+      this.canvasView.renderCurves(this.model.curves);
+    });
+
     //this.deleteBtn = document.getElementById("deleteBtn");
 
     // this.toolbarView.bindToolChange((tool) => this.model.setTool(tool));

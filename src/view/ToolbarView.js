@@ -23,6 +23,11 @@ export default class ToolbarView {
     });
   }
 
+  bindDeletePoint(handler) {
+    this.deletePointBtn.addEventListener("click", handler);
+    console.log("clic delete");
+  }
+
   bindDeleteCurve(handler) {
     this.deleteBtn.addEventListener("click", handler);
   }

@@ -51,7 +51,7 @@ export default class CanvasView {
         "bezier_out"
       );
     });
-    this.updateHandleLines(curve);
+    this.updateHandleLines(curve, visibility);
     //console.log("path", path);
   }
 
@@ -64,6 +64,7 @@ export default class CanvasView {
     c.data.id = id;
     c.data.inPointId = inPtId;
     c.data.outPointId = outPtId;
+
     // c.data.inPoint = inPosition;
     // c.data.outPoint = outPosition;
     return c;
@@ -95,32 +96,35 @@ export default class CanvasView {
   }
 
   // Met à jour les lignes de handles
-  updateHandleLines(curve) {
+  updateHandleLines(curve, visibility = true) {
     //curve.handleLines.forEach((line) => line.remove());
     //curve.handleLines = [];
-
-    for (let i = 0; i < curve.pointsHandles.length; i++) {
-      const point = curve.pointsHandles[i].position;
-      const [hIn, hOut] = curve.bezierHandles[i];
-
+    if (!visibility) return;
+    for (let i = 0; i < curve.handles.length; i++) {
+      const point = curve.handles[i].segt.point;
+      const hIn = curve.handles[i].segt.handleIn.add(point);
+      const hOut = curve.handles[i].segt.handleOut.add(point);
+      console.log(curve.handles[i].segt.handleIn);
       const lineIn = new paper.Path.Line({
         from: point,
-        to: hIn.position,
+        to: hIn,
         strokeColor: "gray",
         strokeWidth: 1,
         dashArray: [4, 4],
       });
+      lineIn.sendToBack();
       const lineOut = new paper.Path.Line({
         from: point,
-        to: hOut.position,
+        to: hOut,
         strokeColor: "gray",
         strokeWidth: 1,
         dashArray: [4, 4],
       });
+      lineOut.sendToBack();
 
-      curve.handleLines.push(lineIn, lineOut);
+      //curve.handleLines.push(lineIn, lineOut);
     }
 
-    paper.view.update();
+    //paper.view.update();
   }
 }

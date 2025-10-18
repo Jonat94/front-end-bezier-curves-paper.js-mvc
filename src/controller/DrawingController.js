@@ -10,7 +10,7 @@ export default class DrawingController {
     this.tempShape = null;
     this.startPoint = null;
 
-    this.selectedItem = null;
+    // this.selectedItem = this.model.selectedItem;
     this.dragOffset = null;
 
     let selectedHandleDown = null;
@@ -60,27 +60,31 @@ export default class DrawingController {
         ) {
           //console.log("Clic sur un handle bezier, pas encore géré");
           console.log("item clické", hit.item);
-          this.selectedItem = hit.item;
+          this.model.selectedItem = hit.item;
           // console.log(
           //   "Handle id sélectionné :",
           //   hit.item.curve.bezierHandles.id
           // );
           console.log("Handle Bézier sélectionné parmi :", curve.handles);
-          this.dragOffset = event.point.subtract(this.selectedItem.position);
+          this.dragOffset = event.point.subtract(
+            this.model.selectedItem.position
+          );
           return;
         }
         // Si un élément a été cliqué
         const item = hit.item;
         console.log("Tu as cliqué sur :", item);
 
-        this.selectedItem = item;
-        this.dragOffset = event.point.subtract(this.selectedItem.position);
+        this.model.selectedItem = item;
+        this.dragOffset = event.point.subtract(
+          this.model.selectedItem.position
+        );
       } else {
         // Si on clique ailleurs, créer un petit point
 
         //if (this.selectedItem)
         // this.selectedItem.fillColor = this.selectedItem.data.originalColor;
-        this.selectedItem = null;
+        //this.model.selectedItem = hit.item;
         this.dragOffset = null;
         let idShape = this.model.generateId();
         let idIn = this.model.generateId();
@@ -132,35 +136,39 @@ export default class DrawingController {
     tool.onMouseDrag = (event) => {
       const curve = this.model.curves[this.model.currentCurveIndex];
       if (!curve) return;
-      if (this.selectedItem) {
-        this.selectedItem.position = event.point.subtract(this.dragOffset);
+      if (this.model.selectedItem) {
+        this.model.selectedItem.position = event.point.subtract(
+          this.dragOffset
+        );
         //console.log("Drag en cours :", curve.pointsHandles[1].pt);
 
         let tab;
-        if (this.selectedItem.data.type == "circle") {
+        if (this.model.selectedItem.data.type == "circle") {
           console.log("circle");
-          tab = curve.handles.filter((e) => e.id == this.selectedItem.data.id);
+          tab = curve.handles.filter(
+            (e) => e.id == this.model.selectedItem.data.id
+          );
           tab[0].segt.point = tab[0].segt.point.add(event.delta);
           console.log(tab);
         }
 
-        if (this.selectedItem.data.type == "bezier_in") {
+        if (this.model.selectedItem.data.type == "bezier_in") {
           console.log("bezier_in");
-          console.log("aaa", this.selectedItem);
+          console.log("aaa", this.model.selectedItem);
           console.log("eee", curve.handles);
           tab = curve.handles.filter(
-            (e) => e.inPointId == this.selectedItem.data.id
+            (e) => e.inPointId == this.model.selectedItem.data.id
           );
           tab[0].segt.handleIn = tab[0].segt.handleIn.add(event.delta);
           console.log(tab);
         }
 
-        if (this.selectedItem.data.type == "bezier_out") {
+        if (this.model.selectedItem.data.type == "bezier_out") {
           console.log("bezier_out");
-          console.log("aaa", this.selectedItem);
+          console.log("aaa", this.model.selectedItem);
           console.log("eee", curve.handles);
           tab = curve.handles.filter(
-            (e) => e.outPointId == this.selectedItem.data.id
+            (e) => e.outPointId == this.model.selectedItem.data.id
           );
           console.log(tab);
           tab[0].segt.handleOut = tab[0].segt.handleOut.add(event.delta);
@@ -170,23 +178,23 @@ export default class DrawingController {
 
         //segt._x = event.point.x;
         //curve.handles.segt._y = event.point.y;
-        //console.log("ggggggggg", this.selectedItem.data);
+        //console.log("ggggggggg", this.model.selectedItem.data);
         // let indexPoint = -1;
-        // if (this.selectedItem.data.type == "circle") {
+        // if (this.model.selectedItem.data.type == "circle") {
         //   curve.pointsHandles.forEach((h, index) => {
         //     console.log("handle id ", h.id);
-        //     if (h.id === this.selectedItem.data.id) {
+        //     if (h.id === this.model.selectedItem.data.id) {
         //       console.log("trouvé", index);
         //       indexPoint = index;
         //     }
         //   });
         //   curve.pointsHandles[indexPoint].pt = event.point;
-        // } else if (this.selectedItem.data.type == "bezier") {
+        // } else if (this.model.selectedItem.data.type == "bezier") {
         //   console.log("tttttttt", curve.bezierHandles);
         //   curve.bezierHandles.forEach((bh, index) => {
         //     if (
-        //       bh.id + "-in" == this.selectedItem.data.id ||
-        //       bh.id + "-out" == this.selectedItem.data.id
+        //       bh.id + "-in" == this.model.selectedItem.data.id ||
+        //       bh.id + "-out" == this.model.selectedItem.data.id
         //     ) {
         //       console.log("trouvé", index);
         //       indexPoint = index;
@@ -201,7 +209,7 @@ export default class DrawingController {
 
         //curve.pointsHandles[indexPoint].pt = event.point;
         //console.log("Drag en cours :", curve.pointsHandles[1]);
-        //console.log("Objet déplacé :", this.selectedItem.position);
+        //console.log("Objet déplacé :", this.model.selectedItem.position);
         this.view.renderCurves(this.model.curves, this.model.handlesVisible);
       }
     };
