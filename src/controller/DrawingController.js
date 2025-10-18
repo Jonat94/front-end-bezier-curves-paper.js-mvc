@@ -13,6 +13,10 @@ export default class DrawingController {
     this.selectedItem = null;
     this.dragOffset = null;
 
+    let selectedHandleDown = null;
+    let handleType = "";
+    let handleDownIndex = -1;
+
     // gestion des clics sur les objets
     // this.view.onShapeClick = (selected) => {
     //   if (this.model.selectedShape) {
@@ -26,7 +30,9 @@ export default class DrawingController {
 
     this._setupTool();
   }
-
+  // visibleHandles() {
+  //   return this.model.showHandles;
+  // }
   _setupTool() {
     const tool = new paper.Tool();
 
@@ -47,7 +53,11 @@ export default class DrawingController {
         (hit.item.data.type == "circle" || hit.item.data.type == "bezier")
       ) {
         if (hit.item.data.type == "bezier") {
-          console.log("Clic sur un handle bezier, pas encore géré");
+          //console.log("Clic sur un handle bezier, pas encore géré");
+          console.log(hit.item);
+          this.selectedItem = hit.item;
+          console.log("Handle Bézier sélectionné :", hit.item);
+
           return;
         }
         // Si un élément a été cliqué
@@ -68,10 +78,12 @@ export default class DrawingController {
         this.dragOffset = null;
         let idShape = this.model.generateId();
         curve.pointsHandles.push({ id: idShape, pt: event.point });
+
         curve.bezierHandles.push({
           id: idShape,
           pt: [new Point(-50, 0), new Point(50, 0)],
         });
+
         console.log("Clic vide, nouveau point ajouté à", curve);
       }
     };
@@ -129,7 +141,7 @@ export default class DrawingController {
         curve.pointsHandles[indexPoint].pt = event.point;
         //console.log("Drag en cours :", curve.pointsHandles[1]);
         //console.log("Objet déplacé :", this.selectedItem.position);
-        this.view.render(this.model.curves);
+        this.view.renderCurves(this.model.curves, this.model.curves);
       }
     };
 
@@ -178,7 +190,8 @@ export default class DrawingController {
       //     strokeWidth: this.model.currentStrokeWidth,
       //   });
       // }
-      this.view.render(this.model.curves);
+      console.log("Visibility", this.model.handlesVisible);
+      this.view.renderCurves(this.model.curves, this.model.handlesVisible);
     };
   }
   //Ajoute un point de contrôle au tableau de la courbe courante
@@ -210,4 +223,5 @@ export default class DrawingController {
   //   bezierHandles.push([handleInCircle, handleOutCircle]);
   //   //updateHandleLines(curve);
   // }
+  //
 }

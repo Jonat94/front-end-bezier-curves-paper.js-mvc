@@ -1,3 +1,4 @@
+import paper from "paper";
 export default class DrawingModel {
   constructor() {
     //this.shapes = [];
@@ -9,6 +10,8 @@ export default class DrawingModel {
     this.currentCurveIndex = -1;
     this.curves = []; // tableau de courbes { path, pointsHandles, bezierHandles, handleLines }
     this._idCounter = 0;
+    this.curveCounter = 0;
+    this.handlesVisible = true;
   }
   setStrokeWidth(width) {
     this.currentStrokeWidth = width;
@@ -44,13 +47,13 @@ export default class DrawingModel {
     this.currentColor = color;
   }
 
-  createNewCurve(name = `Courbe ${this.model.curves.length + 1}`) {
+  createNewCurve(name = `Courbe ${++this.curveCounter}`) {
     const path = new paper.Path({ strokeColor: "black", strokeWidth: 1 });
     const pointsHandles = [];
     const bezierHandles = [];
     //const handleLines = [];
 
-    this.model.curves.push({
+    this.curves.push({
       name,
       path,
       pointsHandles,
@@ -58,22 +61,61 @@ export default class DrawingModel {
       //handleLines,
       selectedPointIndex: null,
     });
-    this.model.currentCurveIndex = this.model.curves.length - 1;
+    this.currentCurveIndex = this.curves.length - 1; // mettre à jour l'index de la courbe courante
 
     // Ajouter au select
-    const option = document.createElement("option");
-    option.value = this.model.currentCurveIndex;
-    option.textContent = name;
-    this.toolbarView.curveSelect.appendChild(option);
-    this.toolbarView.curveSelect.value = this.model.currentCurveIndex;
+    // const option = document.createElement("option");
+    // option.value = this.currentCurveIndex;
+    // option.textContent = name;
+    // this.toolbarView.curveSelect.appendChild(option);
+    // this.toolbarView.curveSelect.value = this.model.currentCurveIndex;
   }
 
-  generateUniqueId() {
-    return "id-" + Math.random().toString(36).substr(2, 9);
-  }
+  // generateUniqueId() {
+  //   return "id-" + Math.random().toString(36).substr(2, 9);
+  // }
+
+  // toggleHandlesVisibility() {
+  //   this.handlesVisible = !this.handlesVisible;
+  //   const curve = this.curves[this.currentCurveIndex];
+  //   if (!curve) return;
+  //   curve.pointsHandles.forEach((h) => (h.visible = this.handlesVisible));
+  //   // curve.bezierHandles.forEach(([hIn, hOut]) => {
+  //   //   hIn.visible = this.handlesVisible;
+  //   //   hOut.visible = this.handlesVisible;
+  //   // });
+  //   curve.bezierHandles[0].visible = this.handlesVisible;
+  //   curve.bezierHandles[1].visible = this.handlesVisible;
+
+  //   // curve.handleLines.forEach((line) => (line.visible = this.handlesVisible));
+  //   paper.view.update();
+  // }
 
   generateId(prefix = "id") {
     this._idCounter += 1;
     return `${prefix}-${this._idCounter}`;
+  }
+
+  deleteCurrentCurve() {
+    if (
+      this.currentCurveIndex < 0 ||
+      this.currentCurveIndex >= this.curves.length
+    ) {
+      console.warn("Aucune courbe à supprimer.");
+      return;
+    }
+
+    // Supprimer le chemin de Paper.js
+    this.curves[this.currentCurveIndex].path.remove();
+
+    // Supprimer la courbe du tableau
+    this.curves.splice(this.currentCurveIndex, 1);
+
+    // Mettre à jour l'index de la courbe courante
+    if (this.curves.length === 0) {
+      this.currentCurveIndex = -1; // Aucune courbe restante
+    } else if (this.currentCurveIndex >= this.curves.length) {
+      this.currentCurveIndex = this.curves.length - 1; // Aller à la dernière courbe
+    }
   }
 }
