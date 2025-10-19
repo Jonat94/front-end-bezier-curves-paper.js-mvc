@@ -41,8 +41,6 @@ export default class ToolController {
   }
 
   renderOffset() {
-    this.model.offetVisibility = !this.model.offetVisibility;
-    if (!this.model.offetVisibility) return;
     const curves = this.model.curves;
     console.log("calcule offset");
     const allPoints = this.canvasView.getOffsetPointsFromCurves(curves);
@@ -50,8 +48,6 @@ export default class ToolController {
     curves.forEach((curve, i) => {
       const points = allPoints[i];
       this.model.computeOffsetFromPoints(curve, points); // méthode dans le modèle
-      // console.log("eeeeeeeeeeeeeeeee");
-      // this.canvasView.renderOffset(curve);
     });
   }
 }

@@ -1,4 +1,4 @@
-import paper from "paper";
+import paper from "../paperSetup.js";
 
 export default class DrawingController {
   constructor(model, view) {
@@ -16,6 +16,15 @@ export default class DrawingController {
     let handleDownIndex = -1;
 
     this._setupTool();
+  }
+
+  renderOffset() {
+    const curves = this.model.curves;
+    const allPoints = this.view.getOffsetPointsFromCurves(curves);
+    curves.forEach((curve, i) => {
+      const points = allPoints[i];
+      this.model.computeOffsetFromPoints(curve, points); // méthode dans le modèle
+    });
   }
 
   _setupTool() {
@@ -119,125 +128,16 @@ export default class DrawingController {
           );
           console.log(tab);
           tab[0].segt.handleOut = tab[0].segt.handleOut.add(event.delta);
-          //tab[0].seg.handleOut._x += event.delta.x;
-          //tab[0].seg.handleOut._y += event.delta.y;
         }
 
-        //segt._x = event.point.x;
-        //curve.handles.segt._y = event.point.y;
-        //console.log("ggggggggg", this.model.selectedItem.data);
-        // let indexPoint = -1;
-        // if (this.model.selectedItem.data.type == "circle") {
-        //   curve.pointsHandles.forEach((h, index) => {
-        //     console.log("handle id ", h.id);
-        //     if (h.id === this.model.selectedItem.data.id) {
-        //       console.log("trouvé", index);
-        //       indexPoint = index;
-        //     }
-        //   });
-        //   curve.pointsHandles[indexPoint].pt = event.point;
-        // } else if (this.model.selectedItem.data.type == "bezier") {
-        //   console.log("tttttttt", curve.bezierHandles);
-        //   curve.bezierHandles.forEach((bh, index) => {
-        //     if (
-        //       bh.id + "-in" == this.model.selectedItem.data.id ||
-        //       bh.id + "-out" == this.model.selectedItem.data.id
-        //     ) {
-        //       console.log("trouvé", index);
-        //       indexPoint = index;
-        //     }
-        //   });
-        // curve.bezierHandles[indexPoint].pt = event.point;
-        // }
-
-        // for (let sh of curve.pointsHandles) {
-        //   console.log("aaaaaaaaaaaa", sh.id);
-        // }
-
-        //curve.pointsHandles[indexPoint].pt = event.point;
-        //console.log("Drag en cours :", curve.pointsHandles[1]);
-        //console.log("Objet déplacé :", this.model.selectedItem.position);
+        this.renderOffset();
         this.view.renderCurves(this.model.curves, this.model.handlesVisible);
       }
     };
 
-    // tool.onMouseDrag = (event) => {
-    //   const curve = this.model.curves[currentCurveIndex];
-    //   if (!curve) return;
-    //   let { path, pointsHandles, bezierHandles } = curve;
-    //   if (!selectedHandleDown) return;
-
-    //   selectedHandleDown.position = event.point;
-
-    //   if (handleType === "point") {
-    //     const s = path.segments[handleDownIndex];
-    //     const delta = event.delta;
-    //     s.point = s.point.add(delta);
-
-    //     const [hIn, hOut] = bezierHandles[handleDownIndex];
-    //     hIn.position = s.point.add(s.handleIn);
-    //     hOut.position = s.point.add(s.handleOut);
-    //   }
-    // };
-
     tool.onMouseUp = (event) => {
-      // if (this.model.currentTool === "pen") {
-      //   this.model.addShape({
-      //     type: "path",
-      //     points: this.currentPath.segments.map((s) => s.point),
-      //     color: this.model.currentColor,
-      //     strokeWidth: this.model.currentStrokeWidth,
-      //   });
-      // } else if (this.model.currentTool === "rectangle") {
-      //   this.model.addShape({
-      //     type: "rectangle",
-      //     from: this.startPoint,
-      //     to: event.point,
-      //     color: this.model.currentColor,
-      //     strokeWidth: this.model.currentStrokeWidth,
-      //   });
-      // } else if (this.model.currentTool === "circle") {
-      //   const radius = this.startPoint.getDistance(event.point);
-      //   this.model.addShape({
-      //     type: "circle",
-      //     center: this.startPoint,
-      //     radius,
-      //     color: this.model.currentColor,
-      //     strokeWidth: this.model.currentStrokeWidth,
-      //   });
-      // }
       console.log("Visibility", this.model.handlesVisible);
       this.view.renderCurves(this.model.curves, this.model.handlesVisible);
     };
   }
-  //Ajoute un point de contrôle au tableau de la courbe courante
-  // addHandle(pt) {
-  //   let path = this.model.curves[this.model.currentCurveIndex].path;
-  //   let pointsHandles =
-  //     this.model.curves[this.model.currentCurveIndex].pointsHandles;
-  //   let bezierHandles =
-  //     this.model.curves[this.model.currentCurveIndex].bezierHandles;
-  //   const curve = this.model.curves[this.model.currentCurveIndex];
-  //   curve.selectedPointIndex = null; // aucun point sélectionné
-  //   const newSegment = path.add(pt);
-  //   const segmentIndex = path.segments.length - 1;
-
-  //   path.segments[segmentIndex].handleIn = new paper.Point(-50, 0);
-  //   path.segments[segmentIndex].handleOut = new paper.Point(50, 0);
-
-  //   pointsHandles.push(this.makeHandle(pt, "red"));
-
-  //   const handleInCircle = Object.assign(
-  //     this.makeHandle(pt.add(path.segments[segmentIndex].handleIn), "blue"),
-  //     { type: "in" }
-  //   );
-  //   const handleOutCircle = Object.assign(
-  //     this.makeHandle(pt.add(path.segments[segmentIndex].handleOut), "blue"),
-  //     { type: "out" }
-  //   );
-
-  //   bezierHandles.push([handleInCircle, handleOutCircle]);
-  //   //updateHandleLines(curve);
-  // }
-  //
 }

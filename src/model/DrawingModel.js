@@ -8,19 +8,6 @@ export default class DrawingModel {
     this.currentStrokeWidth = 20; // ← ajout pour la taille du trait
     this.currentCurveIndex = -1;
     this.curves = [];
-    //   {
-    //     name,
-    //     handles: [],
-    //     offsetData: {
-    //       points: [],
-    //       line: null,
-    //       sampleStep: 15,
-    //       scale: 100,
-    //       offset: 50,
-    //     },
-    //     // plus de propriétés si besoin
-    //   },
-    // ]; // tableau de courbes { path, handles, handleLines }
     this._idCounter = 0;
     this.curveCounter = 0;
     this.handlesVisible = true;
@@ -82,10 +69,6 @@ export default class DrawingModel {
       offsetPointsRaw.forEach((pt) => {
         //reduit le nombre de point à calsculer
         if (!lastPt || pt.getDistance(lastPt) >= 6) {
-          // let dot = new paper.point(pt);
-          // dot.fillColor = "yellow";
-          // dot.sendToBack();
-          // dot.visible = true;
           //ajoute les coordonnées des points de l'offeset dans ofsetdata
           curve.offsetData.points.push(pt);
           //curve.offsetData.points.push(pt);
@@ -167,110 +150,16 @@ export default class DrawingModel {
       }
     });
 
+    curve.offsetData.points = curve.offsetData.points
+      .map((pt) => ({
+        pt,
+        offset: mainPath.getOffsetOf(mainPath.getNearestPoint(pt)),
+      }))
+      .sort((a, b) => a.offset - b.offset)
+      .map((o) => o.pt);
+
     // Remplacer l'ancien tableau par le filtré
     curve.offsetData.points = filteredPoints2;
-
-    const bez = new paper.Path();
-    bez.visible = true;
-    bez.strokeColor = "red";
-    bez.strokeWidth = 1;
-
-    curve.offsetData.points.forEach((p, index) => {
-      bez.add(p);
-    });
-  }
-
-  filterPointsAbove_old(curve) {
-    //A REFAIRE
-    //creation d'une nouvelle courbe de bezier avec plus de points
-    let P0Point = curve.handles[0].point;
-    let P7Point = curve.handles[curve.handles.length - 1].point;
-    let newOffsetPointsRawDots = [];
-
-    // Filtrer les points verts au-dessus de la courbe
-
-    const bez = new paper.Path();
-    bez.visible = true;
-    bez.strokeColor = "red";
-    bez.strokeWidth = 10;
-    bez.visible = true;
-    console.log("ppppppp", curve.offsetData.points);
-    // console.log("aaaaa", pt);
-
-    curve.offsetData.points.forEach((p, index) => {
-      bez.add(p.position);
-    });
-
-    curve.offsetData.points.forEach((pt) => {
-      let keepPoint = true;
-
-      // Ignorer les points proches des extrémités
-      if (
-        pt.position.getDistance(P0Point) <= curve.offsetData.offset + 1 ||
-        pt.position.getDistance(P7Point) <= curve.offsetData.offset.offset + 1
-      ) {
-        pt.remove();
-        keepPoint = false;
-      }
-
-      if (keepPoint) {
-        let nearest = bez.getNearestPoint(pt.position);
-        let offset = bez.getOffsetOf(nearest);
-        let tangent = bez.getTangentAt(offset);
-        if (!tangent) return;
-
-        let normal = tangent.rotate(90).normalize();
-        let vec = new paper.Point(pt.positon).subtract(nearest);
-        let proj = vec.dot(normal);
-
-        if (proj > 0) {
-          newOffsetPointsRawDots.push(pt);
-        } else {
-          pt.remove();
-        }
-      }
-    });
-    console.log("nnnnn", newOffsetPointsRawDots);
-    curve.offsetData.points = newOffsetPointsRawDots;
-    console.log("mmmm", curve.offsetData.points);
-
-    // --- Connecter les points verts en ordre le long de la courbe ---
-    //supprimer la courbe deja tracé
-    //if (offsetLine) offsetLine.remove();
-
-    if (curve.offsetData.points.length > 1) {
-      // Trier les points par position le long de la courbe
-
-      console.log(
-        "eeee",
-        curve.offsetData.points.map((dot) => ({
-          dot: dot.position,
-          offset: bez.getOffsetOf(bez.getNearestPoint(dot.position)),
-        }))
-      );
-
-      let sortedDots = curve.offsetData.points
-        .map((dot) => ({
-          dot: dot,
-          offset: bez.getOffsetOf(bez.getNearestPoint(dot.position)),
-        }))
-        .sort((a, b) => a.offset - b.offset)
-        .map((o) => o.dot);
-
-      let offsetLine = new paper.Path();
-      offsetLine.strokeColor = "blue";
-      offsetLine.strokeWidth = 4;
-
-      sortedDots.forEach((dot) => {
-        offsetLine.add(dot.position);
-      });
-
-      offsetLine.closed = false; // empêche la fermeture
-      offsetLine.sendToBack();
-    }
-
-    // Remettre les points orange au premier plan
-    //  handles.forEach((h) => h.bringToFront());
   }
 
   setStrokeWidth(width) {
