@@ -5,6 +5,11 @@ export default class ToolbarView {
     this.deleteBtn = document.getElementById("deleteBtn");
     this.addCurveBtn = document.getElementById("addCurveBtn");
     this.curveSelect = document.getElementById("curveSelect");
+    this.offsetBtn = document.getElementById("addOffsetBtn");
+  }
+
+  bindOffset(handler) {
+    this.offsetBtn.addEventListener("click", handler);
   }
 
   bindToggleHandles(handler) {

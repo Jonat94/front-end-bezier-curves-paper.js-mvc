@@ -34,5 +34,24 @@ export default class ToolController {
       this.model.deletePoint();
       this.canvasView.renderCurves(this.model.curves);
     });
+
+    this.toolbarView.bindOffset(() => {
+      this.renderOffset();
+    });
+  }
+
+  renderOffset() {
+    this.model.offetVisibility = !this.model.offetVisibility;
+    if (!this.model.offetVisibility) return;
+    const curves = this.model.curves;
+    console.log("calcule offset");
+    const allPoints = this.canvasView.getOffsetPointsFromCurves(curves);
+    console.log("jjjjjjjj", allPoints);
+    curves.forEach((curve, i) => {
+      const points = allPoints[i];
+      this.model.computeOffsetFromPoints(curve, points); // méthode dans le modèle
+      // console.log("eeeeeeeeeeeeeeeee");
+      // this.canvasView.renderOffset(curve);
+    });
   }
 }
