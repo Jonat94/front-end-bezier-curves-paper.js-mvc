@@ -70,7 +70,7 @@ export default class DrawingModel {
       let lastPt = null;
       offsetPointsRaw.forEach((pt) => {
         //reduit le nombre de point à calsculer
-        if (!lastPt || pt.getDistance(lastPt) >= 46) {
+        if (!lastPt || pt.getDistance(lastPt) >= 6) {
           //ajoute les coordonnées des points de l'offeset dans ofsetdata
           curve.offsetData.points.push(pt);
           //curve.offsetData.points.push(pt);
@@ -239,7 +239,7 @@ export default class DrawingModel {
         line: null,
         sampleStep: 5,
         scale: 1000,
-        offset: 50,
+        offset: 10,
       },
     });
     this.currentCurveIndex = this.curves.length - 1; // mettre à jour l'index de la courbe courante
