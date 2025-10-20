@@ -46,7 +46,7 @@ export default class CanvasView {
 
   // Crée un cercle interactif
   makeShape(point, color, id, type, inPtId, outPtId) {
-    const c = new paper.Path.Circle(point, 3);
+    const c = new paper.Path.Circle(point, 5);
     c.fillColor = color;
     c.data.type = type;
     c.data.id = id;
@@ -62,7 +62,7 @@ export default class CanvasView {
 
     curves.forEach((curve) => this.sortOffsetPointsAlongCurve(curve));
 
-    curves.forEach((curve) => this.drawOffset(curve, visibility));
+    curves.forEach((curve) => this.drawOffset(curve));
 
     //this.showPointsWithIndex(curves[0].offsetData.points);
     paper.view.update();
@@ -190,7 +190,7 @@ export default class CanvasView {
 
     // --- 🟥 Dessin de la courbe d’offset ---
     const bez = new paper.Path({
-      strokeColor: "red",
+      strokeColor: "green",
       strokeWidth: 1,
       visible: visibility,
     });

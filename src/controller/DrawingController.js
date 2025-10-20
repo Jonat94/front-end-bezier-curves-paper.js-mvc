@@ -52,10 +52,10 @@ export default class DrawingController {
           hit.item.data.type == "bezier_in" ||
           hit.item.data.type == "bezier_out"
         ) {
-          console.log("item clické", hit.item);
+          //console.log("item clické", hit.item);
           this.model.selectedItem = hit.item;
 
-          console.log("Handle Bézier sélectionné parmi :", curve.handles);
+          // console.log("Handle Bézier sélectionné parmi :", curve.handles);
           this.dragOffset = event.point.subtract(
             this.model.selectedItem.position
           );
@@ -63,7 +63,7 @@ export default class DrawingController {
         }
         // Si un élément a été cliqué
         const item = hit.item;
-        console.log("Tu as cliqué sur :", item);
+        //console.log("Tu as cliqué sur :", item);
 
         this.model.selectedItem = item;
         this.dragOffset = event.point.subtract(
@@ -85,7 +85,7 @@ export default class DrawingController {
           inPointId: idIn,
           outPointId: idOut,
         });
-        console.log("Clic vide, nouveau point ajouté à", curve);
+        //console.log("Clic vide, nouveau point ajouté à", curve);
       }
     };
 
@@ -100,33 +100,27 @@ export default class DrawingController {
 
         let tab;
         if (this.model.selectedItem.data.type == "circle") {
-          console.log("circle");
+          //console.log("circle");
           tab = curve.handles.filter(
             (e) => e.id == this.model.selectedItem.data.id
           );
           tab[0].segt.point = tab[0].segt.point.add(event.delta);
-          console.log(tab);
+          //console.log(tab);
         }
 
         if (this.model.selectedItem.data.type == "bezier_in") {
-          console.log("bezier_in");
-          console.log("aaa", this.model.selectedItem);
-          console.log("eee", curve.handles);
           tab = curve.handles.filter(
             (e) => e.inPointId == this.model.selectedItem.data.id
           );
           tab[0].segt.handleIn = tab[0].segt.handleIn.add(event.delta);
-          console.log(tab);
+          //console.log(tab);
         }
 
         if (this.model.selectedItem.data.type == "bezier_out") {
-          console.log("bezier_out");
-          console.log("aaa", this.model.selectedItem);
-          console.log("eee", curve.handles);
           tab = curve.handles.filter(
             (e) => e.outPointId == this.model.selectedItem.data.id
           );
-          console.log(tab);
+          //console.log(tab);
           tab[0].segt.handleOut = tab[0].segt.handleOut.add(event.delta);
         }
 
@@ -136,7 +130,7 @@ export default class DrawingController {
     };
 
     tool.onMouseUp = (event) => {
-      console.log("Visibility", this.model.handlesVisible);
+      //console.log("Visibility", this.model.handlesVisible);
       this.renderOffset();
       this.view.renderCurves(this.model.curves, this.model.handlesVisible);
     };

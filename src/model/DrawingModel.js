@@ -3,7 +3,7 @@ import paper from "../paperSetup.js";
 
 export default class DrawingModel {
   constructor() {
-    console.log("Paper project ID:", paper.project);
+    //console.log("Paper project ID:", paper.project);
     this.currentColor = "#000000";
     this.currentStrokeWidth = 20; // ← ajout pour la taille du trait
     this.currentCurveIndex = -1;
@@ -18,7 +18,7 @@ export default class DrawingModel {
   computeOffsetFromPoints(curve, points) {
     // similaire à ton computeOffset(), mais en manipulant curve.handles
     // et en stockant le résultat dans this.offsetData
-    console.log("Compute offset");
+    //console.log("Compute offset");
     //let curve = this.curves[this.currentCurveIndex];
     //console.log("ppppppp", points);
     let pts = [];
@@ -31,7 +31,7 @@ export default class DrawingModel {
 
     //console.log(pts);
     if (pts.length < 2) return;
-    console.log("avant clipper");
+    //console.log("avant clipper");
     let co = new ClipperLib.ClipperOffset();
     co.AddPath(
       pts,
@@ -46,7 +46,7 @@ export default class DrawingModel {
 
     if (curve.offsetData.points) curve.offsetData.points = [];
 
-    console.log("aaaa", solution_paths.length);
+    //console.log("aaaa", solution_paths.length);
 
     //cherche le plus long chemin continue car il peut y avoir plusieur chemein dans solution_paths
     //console.log("sssssssss", solution_paths.length);
@@ -132,7 +132,7 @@ export default class DrawingModel {
         distStart <= curve.offsetData.offset + 1 ||
         distEnd <= curve.offsetData.offset + 1
       ) {
-        console.log("Point supprimé (trop proche des extrémités)");
+        //console.log("Point supprimé (trop proche des extrémités)");
       } else {
         filteredPoints.push(pt); // on garde les autres
       }
@@ -260,7 +260,7 @@ export default class DrawingModel {
     }
 
     // Supprimer le chemin de Paper.js
-    this.curves[this.currentCurveIndex].path.remove();
+    //this.curves[this.currentCurveIndex].path.remove();
 
     // Supprimer la courbe du tableau
     this.curves.splice(this.currentCurveIndex, 1);

@@ -6,6 +6,12 @@ export default class ToolbarView {
     this.addCurveBtn = document.getElementById("addCurveBtn");
     this.curveSelect = document.getElementById("curveSelect");
     this.offsetBtn = document.getElementById("addOffsetBtn");
+    this.offsetSlider = document.getElementById("offsetSlider");
+    this.offsetValue = document.getElementById("offsetValue");
+  }
+
+  bindSlider(handler) {
+    this.offsetSlider.addEventListener("input", handler);
   }
 
   bindOffset(handler) {
@@ -22,7 +28,6 @@ export default class ToolbarView {
 
   bindCurveSelect(handler) {
     this.curveSelect.addEventListener("change", (e) => {
-      console.log("Curve selected:", e.target.value);
       handler(parseInt(e.target.value));
     });
   }
@@ -41,13 +46,12 @@ export default class ToolbarView {
     this.curveSelect.innerHTML = "";
 
     // Add new options
-    console.log("Updating curve list:", curveNames);
+
     curveNames.forEach((curve, index) => {
       const option = document.createElement("option");
       option.value = index;
       option.textContent = curve.name;
       this.curveSelect.appendChild(option);
-      console.log("");
     });
   }
 

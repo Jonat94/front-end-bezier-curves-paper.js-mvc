@@ -6,6 +6,24 @@ export default class ToolController {
     this.model.createNewCurve();
     this.toolbarView.updateCurveList(this.model.curves);
 
+    this.toolbarView.bindSlider((e) => {
+      const value = parseFloat(e.target.value);
+      offsetValue.textContent = value;
+
+      const curve = model.curves[model.currentCurveIndex];
+      if (!curve) return;
+
+      // 1️⃣ Mettre à jour l'offset de la courbe
+      curve.offsetData.offset = value;
+
+      // 2️⃣ Recalculer l'offset avec les points de la courbe
+      const points = canvasView.getOffsetPointsFromCurves(model.curves)[0]; // à adapter selon ta méthode
+      model.computeOffsetFromPoints(curve, points);
+
+      // 3️⃣ Rerender la courbe avec la nouvelle offset
+      canvasView.renderCurves(model.curves, model.handlesVisible);
+    });
+
     this.toolbarView.bindAddCurve(() => {
       this.model.createNewCurve();
       this.toolbarView.updateCurveList(this.model.curves);
@@ -42,9 +60,9 @@ export default class ToolController {
 
   renderOffset() {
     const curves = this.model.curves;
-    console.log("calcule offset");
+    //console.log("calcule offset");
     const allPoints = this.canvasView.getOffsetPointsFromCurves(curves);
-    console.log("jjjjjjjj", allPoints);
+    //console.log("jjjjjjjj", allPoints);
     curves.forEach((curve, i) => {
       const points = allPoints[i];
       this.model.computeOffsetFromPoints(curve, points); // méthode dans le modèle
