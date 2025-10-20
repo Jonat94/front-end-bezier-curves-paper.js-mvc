@@ -79,8 +79,8 @@ export default class DrawingController {
           id: idShape,
           segt: new paper.Segment(
             new paper.Point(event.point.x, event.point.y),
-            new paper.Point(50, 0),
-            new paper.Point(-50, 0)
+            new paper.Point(-50, 0),
+            new paper.Point(50, 0)
           ),
           inPointId: idIn,
           outPointId: idOut,

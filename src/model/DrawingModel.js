@@ -47,6 +47,7 @@ export default class DrawingModel {
     if (curve.offsetData.points) curve.offsetData.points = [];
 
     //cherche le plus long chemin continue car il peut y avoir plusieur chemein dans solution_paths
+    console.log("sssssssss", solution_paths.length);
     if (solution_paths.length > 0) {
       let best = solution_paths[0];
       for (let i = 1; i < solution_paths.length; i++) {
@@ -76,16 +77,16 @@ export default class DrawingModel {
         }
       });
 
-      // 🔹 Fermer le contour : ajouter le premier point à la fin
-      if (curve.offsetData.points.length > 1) {
-        const firstPt = curve.offsetData.points[0];
-        const lastPt =
-          curve.offsetData.points[curve.offsetData.points.length - 1];
-        if (firstPt.getDistance(lastPt) > 0.01) {
-          // créer un nouveau cercle identique au premier pour fermer le chemin
-          curve.offsetData.points.push(firstPt.clone());
-        }
-      }
+      // // 🔹 Fermer le contour : ajouter le premier point à la fin
+      // if (curve.offsetData.points.length > 1) {
+      //   const firstPt = curve.offsetData.points[0];
+      //   const lastPt =
+      //     curve.offsetData.points[curve.offsetData.points.length - 1];
+      //   if (firstPt.getDistance(lastPt) > 0.01) {
+      //     // créer un nouveau cercle identique au premier pour fermer le chemin
+      //     curve.offsetData.points.push(firstPt.clone());
+      //   }
+      // }
 
       //ici le tableau points contient tous les points de la courbe
       console.log("oooooooo", curve.offsetData.points);
@@ -141,7 +142,7 @@ export default class DrawingModel {
       const vec = pt.subtract(nearest);
 
       // Produit scalaire pour déterminer le côté
-      if (vec.dot(normal) <= 0) {
+      if (vec.dot(normal) >= 0) {
         // Côté « bas » ou sur la courbe → garder
         filteredPoints2.push(pt);
       } else {
@@ -215,7 +216,7 @@ export default class DrawingModel {
         points: [],
         line: null,
         sampleStep: 15,
-        scale: 100,
+        scale: 1000,
         offset: 50,
       },
     });
