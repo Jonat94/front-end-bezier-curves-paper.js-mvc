@@ -137,6 +137,7 @@ export default class DrawingController {
 
     tool.onMouseUp = (event) => {
       console.log("Visibility", this.model.handlesVisible);
+      this.renderOffset();
       this.view.renderCurves(this.model.curves, this.model.handlesVisible);
     };
   }

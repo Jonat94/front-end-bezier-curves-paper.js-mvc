@@ -20,7 +20,7 @@ export default class DrawingModel {
     // et en stockant le résultat dans this.offsetData
     console.log("Compute offset");
     //let curve = this.curves[this.currentCurveIndex];
-    console.log("ppppppp", points);
+    //console.log("ppppppp", points);
     let pts = [];
     points.forEach((pt) => {
       pts.push({
@@ -29,7 +29,7 @@ export default class DrawingModel {
       });
     });
 
-    console.log(pts);
+    //console.log(pts);
     if (pts.length < 2) return;
     console.log("avant clipper");
     let co = new ClipperLib.ClipperOffset();
@@ -46,15 +46,17 @@ export default class DrawingModel {
 
     if (curve.offsetData.points) curve.offsetData.points = [];
 
+    console.log("aaaa", solution_paths.length);
+
     //cherche le plus long chemin continue car il peut y avoir plusieur chemein dans solution_paths
-    console.log("sssssssss", solution_paths.length);
+    //console.log("sssssssss", solution_paths.length);
     if (solution_paths.length > 0) {
       let best = solution_paths[0];
       for (let i = 1; i < solution_paths.length; i++) {
         if (solution_paths[i].length > best.length) best = solution_paths[i];
       }
       //reduction de la taille de l'offset
-      console.log("pppiiiippp", best);
+      //console.log("pppiiiippp", best);
       let offsetPointsRaw = best.map(
         (pt) =>
           new paper.Point(
@@ -63,13 +65,12 @@ export default class DrawingModel {
           )
       );
 
-      console.log("fffffff", offsetPointsRaw);
+      // console.log("fffffff", offsetPointsRaw);
 
-      //Affiche les points de l'offset calculé avec des cercle jaunes;
       let lastPt = null;
       offsetPointsRaw.forEach((pt) => {
         //reduit le nombre de point à calsculer
-        if (!lastPt || pt.getDistance(lastPt) >= 6) {
+        if (!lastPt || pt.getDistance(lastPt) >= 46) {
           //ajoute les coordonnées des points de l'offeset dans ofsetdata
           curve.offsetData.points.push(pt);
           //curve.offsetData.points.push(pt);
@@ -77,20 +78,38 @@ export default class DrawingModel {
         }
       });
 
-      // // 🔹 Fermer le contour : ajouter le premier point à la fin
-      // if (curve.offsetData.points.length > 1) {
-      //   const firstPt = curve.offsetData.points[0];
-      //   const lastPt =
-      //     curve.offsetData.points[curve.offsetData.points.length - 1];
-      //   if (firstPt.getDistance(lastPt) > 0.01) {
-      //     // créer un nouveau cercle identique au premier pour fermer le chemin
-      //     curve.offsetData.points.push(firstPt.clone());
-      //   }
-      // }
+      // 🔹 Fermer le contour : ajouter le premier point à la fin
+      if (curve.offsetData.points.length > 1) {
+        const firstPt = curve.offsetData.points[0];
+        const lastPt =
+          curve.offsetData.points[curve.offsetData.points.length - 1];
+        if (firstPt.getDistance(lastPt) > 0.01) {
+          // créer un nouveau cercle identique au premier pour fermer le chemin
+          curve.offsetData.points.push(firstPt.clone());
+        }
+      }
 
       //ici le tableau points contient tous les points de la courbe
-      console.log("oooooooo", curve.offsetData.points);
+      //console.log("oooooooo", curve.offsetData.points);
+
       this.filterPointsAbove(curve);
+
+      // // 1️⃣ Créer un Path de la courbe principale
+      // const mainPath = new paper.Path();
+      // curve.handles.forEach((h) => mainPath.add(h.segt.point));
+
+      // // 2️⃣ Mapper chaque point de l’offset à sa position sur la courbe principale
+      // const pointsWithOffset = curve.offsetData.points.map((pt) => {
+      //   const nearestPoint = mainPath.getNearestPoint(pt); // point sur la courbe principale
+      //   const offsetOnPath = mainPath.getOffsetOf(nearestPoint); // distance le long du path
+      //   return { pt, offset: offsetOnPath };
+      // });
+
+      // // 3️⃣ Trier les points selon leur position le long de la courbe principale
+      // pointsWithOffset.sort((a, b) => a.offset - b.offset);
+
+      // // 4️⃣ Mettre à jour le tableau des points de l’offset
+      // curve.offsetData.points = pointsWithOffset.map((o) => o.pt);
     }
   }
 
@@ -120,6 +139,8 @@ export default class DrawingModel {
     });
     // Remplacer l'ancien tableau par le nouveau filtré
     curve.offsetData.points = filteredPoints;
+
+    /*----------
 
     //filtrage de la partie haute de la courbe
     // Crée un path de la courbe principale (juste les points)
@@ -161,6 +182,7 @@ export default class DrawingModel {
 
     // Remplacer l'ancien tableau par le filtré
     curve.offsetData.points = filteredPoints2;
+    ----------*/
   }
 
   setStrokeWidth(width) {
@@ -215,7 +237,7 @@ export default class DrawingModel {
       offsetData: {
         points: [],
         line: null,
-        sampleStep: 15,
+        sampleStep: 5,
         scale: 1000,
         offset: 50,
       },

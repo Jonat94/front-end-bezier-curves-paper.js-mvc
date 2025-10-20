@@ -59,34 +59,85 @@ export default class CanvasView {
     this.clear();
     curves.forEach((curve) => this.drawShape(curve, visibility));
     curves.forEach((curve) => this.drawOffset(curve, visibility));
+    this.showPointsWithIndex(curves[0].offsetData.points);
     paper.view.update();
   }
 
-  drawOffset(curve, visibility) {
-    const bez = new paper.Path();
+  showPointsWithIndex(points, radius = 15, color = "blue") {
+    points.forEach((pt, i) => {
+      // Créer le cercle
+      const circle = new paper.Path.Circle({
+        center: pt,
+        radius: radius,
+        fillColor: color,
+        strokeColor: "black",
+        strokeWidth: 1,
+      });
 
-    bez.visible = true;
-    bez.strokeColor = "red";
-    bez.strokeWidth = 1;
-    curve.offsetData.points.forEach((p, index) => {
-      bez.add(p);
+      // Ajouter le texte au centre du cercle
+      const text = new paper.PointText({
+        point: pt.add(new paper.Point(-radius / 2, radius / 2)), // léger décalage pour centrer
+        content: i.toString(),
+        fillColor: "white",
+        fontSize: radius * 1.5,
+        justification: "center",
+      });
     });
   }
 
-  getCurvePoints(curve, sampleStep) {
+  drawOffset(curve, visibility = true) {
+    if (!visibility || !curve.offsetData?.points?.length) return;
+
+    // Crée un chemin temporaire pour accéder aux tangentes, si besoin
     const path = new paper.Path();
-    path.visible = false;
-    curve.handles.forEach((p, index) => {
-      path.add(p.segt);
+    curve.handles.forEach((p) => path.add(p.segt));
+
+    // --- 🟦 Réordonnancement du tableau d’offsets ---
+    const start = curve.handles[0].segt.point;
+    let closestIndex = 0;
+    let minDist = Infinity;
+
+    curve.offsetData.points.forEach((pt, i) => {
+      const dist = pt.getDistance(start);
+      if (dist < minDist) {
+        minDist = dist;
+        closestIndex = i;
+      }
     });
-    const points = [];
-    //const path = curve.path;
-    for (let s = 0; s <= path.length; s += sampleStep) {
-      const p = path.getPointAt(s);
-      if (p) points.push({ x: p.x, y: p.y });
+
+    if (closestIndex > 0) {
+      // rotation du tableau : le point le plus proche passe en premier
+      const rotated = [
+        ...curve.offsetData.points.slice(closestIndex),
+        ...curve.offsetData.points.slice(0, closestIndex),
+      ];
+      curve.offsetData.points = rotated;
     }
-    return points;
+
+    // --- 🟥 Dessin de la courbe d’offset ---
+    const bez = new paper.Path({
+      strokeColor: "red",
+      strokeWidth: 1,
+      visible: visibility,
+    });
+
+    bez.addSegments(curve.offsetData.points);
   }
+
+  // getCurvePoints(curve, sampleStep) {
+  //   const path = new paper.Path();
+  //   path.visible = false;
+  //   curve.handles.forEach((p, index) => {
+  //     path.add(p.segt);
+  //   });
+  //   const points = [];
+  //   //const path = curve.path;
+  //   for (let s = 0; s <= path.length; s += sampleStep) {
+  //     const p = path.getPointAt(s);
+  //     if (p) points.push({ x: p.x, y: p.y });
+  //   }
+  //   return points;
+  // }
 
   // Dans CanvasView
   getOffsetPointsFromCurves(curves) {
