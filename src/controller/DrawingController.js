@@ -124,14 +124,18 @@ export default class DrawingController {
         }
 
         this.renderOffset();
-        this.view.renderCurves(this.model.curves, this.model.handlesVisible);
+        this.view.renderCurves(
+          this.model.curves,
+          this.model.handlesVisible,
+          this.model.offsetVisible
+        );
       }
     };
 
     tool.onMouseUp = (event) => {
       //console.log("Visibility", this.model.handlesVisible);
       this.renderOffset();
-      this.view.renderCurves(this.model.curves, this.model.handlesVisible);
+      this.view.renderCurves(this.model.curves, this.model.offsetVisible);
     };
   }
 }

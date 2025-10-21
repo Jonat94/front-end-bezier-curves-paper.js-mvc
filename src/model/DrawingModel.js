@@ -85,6 +85,10 @@ export default class DrawingModel {
       //il faut maintenant filtrer les points qui nous interesse.
       this.filterPointsAbove(curve);
 
+      this.filterOffsetPointsBelowCurve(curve);
+
+      this.sortOffsetPointsAlongCurve(curve);
+
       // // 1️⃣ Créer un Path de la courbe principale
       // const mainPath = new paper.Path();
       // curve.handles.forEach((h) => mainPath.add(h.segt.point));
@@ -104,6 +108,77 @@ export default class DrawingModel {
     }
   }
 
+  filterOffsetPointsBelowCurve(curve) {
+    if (!curve.offsetData?.points?.length) return [];
+
+    // 1️⃣ Créer un path temporaire à partir des handles
+    const path = new paper.Path();
+    path.visible = false;
+    curve.handles.forEach((p) => path.add(p.segt));
+
+    // 2️⃣ Filtrer les points existants dans offsetData
+    let belowPoints = curve.offsetData.points.filter((pt) => {
+      const paperPt = new paper.Point(pt.x, pt.y);
+      const nearest = path.getNearestLocation(paperPt);
+      const tangent = path.getTangentAt(nearest.offset).normalize();
+      const normal = tangent.rotate(-90).normalize(); // vers le bas
+      const vec = paperPt.subtract(nearest.point);
+      return vec.dot(normal) < 0; // <0 si le point est en dessous
+    });
+
+    // 3️⃣ Réordonner pour que le point le plus proche du début devienne le premier
+    const start = curve.handles[0].segt.point;
+    let closestIndex = 0;
+    let minDist = Infinity;
+    belowPoints.forEach((pt, i) => {
+      const dist = new paper.Point(pt.x, pt.y).getDistance(start);
+      if (dist < minDist) {
+        minDist = dist;
+        closestIndex = i;
+      }
+    });
+
+    if (closestIndex > 0) {
+      belowPoints = [
+        ...belowPoints.slice(closestIndex),
+        ...belowPoints.slice(0, closestIndex),
+      ];
+    }
+
+    // 4️⃣ Mettre à jour offsetData.points
+    curve.offsetData.points = belowPoints;
+
+    return belowPoints;
+  }
+
+  sortOffsetPointsAlongCurve(curve, sampleStep = 5) {
+    if (!curve.offsetData?.points?.length) return [];
+
+    // 1️⃣ Créer un path temporaire à partir des points de la courbe principal
+    const path = new paper.Path();
+    path.visible = false;
+    curve.handles.forEach((p) => path.add(p.segt));
+
+    // 2️⃣ Pour chaque point d'offset, trouver sa position sur le path
+    const pointsWithOffset = curve.offsetData.points.map((pt) => {
+      const paperPt = new paper.Point(pt.x, pt.y);
+      const location = path.getNearestLocation(paperPt);
+      return { pt, offset: location.offset };
+    });
+
+    // 3️⃣ Trier les points selon leur offset le long du path
+    pointsWithOffset.sort((a, b) => a.offset - b.offset);
+
+    // 4️⃣ Extraire seulement les points triés
+    const sortedPoints = pointsWithOffset.map((p) => p.pt);
+
+    // 5️⃣ Mettre à jour offsetData
+    curve.offsetData.points = sortedPoints;
+
+    return sortedPoints;
+  }
+
+  // acctuellement supprime les coté de la courbe offset
   filterPointsAbove(curve) {
     //creation d'une nouvelle courbe de bezier avec les points de la courbe principale
     let start = curve.handles[0].segt.point;
@@ -128,6 +203,10 @@ export default class DrawingModel {
     });
     // Remplacer l'ancien tableau tableau de point par le nouveau tableau filtré
     curve.offsetData.points = filteredPoints;
+
+    // curves.forEach((curve) => this.filterOffsetPointsBelowCurve(curve));
+
+    //curves.forEach((curve) => this.sortOffsetPointsAlongCurve(curve));
 
     /*----------
 
