@@ -54,14 +54,6 @@ export default class ToolbarView {
     });
   }
 
-  updateOffsetValue(offsetValue) {
-    // this.curveSelect.innerHTML = "";
-    this.offsetSlider.value = offsetValue;
-    this.offsetValue.value = offsetValue;
-    this.offsetValue.innerText = offsetValue;
-    // Add new options
-  }
-
   setSelectedCurve(index) {
     this.curveSelect.value = index;
   }

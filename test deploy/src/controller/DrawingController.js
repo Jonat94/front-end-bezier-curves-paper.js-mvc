@@ -4,24 +4,26 @@ export default class DrawingController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
+
     this.currentPath = null;
     this.tempShape = null;
     this.startPoint = null;
+
     this.dragOffset = null;
+
     this._setupTool();
   }
 
   /** Recalcule et applique les offsets pour toutes les courbes */
-  // renderOffset() {
-  //   if (!this.model.curves) return;
-  //   const curves = this.model.curves;
-  //   const allPoints = this.model.getPointsFromCurves(curves); //--> recupere le tableau des points de l'offset de chaque courbe
-
-  //   curves.forEach((curve, i) => {
-  //     const points = allPoints[i];
-  //     this.model.computeOffsetFromPoints(curve, points); // envoi les points offset calculé au modele pour filtrage et stockage
-  //   });
-  // }
+  renderOffset() {
+    if (!this.model.curves) return;
+    const curves = this.model.curves;
+    const allPoints = this.view.getOffsetPointsFromCurves(curves); //--> recupere le tableau des points de l'offset de chaque courbe
+    curves.forEach((curve, i) => {
+      const points = allPoints[i];
+      this.model.computeOffsetFromPoints(curve, points); // envoi les points offset calculé au modele pour filtrage et stockage
+    });
+  }
 
   _setupTool() {
     const tool = new paper.Tool();
@@ -102,6 +104,7 @@ export default class DrawingController {
             (e) => e.id == this.model.selectedItem.data.id
           );
           tab[0].segt.point = tab[0].segt.point.add(event.delta);
+          //console.log(tab);
         }
 
         if (this.model.selectedItem.data.type == "bezier_in") {
@@ -109,16 +112,18 @@ export default class DrawingController {
             (e) => e.inPointId == this.model.selectedItem.data.id
           );
           tab[0].segt.handleIn = tab[0].segt.handleIn.add(event.delta);
+          //console.log(tab);
         }
 
         if (this.model.selectedItem.data.type == "bezier_out") {
           tab = curve.handles.filter(
             (e) => e.outPointId == this.model.selectedItem.data.id
           );
+          //console.log(tab);
           tab[0].segt.handleOut = tab[0].segt.handleOut.add(event.delta);
         }
 
-        this.model.computeOffset();
+        this.renderOffset();
         this.view.renderCurves(
           this.model.curves,
           this.model.handlesVisible,
@@ -128,7 +133,8 @@ export default class DrawingController {
     };
 
     tool.onMouseUp = (event) => {
-      this.model.computeOffset();
+      //console.log("Visibility", this.model.handlesVisible);
+      this.renderOffset();
       this.view.renderCurves(this.model.curves, this.model.offsetVisible);
     };
   }

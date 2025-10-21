@@ -62,7 +62,6 @@ export default class CanvasView {
     // curves.forEach((curve) =>
     //   this.showPointsWithIndex(curve.offsetData.points)
     // );
-
     paper.view.update();
   }
 
@@ -98,6 +97,54 @@ export default class CanvasView {
     });
 
     bez.addSegments(curve.offsetData.points);
+  }
+
+  // Dans CanvasView
+  getOffsetPointsFromCurves(curves) {
+    return curves.map((curve) => {
+      const path = new paper.Path();
+      path.visible = false;
+
+      // --- Création d'un chemin Bézier invisibel de la courbe principal ---
+      curve.handles.forEach((p) => path.add(p.segt));
+
+      // --- echantillonage des points le long du chemin ---
+      const sampledPoints = [];
+      for (let s = 0; s <= path.length; s += curve.offsetData.sampleStep) {
+        const p = path.getPointAt(s);
+        if (p) sampledPoints.push(p);
+      }
+
+      // --- Filtrage : conserver uniquement les points en dessous ---
+      let belowPoints = sampledPoints.filter((pt) => {
+        const nearest = path.getNearestLocation(pt);
+        const tangent = path.getTangentAt(nearest.offset).normalize();
+        const normal = tangent.rotate(-90).normalize(); // vers le bas
+        const vec = pt.subtract(nearest.point);
+        return vec.dot(normal) < 0;
+      });
+
+      // --- Réordonner pour que le premier point soit proche du début ---
+      const start = curve.handles[0].segt.point;
+      let closestIndex = 0;
+      let minDist = Infinity;
+      belowPoints.forEach((pt, i) => {
+        const dist = pt.getDistance(start);
+        if (dist < minDist) {
+          minDist = dist;
+          closestIndex = i;
+        }
+      });
+
+      if (closestIndex > 0) {
+        belowPoints = [
+          ...belowPoints.slice(closestIndex),
+          ...belowPoints.slice(0, closestIndex),
+        ];
+      }
+
+      return belowPoints.map((pt) => ({ x: pt.x, y: pt.y }));
+    });
   }
 
   // Affiche les lignes de tangente sur le canvas

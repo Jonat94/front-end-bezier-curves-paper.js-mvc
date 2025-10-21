@@ -14,13 +14,11 @@ export default class ToolController {
       if (!curve) return;
 
       // Mettre à jour l'offset de la courbe
-      model.curves[model.currentCurveIndex].offsetData.offset = value;
+      curve.offsetData.offset = value;
 
       // Recalculer l'offset avec les points de la courbe
-      const points = model.getPointsFromCurves(model.curves); // renvoi les points echantilloné des courbes principal
-      points.forEach((point, index) =>
-        model.computeOffsetFromPoints(this.model.curves[index], point)
-      );
+      const points = canvasView.getOffsetPointsFromCurves(model.curves)[0]; // à adapter selon ta méthode
+      model.computeOffsetFromPoints(curve, points);
 
       // 3Rerender la courbe avec la nouvelle offset
       canvasView.renderCurves(
@@ -34,9 +32,6 @@ export default class ToolController {
       this.model.createNewCurve();
       this.toolbarView.updateCurveList(this.model.curves);
       this.toolbarView.setSelectedCurve(this.model.currentCurveIndex);
-      this.toolbarView.updateOffsetValue(
-        this.model.curves[this.model.currentCurveIndex].offsetData.offset
-      );
     });
 
     this.toolbarView.bindDeleteCurve(() => {
@@ -47,9 +42,6 @@ export default class ToolController {
 
     this.toolbarView.bindCurveSelect((index) => {
       this.model.currentCurveIndex = index;
-      this.toolbarView.updateOffsetValue(
-        this.model.curves[index].offsetData.offset
-      );
     });
 
     this.toolbarView.bindToggleHandles(() => {

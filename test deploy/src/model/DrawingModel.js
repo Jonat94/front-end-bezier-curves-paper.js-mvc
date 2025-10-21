@@ -83,12 +83,12 @@ export default class DrawingModel {
   filterOffsetPointsBelowCurve(curve) {
     if (!curve.offsetData?.points?.length) return [];
 
-    // Créer un path temporaire à partir des handles
+    // 1️⃣ Créer un path temporaire à partir des handles
     const path = new paper.Path();
     path.visible = false;
     curve.handles.forEach((p) => path.add(p.segt));
 
-    // Filtrer les points existants dans offsetData
+    // 2️⃣ Filtrer les points existants dans offsetData
     let belowPoints = curve.offsetData.points.filter((pt) => {
       const paperPt = new paper.Point(pt.x, pt.y);
       const nearest = path.getNearestLocation(paperPt);
@@ -98,7 +98,7 @@ export default class DrawingModel {
       return vec.dot(normal) < 0; // <0 si le point est en dessous
     });
 
-    // Réordonner pour que le point le plus proche du début devienne le premier
+    // 3️⃣ Réordonner pour que le point le plus proche du début devienne le premier
     const start = curve.handles[0].segt.point;
     let closestIndex = 0;
     let minDist = Infinity;
@@ -119,33 +119,6 @@ export default class DrawingModel {
 
     // Mettre à jour offsetData.points
     curve.offsetData.points = belowPoints;
-  }
-
-  computeOffset() {
-    if (!this.curves) return;
-    const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
-    this.curves.forEach((curve, i) => {
-      const points = allPoints[i];
-      this.computeOffsetFromPoints(curve, points); // envoi les points offset calculé au modele pour filtrage et stockage
-    });
-  }
-
-  getPointsFromCurves() {
-    return this.curves.map((curve) => {
-      const path = new paper.Path();
-      path.visible = false;
-
-      // --- Création d'un chemin Bézier invisibel de la courbe principal ---
-      curve.handles.forEach((p) => path.add(p.segt));
-
-      // --- echantillonage des points le long du chemin ---
-      const sampledPoints = [];
-      for (let s = 0; s <= path.length; s += curve.offsetData.sampleStep) {
-        const p = path.getPointAt(s);
-        if (p) sampledPoints.push(p);
-      }
-      return sampledPoints;
-    });
   }
 
   sortOffsetPointsAlongCurve(curve, sampleStep = 5) {
