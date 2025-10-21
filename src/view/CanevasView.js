@@ -59,10 +59,9 @@ export default class CanvasView {
     this.clear();
     curves.forEach((curve) => this.drawShape(curve, visibility));
     curves.forEach((curve) => this.drawOffset(curve, visibility_offset));
-
-    // curves.forEach((curve) => this.drawOffset(curve));
-
-    //this.showPointsWithIndex(curves[0].offsetData.points);
+    // curves.forEach((curve) =>
+    //   this.showPointsWithIndex(curve.offsetData.points)
+    // );
     paper.view.update();
   }
 
@@ -91,7 +90,7 @@ export default class CanvasView {
   drawOffset(curve, visibility = true) {
     if (!visibility || !curve.offsetData?.points?.length) return;
 
-    // --- 🟥 Dessin de la courbe d’offset ---
+    // --- Dessin de la courbe d’offset ---
     const bez = new paper.Path({
       strokeColor: "green",
       strokeWidth: 1,
@@ -99,21 +98,6 @@ export default class CanvasView {
 
     bez.addSegments(curve.offsetData.points);
   }
-
-  // getCurvePoints(curve, sampleStep) {
-  //   const path = new paper.Path();
-  //   path.visible = false;
-  //   curve.handles.forEach((p, index) => {
-  //     path.add(p.segt);
-  //   });
-  //   const points = [];
-  //   //const path = curve.path;
-  //   for (let s = 0; s <= path.length; s += sampleStep) {
-  //     const p = path.getPointAt(s);
-  //     if (p) points.push({ x: p.x, y: p.y });
-  //   }
-  //   return points;
-  // }
 
   // Dans CanvasView
   getOffsetPointsFromCurves(curves) {

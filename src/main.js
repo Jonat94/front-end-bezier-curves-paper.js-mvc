@@ -10,8 +10,7 @@ import ToolController from "./controller/ToolController.js";
 window.onload = () => {
   const paperInstance = initPaper("canvas"); // setup unique
   console.log("Paper project ID:", paper.project);
-  // const canvas = document.getElementById("canvas");
-  //paper.setup(canvas);
+
   const model = new DrawingModel();
   const canvasView = new CanvasView(canvas);
   const toolbarView = new ToolbarView();

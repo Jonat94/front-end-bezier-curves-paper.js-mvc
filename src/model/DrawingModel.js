@@ -70,17 +70,6 @@ export default class DrawingModel {
         }
       });
 
-      // // 🔹 Fermer le contour : ajouter le premier point à la fin
-      // if (curve.offsetData.points.length > 1) {
-      //   const firstPt = curve.offsetData.points[0];
-      //   const lastPt =
-      //     curve.offsetData.points[curve.offsetData.points.length - 1];
-      //   if (firstPt.getDistance(lastPt) > 0.01) {
-      //     // créer un nouveau cercle identique au premier pour fermer le chemin
-      //     curve.offsetData.points.push(firstPt.clone());
-      //   }
-      // }
-
       //ici le tableau points contient la totalité des points de la courbe offset
       //il faut maintenant filtrer les points qui nous interesse.
       this.filterPointsAbove(curve);
@@ -88,23 +77,6 @@ export default class DrawingModel {
       this.filterOffsetPointsBelowCurve(curve);
 
       this.sortOffsetPointsAlongCurve(curve);
-
-      // // 1️⃣ Créer un Path de la courbe principale
-      // const mainPath = new paper.Path();
-      // curve.handles.forEach((h) => mainPath.add(h.segt.point));
-
-      // // 2️⃣ Mapper chaque point de l’offset à sa position sur la courbe principale
-      // const pointsWithOffset = curve.offsetData.points.map((pt) => {
-      //   const nearestPoint = mainPath.getNearestPoint(pt); // point sur la courbe principale
-      //   const offsetOnPath = mainPath.getOffsetOf(nearestPoint); // distance le long du path
-      //   return { pt, offset: offsetOnPath };
-      // });
-
-      // // 3️⃣ Trier les points selon leur position le long de la courbe principale
-      // pointsWithOffset.sort((a, b) => a.offset - b.offset);
-
-      // // 4️⃣ Mettre à jour le tableau des points de l’offset
-      // curve.offsetData.points = pointsWithOffset.map((o) => o.pt);
     }
   }
 
@@ -145,37 +117,33 @@ export default class DrawingModel {
       ];
     }
 
-    // 4️⃣ Mettre à jour offsetData.points
+    // Mettre à jour offsetData.points
     curve.offsetData.points = belowPoints;
-
-    return belowPoints;
   }
 
   sortOffsetPointsAlongCurve(curve, sampleStep = 5) {
     if (!curve.offsetData?.points?.length) return [];
 
-    // 1️⃣ Créer un path temporaire à partir des points de la courbe principal
+    // Créer un path temporaire à partir des points de la courbe principal
     const path = new paper.Path();
     path.visible = false;
     curve.handles.forEach((p) => path.add(p.segt));
 
-    // 2️⃣ Pour chaque point d'offset, trouver sa position sur le path
+    // Pour chaque point d'offset, trouver sa position le plus proche de la courbe principale
     const pointsWithOffset = curve.offsetData.points.map((pt) => {
       const paperPt = new paper.Point(pt.x, pt.y);
       const location = path.getNearestLocation(paperPt);
       return { pt, offset: location.offset };
     });
 
-    // 3️⃣ Trier les points selon leur offset le long du path
+    // Trier les points selon leur position la plus proche de la courbe principal
     pointsWithOffset.sort((a, b) => a.offset - b.offset);
 
-    // 4️⃣ Extraire seulement les points triés
+    // Extraire seulement les points triés
     const sortedPoints = pointsWithOffset.map((p) => p.pt);
 
-    // 5️⃣ Mettre à jour offsetData
+    // Mettre à jour offsetData points
     curve.offsetData.points = sortedPoints;
-
-    return sortedPoints;
   }
 
   // acctuellement supprime les coté de la courbe offset
@@ -203,54 +171,6 @@ export default class DrawingModel {
     });
     // Remplacer l'ancien tableau tableau de point par le nouveau tableau filtré
     curve.offsetData.points = filteredPoints;
-
-    // curves.forEach((curve) => this.filterOffsetPointsBelowCurve(curve));
-
-    //curves.forEach((curve) => this.sortOffsetPointsAlongCurve(curve));
-
-    /*----------
-
-    //filtrage de la partie haute de la courbe
-    // Crée un path de la courbe principale (juste les points)
-    const mainPath = new paper.Path();
-    curve.handles.forEach((h) => mainPath.add(h.segt.point));
-    const filteredPoints2 = [];
-    curve.offsetData.points.forEach((pt) => {
-      // Trouver le point le plus proche sur la courbe principale
-      const nearest = mainPath.getNearestPoint(pt);
-
-      // Calculer le vecteur tangent à ce point
-      const offsetOnPath = mainPath.getOffsetOf(nearest);
-      const tangent = mainPath.getTangentAt(offsetOnPath);
-      if (!tangent) return; // sécurité
-
-      // Normale perpendiculaire
-      const normal = tangent.rotate(90).normalize();
-
-      // Vecteur du point d'offset vers le point de la courbe
-      const vec = pt.subtract(nearest);
-
-      // Produit scalaire pour déterminer le côté
-      if (vec.dot(normal) >= 0) {
-        // Côté « bas » ou sur la courbe → garder
-        filteredPoints2.push(pt);
-      } else {
-        // Côté « haut » → supprimer
-        // pas besoin de .remove() pour paper.Point purs
-      }
-    });
-
-    curve.offsetData.points = curve.offsetData.points
-      .map((pt) => ({
-        pt,
-        offset: mainPath.getOffsetOf(mainPath.getNearestPoint(pt)),
-      }))
-      .sort((a, b) => a.offset - b.offset)
-      .map((o) => o.pt);
-
-    // Remplacer l'ancien tableau par le filtré
-    curve.offsetData.points = filteredPoints2;
-    ----------*/
   }
 
   //supprime le point sélctionné (a réécrire)...
@@ -262,35 +182,20 @@ export default class DrawingModel {
     let index = this.curves[this.currentCurveIndex].handles.indexOf(tab[0]);
     this.curves[this.currentCurveIndex].handles.splice(index, 1);
   }
-  addShape(shape) {
-    this.shapes.push(shape);
-  }
 
-  selectShape(shape) {
-    this.selectedShape = shape;
-  }
-
-  clearSelection() {
-    this.selectedShape = null;
-  }
-
+  //Supprime une courbe du canvas
   removeSelected() {
     if (!this.selectedShape) return;
     this.shapes = this.shapes.filter((s) => s !== this.selectedShape.shapeData);
     this.selectedShape.item.remove();
     this.clearSelection();
-  }
-
-  clear() {
-    this.shapes = [];
     this.selectedShape = null;
   }
 
-  setTool(tool) {
-    this.currentTool = tool;
-  }
-  setColor(color) {
-    this.currentColor = color;
+  //efface le canvas paper
+  clear() {
+    this.shapes = [];
+    this.selectedShape = null;
   }
 
   //Ajout une courbe vide sur le canvas en faisant un ajout d'objet dans le tableau curves
@@ -304,7 +209,7 @@ export default class DrawingModel {
         points: [],
         line: null,
         sampleStep: 5,
-        scale: 1000,
+        scale: 100,
         offset: 10,
       },
     });

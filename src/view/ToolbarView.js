@@ -42,7 +42,6 @@ export default class ToolbarView {
   }
 
   updateCurveList(curveNames) {
-    // Clear existing options
     this.curveSelect.innerHTML = "";
 
     // Add new options

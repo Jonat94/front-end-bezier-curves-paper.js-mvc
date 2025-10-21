@@ -13,15 +13,19 @@ export default class ToolController {
       const curve = model.curves[model.currentCurveIndex];
       if (!curve) return;
 
-      // 1️⃣ Mettre à jour l'offset de la courbe
+      // Mettre à jour l'offset de la courbe
       curve.offsetData.offset = value;
 
-      // 2️⃣ Recalculer l'offset avec les points de la courbe
+      // Recalculer l'offset avec les points de la courbe
       const points = canvasView.getOffsetPointsFromCurves(model.curves)[0]; // à adapter selon ta méthode
       model.computeOffsetFromPoints(curve, points);
 
-      // 3️⃣ Rerender la courbe avec la nouvelle offset
-      canvasView.renderCurves(model.curves, model.handlesVisible);
+      // 3Rerender la courbe avec la nouvelle offset
+      canvasView.renderCurves(
+        model.curves,
+        model.handlesVisible,
+        model.offsetVisible
+      );
     });
 
     this.toolbarView.bindAddCurve(() => {
@@ -44,7 +48,8 @@ export default class ToolController {
       this.model.handlesVisible = !this.model.handlesVisible;
       this.canvasView.renderCurves(
         this.model.curves,
-        this.model.handlesVisible
+        this.model.handlesVisible,
+        this.model.offsetVisible
       );
     });
 
@@ -60,12 +65,18 @@ export default class ToolController {
 
   renderOffset() {
     const curves = this.model.curves;
-    //console.log("calcule offset");
-    const allPoints = this.canvasView.getOffsetPointsFromCurves(curves);
+    console.log(" masquer offset");
+    this.model.offsetVisible = !this.model.offsetVisible;
+    this.canvasView.renderCurves(
+      this.model.curves,
+      this.model.handlesVisible,
+      this.model.offsetVisible
+    );
+    //const allPoints = this.canvasView.getOffsetPointsFromCurves(curves);
     //console.log("jjjjjjjj", allPoints);
-    curves.forEach((curve, i) => {
-      const points = allPoints[i];
-      this.model.computeOffsetFromPoints(curve, points); // méthode dans le modèle
-    });
+    // curves.forEach((curve, i) => {
+    //   const points = allPoints[i];
+    //   this.model.computeOffsetFromPoints(curve, points); // méthode dans le modèle
+    // });
   }
 }
