@@ -6,22 +6,20 @@ export default class DrawingModel {
     //console.log("Paper project ID:", paper.project);
     this.currentColor = "#000000";
     this.currentStrokeWidth = 20; // ← ajout pour la taille du trait
-    this.currentCurveIndex = -1;
-    this.curves = [];
-    this._idCounter = 0;
-    this.curveCounter = 0;
-    this.handlesVisible = true;
-    this.offsetVisible = true;
-    this.selectedItem = null;
+    this.currentCurveIndex = -1; //index de la courbe choisi pour modification
+    this.curves = []; // array des courbes sur le canvas
+    this._idCounter = 0; //compteur de cercle ajouté au canvas
+    this.curveCounter = 0; // numero de la courbe créée pour pouvoir l'identifier uniquement
+    this.handlesVisible = true; //flag permettant de specifier si il faut afficher les poingées
+    this.offsetVisible = true; //flag permettant de specifier si il faut afficher l'offset
+    this.selectedItem = null; //item paper selectionné sur le canvas (à placer dans la vue)
   }
 
+  //construit le tableau à partir de tous les points echantillioné sur la courbe
+  // pour ne conserver que la partie qui est sous la courbe.
   computeOffsetFromPoints(curve, points) {
-    // similaire à ton computeOffset(), mais en manipulant curve.handles
-    // et en stockant le résultat dans this.offsetData
-    //console.log("Compute offset");
-    //let curve = this.curves[this.currentCurveIndex];
-    //console.log("ppppppp", points);
     let pts = [];
+    //multiplie par le scale pour clipper
     points.forEach((pt) => {
       pts.push({
         X: Math.round(pt.x * curve.offsetData.scale),
@@ -31,7 +29,7 @@ export default class DrawingModel {
 
     //console.log(pts);
     if (pts.length < 2) return;
-    //console.log("avant clipper");
+    //calcul du tracé complet de l'offset par clipper
     let co = new ClipperLib.ClipperOffset();
     co.AddPath(
       pts,
@@ -46,17 +44,13 @@ export default class DrawingModel {
 
     if (curve.offsetData.points) curve.offsetData.points = [];
 
-    //console.log("aaaa", solution_paths.length);
-
-    //cherche le plus long chemin continue car il peut y avoir plusieur chemein dans solution_paths
-    //console.log("sssssssss", solution_paths.length);
+    //cherche le plus long chemin continue car il peut y avoir plusieur chemin dans solution_paths
     if (solution_paths.length > 0) {
       let best = solution_paths[0];
       for (let i = 1; i < solution_paths.length; i++) {
         if (solution_paths[i].length > best.length) best = solution_paths[i];
       }
-      //reduction de la taille de l'offset
-      //console.log("pppiiiippp", best);
+      //division par scale pour retrouver les coordonnées dans le plan de depart
       let offsetPointsRaw = best.map(
         (pt) =>
           new paper.Point(
@@ -65,33 +59,30 @@ export default class DrawingModel {
           )
       );
 
-      // console.log("fffffff", offsetPointsRaw);
-
+      //Reduction du nombre de point calculé pour accélérer les calcules
       let lastPt = null;
       offsetPointsRaw.forEach((pt) => {
         //reduit le nombre de point à calsculer
         if (!lastPt || pt.getDistance(lastPt) >= 6) {
           //ajoute les coordonnées des points de l'offeset dans ofsetdata
           curve.offsetData.points.push(pt);
-          //curve.offsetData.points.push(pt);
           lastPt = pt;
         }
       });
 
-      // 🔹 Fermer le contour : ajouter le premier point à la fin
-      if (curve.offsetData.points.length > 1) {
-        const firstPt = curve.offsetData.points[0];
-        const lastPt =
-          curve.offsetData.points[curve.offsetData.points.length - 1];
-        if (firstPt.getDistance(lastPt) > 0.01) {
-          // créer un nouveau cercle identique au premier pour fermer le chemin
-          curve.offsetData.points.push(firstPt.clone());
-        }
-      }
+      // // 🔹 Fermer le contour : ajouter le premier point à la fin
+      // if (curve.offsetData.points.length > 1) {
+      //   const firstPt = curve.offsetData.points[0];
+      //   const lastPt =
+      //     curve.offsetData.points[curve.offsetData.points.length - 1];
+      //   if (firstPt.getDistance(lastPt) > 0.01) {
+      //     // créer un nouveau cercle identique au premier pour fermer le chemin
+      //     curve.offsetData.points.push(firstPt.clone());
+      //   }
+      // }
 
-      //ici le tableau points contient tous les points de la courbe
-      //console.log("oooooooo", curve.offsetData.points);
-
+      //ici le tableau points contient la totalité des points de la courbe offset
+      //il faut maintenant filtrer les points qui nous interesse.
       this.filterPointsAbove(curve);
 
       // // 1️⃣ Créer un Path de la courbe principale
@@ -114,30 +105,28 @@ export default class DrawingModel {
   }
 
   filterPointsAbove(curve) {
-    //creation d'une nouvelle courbe de bezier avec les points de l'offset
+    //creation d'une nouvelle courbe de bezier avec les points de la courbe principale
     let start = curve.handles[0].segt.point;
     let end = curve.handles[curve.handles.length - 1].segt.point;
     const filteredPoints = [];
 
-    // Ignorer les points proches des extrémités
-
-    // Ignorer les points trop proches des extrémités
-
+    // filtrage des points proches des extrémités pour ouvrir la courbe dee chaque coté
     curve.offsetData.points.forEach((pt) => {
       const distStart = pt.getDistance(start);
       const distEnd = pt.getDistance(end);
 
-      // 🔹 Si le point est trop proche du début ou de la fin, on le supprime
+      // Si le point est à une distance d'un offset du début ou de la fin de la courbe principale,
+      // on le supprime du tableau.
       if (
         distStart <= curve.offsetData.offset + 1 ||
         distEnd <= curve.offsetData.offset + 1
       ) {
         //console.log("Point supprimé (trop proche des extrémités)");
       } else {
-        filteredPoints.push(pt); // on garde les autres
+        filteredPoints.push(pt); // sinon on place le points dans le tableau filtré
       }
     });
-    // Remplacer l'ancien tableau par le nouveau filtré
+    // Remplacer l'ancien tableau tableau de point par le nouveau tableau filtré
     curve.offsetData.points = filteredPoints;
 
     /*----------
@@ -185,9 +174,7 @@ export default class DrawingModel {
     ----------*/
   }
 
-  setStrokeWidth(width) {
-    this.currentStrokeWidth = width;
-  }
+  //supprime le point sélctionné (a réécrire)...
   deletePoint() {
     let tab;
     tab = this.curves[this.currentCurveIndex].handles.filter((h) => {
@@ -227,8 +214,8 @@ export default class DrawingModel {
     this.currentColor = color;
   }
 
+  //Ajout une courbe vide sur le canvas en faisant un ajout d'objet dans le tableau curves
   createNewCurve(name = `Courbe ${++this.curveCounter}`) {
-    //const path = new paper.Path({ strokeColor: "black", strokeWidth: 1 });
     const handles = [];
     this.curves.push({
       name,
@@ -245,11 +232,13 @@ export default class DrawingModel {
     this.currentCurveIndex = this.curves.length - 1; // mettre à jour l'index de la courbe courante
   }
 
+  //permet d'incrementer un id , utilisé pour identifier chaque point du canvas de facon unique
   generateId(prefix = "id") {
     this._idCounter += 1;
     return `${prefix}-${this._idCounter}`;
   }
 
+  //supprime la courbe en cours de modification
   deleteCurrentCurve() {
     if (
       this.currentCurveIndex < 0 ||

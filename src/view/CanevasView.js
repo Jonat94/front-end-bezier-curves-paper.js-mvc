@@ -219,10 +219,10 @@ export default class CanvasView {
       const path = new paper.Path();
       path.visible = false;
 
-      // --- Création du chemin Bézier ---
+      // --- Création d'un chemin Bézier invisibel de la courbe principal ---
       curve.handles.forEach((p) => path.add(p.segt));
 
-      // --- Récupération initiale des points le long du chemin ---
+      // --- echantillonage des points le long du chemin ---
       const sampledPoints = [];
       for (let s = 0; s <= path.length; s += curve.offsetData.sampleStep) {
         const p = path.getPointAt(s);
@@ -261,7 +261,7 @@ export default class CanvasView {
     });
   }
 
-  // Met à jour les lignes de handles
+  // Affiche les lignes de tangente sur le canvas
   updateHandleLines(curve, visibility = true) {
     if (!visibility) return;
     for (let i = 0; i < curve.handles.length; i++) {

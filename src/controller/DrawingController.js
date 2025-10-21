@@ -11,19 +11,17 @@ export default class DrawingController {
 
     this.dragOffset = null;
 
-    let selectedHandleDown = null;
-    let handleType = "";
-    let handleDownIndex = -1;
-
     this._setupTool();
   }
 
+  /** Recalcule et applique les offsets pour toutes les courbes */
   renderOffset() {
+    if (!this.model.curves) return;
     const curves = this.model.curves;
-    const allPoints = this.view.getOffsetPointsFromCurves(curves);
+    const allPoints = this.view.getOffsetPointsFromCurves(curves); //--> recupere le tableau des points de l'offset de chaque courbe
     curves.forEach((curve, i) => {
       const points = allPoints[i];
-      this.model.computeOffsetFromPoints(curve, points); // méthode dans le modèle
+      this.model.computeOffsetFromPoints(curve, points); // envoi les points offset calculé au modele pour filtrage et stockage
     });
   }
 
@@ -31,6 +29,7 @@ export default class DrawingController {
     const tool = new paper.Tool();
 
     tool.onMouseDown = (event) => {
+      console.log("tu as clické ", event.point);
       const curve = this.model.curves[this.model.currentCurveIndex];
       if (!curve) return;
 
@@ -38,7 +37,7 @@ export default class DrawingController {
       const hit = paper.project.hitTest(event.point, {
         fill: true, // détecte les clics sur les zones remplies
         stroke: true, // (optionnel) détecte aussi les bords
-        tolerance: 15, // marge d’erreur (px)
+        tolerance: 5, // marge d’erreur (px)
       });
 
       if (
