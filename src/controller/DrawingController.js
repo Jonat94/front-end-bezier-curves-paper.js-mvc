@@ -11,18 +11,6 @@ export default class DrawingController {
     this._setupTool();
   }
 
-  /** Recalcule et applique les offsets pour toutes les courbes */
-  // renderOffset() {
-  //   if (!this.model.curves) return;
-  //   const curves = this.model.curves;
-  //   const allPoints = this.model.getPointsFromCurves(curves); //--> recupere le tableau des points de l'offset de chaque courbe
-
-  //   curves.forEach((curve, i) => {
-  //     const points = allPoints[i];
-  //     this.model.computeOffsetFromPoints(curve, points); // envoi les points offset calculé au modele pour filtrage et stockage
-  //   });
-  // }
-
   _setupTool() {
     const tool = new paper.Tool();
 
@@ -97,6 +85,7 @@ export default class DrawingController {
 
         let tab;
         if (this.model.selectedItem.data.type == "circle") {
+          //TO DO verifier que l'item selectionné appartient bien à la courbe selectionné.
           //console.log("circle");
           tab = curve.handles.filter(
             (e) => e.id == this.model.selectedItem.data.id
@@ -129,7 +118,11 @@ export default class DrawingController {
 
     tool.onMouseUp = (event) => {
       this.model.computeOffset();
-      this.view.renderCurves(this.model.curves, this.model.offsetVisible);
+      this.view.renderCurves(
+        this.model.curves,
+        this.model.handlesVisible,
+        this.model.offsetVisible
+      );
     };
   }
 }

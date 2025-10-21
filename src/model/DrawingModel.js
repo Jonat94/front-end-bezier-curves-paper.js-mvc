@@ -63,7 +63,7 @@ export default class DrawingModel {
       let lastPt = null;
       offsetPointsRaw.forEach((pt) => {
         //reduit le nombre de point à calsculer
-        if (!lastPt || pt.getDistance(lastPt) >= 6) {
+        if (!lastPt || pt.getDistance(lastPt) >= 4) {
           //ajoute les coordonnées des points de l'offeset dans ofsetdata
           curve.offsetData.points.push(pt);
           lastPt = pt;
@@ -208,6 +208,7 @@ export default class DrawingModel {
     });
     let index = this.curves[this.currentCurveIndex].handles.indexOf(tab[0]);
     this.curves[this.currentCurveIndex].handles.splice(index, 1);
+    this.computeOffset();
   }
 
   //Supprime une courbe du canvas

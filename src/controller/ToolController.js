@@ -54,6 +54,7 @@ export default class ToolController {
 
     this.toolbarView.bindToggleHandles(() => {
       this.model.handlesVisible = !this.model.handlesVisible;
+      console.log("toggle");
       this.canvasView.renderCurves(
         this.model.curves,
         this.model.handlesVisible,
@@ -64,6 +65,11 @@ export default class ToolController {
     this.toolbarView.bindDeletePoint(() => {
       this.model.deletePoint();
       this.canvasView.renderCurves(this.model.curves);
+      this.canvasView.renderCurves(
+        this.model.curves,
+        this.model.handlesVisible,
+        this.model.offsetVisible
+      );
     });
 
     this.toolbarView.bindOffset(() => {
@@ -80,11 +86,5 @@ export default class ToolController {
       this.model.handlesVisible,
       this.model.offsetVisible
     );
-    //const allPoints = this.canvasView.getOffsetPointsFromCurves(curves);
-    //console.log("jjjjjjjj", allPoints);
-    // curves.forEach((curve, i) => {
-    //   const points = allPoints[i];
-    //   this.model.computeOffsetFromPoints(curve, points); // méthode dans le modèle
-    // });
   }
 }
