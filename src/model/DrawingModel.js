@@ -121,6 +121,7 @@ export default class DrawingModel {
     curve.offsetData.points = belowPoints;
   }
 
+  //retourne un echantillonage des courbes principales
   computeOffset() {
     if (!this.curves) return;
     const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
@@ -130,6 +131,7 @@ export default class DrawingModel {
     });
   }
 
+  //retourn l'echantillonga de toutes les courbes de bezier dans un array
   getPointsFromCurves() {
     return this.curves.map((curve) => {
       const path = new paper.Path();
@@ -148,6 +150,8 @@ export default class DrawingModel {
     });
   }
 
+  //Cette fonction trie les points d’offset d’une courbe pour qu’ils suivent l’ordre de la courbe principale
+  // en fonction de leur position la plus proche sur celle-ci.
   sortOffsetPointsAlongCurve(curve, sampleStep = 5) {
     if (!curve.offsetData?.points?.length) return [];
 
