@@ -1,8 +1,8 @@
 export default class ToolController {
-  constructor(model, toolbarView, canvasView) {
+  constructor(model, toolbarView, canView) {
     this.model = model;
     this.toolbarView = toolbarView;
-    this.canvasView = canvasView;
+    this.canvasView = canView;
     this.model.createNewCurve();
     this.toolbarView.updateCurveList(this.model.curves);
 
@@ -23,7 +23,7 @@ export default class ToolController {
       );
 
       // 3Rerender la courbe avec la nouvelle offset
-      canvasView.renderCurves(
+      this.canvasView.renderCurves(
         model.curves,
         model.handlesVisible,
         model.offsetVisible
@@ -58,7 +58,7 @@ export default class ToolController {
 
     this.toolbarView.bindToggleHandles(() => {
       this.model.handlesVisible = !this.model.handlesVisible;
-      console.log("toggle");
+      //console.log("toggle");
       this.canvasView.renderCurves(
         this.model.curves,
         this.model.handlesVisible,
@@ -74,6 +74,12 @@ export default class ToolController {
         this.model.handlesVisible,
         this.model.offsetVisible
       );
+    });
+
+    this.toolbarView.bindToggleBackground(() => {
+      this.model.backgroundVisible = !this.model.backgroundVisible;
+      console.log("toggle background", this.model.backgroundVisible);
+      this.canvasView.setBackground(model.backgroundVisible);
     });
 
     this.toolbarView.bindOffset(() => {

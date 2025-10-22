@@ -9,6 +9,11 @@ export default class ToolbarView {
     this.offsetSlider = document.getElementById("offsetSlider");
     this.offsetValue = document.getElementById("offsetValue");
     this.export = document.getElementById("exportBtn");
+    this.toggleBackgroundBtn = document.getElementById("toggleBackgroundBtn");
+  }
+
+  bindToggleBackground(handler) {
+    this.toggleBackgroundBtn.addEventListener("click", handler);
   }
 
   bindSlider(handler) {

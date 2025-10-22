@@ -4,7 +4,7 @@ import paper from "../paperSetup.js";
 export default class DrawingModel {
   constructor() {
     //console.log("Paper project ID:", paper.project);
-    this.currentColor = "#000000";
+    //this.currentColor = "#000000";
     this.currentStrokeWidth = 20; // ← ajout pour la taille du trait
     this.currentCurveIndex = -1; //index de la courbe choisi pour modification
     this.curves = []; // array des courbes sur le canvas
@@ -12,6 +12,7 @@ export default class DrawingModel {
     this.curveCounter = 0; // numero de la courbe créée pour pouvoir l'identifier uniquement
     this.handlesVisible = true; //flag permettant de specifier si il faut afficher les poingées
     this.offsetVisible = true; //flag permettant de specifier si il faut afficher l'offset
+    this.backgroundVisible = true; //Flag permettant de specifier si le fond doit s'afficher.
     this.selectedItem = null; //item paper selectionné sur le canvas (à placer dans la vue)
   }
 

@@ -17,6 +17,13 @@ export default class CanvasView {
     this.foregroundLayer.activate();
   }
 
+  //definie la veisibilité du fond
+  setBackground(visibility) {
+    if (visibility) this.backgroundLayer.visible = true;
+    else this.backgroundLayer.visible = false;
+  }
+
+  //efface tous les elements du premier plan
   clear() {
     this.foregroundLayer.removeChildren();
   }
