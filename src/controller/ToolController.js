@@ -45,6 +45,10 @@ export default class ToolController {
       this.canvasView.renderCurves(this.model.curves);
     });
 
+    this.toolbarView.bindExport(() => {
+      this.canvasView.exportAsImage("mon_dessin.png");
+    });
+
     this.toolbarView.bindCurveSelect((index) => {
       this.model.currentCurveIndex = index;
       this.toolbarView.updateOffsetValue(

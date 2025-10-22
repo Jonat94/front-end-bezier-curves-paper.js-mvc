@@ -3,22 +3,35 @@ import paper from "../paperSetup.js";
 export default class CanvasView {
   constructor(canvasElement) {
     paper.setup(canvasElement);
+    this.canvas = canvasElement; // on garde le canvas pour l'export
+    this.backgroundLayer = new paper.Layer();
+    this.foregroundLayer = new paper.Layer();
+    // Ajouter le fond
+    const raster = new paper.Raster("/images/paper.jpg");
+    raster.position = paper.view.center;
+    // Réduire l'image à 50% de sa taille
+    raster.scale(0.4);
+    raster.sendToBack(); // toujours derrière les formes
+    this.backgroundLayer.addChild(raster);
+    // Toujours dessiner sur le layer du dessus
+    this.foregroundLayer.activate();
   }
 
   clear() {
-    paper.project.activeLayer.removeChildren();
+    this.foregroundLayer.removeChildren();
   }
-
-  drawShape(curve, visibility = true) {
+  //dessine une courbe dans le canvase
+  drawCurve(curve, visibility = true) {
     const path = new paper.Path();
 
     path.strokeColor = "#000000";
-    path.strokeWidth = curve.currentStrokeWidth || 1;
+    path.strokeWidth = curve.currentStrokeWidth || 2;
 
     curve.handles.forEach((p, index) => {
       path.add(p.segt);
       if (!visibility) return;
-      this.makeShape(
+      //ajoute un cercle rouge pour chaque point de la courbe
+      this.makeCircle(
         p.segt.point,
         "#ff0000",
         p.id,
@@ -26,15 +39,15 @@ export default class CanvasView {
         p.inPointId,
         p.outPointId
       );
-      //path.add(p.segt._handleIn),
-      this.makeShape(
+      //ajoute un cercle bleu pour la première poignée
+      this.makeCircle(
         p.segt.point.add(p.segt.handleIn),
         "#1e25fbff",
         p.inPointId,
         "bezier_in"
       );
-
-      this.makeShape(
+      //ajoute un cercle bleu pour la deuxième poignée
+      this.makeCircle(
         p.segt.point.add(p.segt.handleOut),
         "#1e25fbff",
         p.outPointId,
@@ -45,8 +58,8 @@ export default class CanvasView {
   }
 
   // Crée un cercle interactif
-  makeShape(point, color, id, type, inPtId, outPtId) {
-    const c = new paper.Path.Circle(point, 5);
+  makeCircle(point, color, id, type, inPtId, outPtId) {
+    const c = new paper.Path.Circle(point, 4);
     c.fillColor = color;
     c.data.type = type;
     c.data.id = id;
@@ -55,9 +68,10 @@ export default class CanvasView {
     return c;
   }
 
+  //Dessine la courbes principale et son offset sur le canvas
   renderCurves(curves, visibility, visibility_offset) {
     this.clear();
-    curves.forEach((curve) => this.drawShape(curve, visibility));
+    curves.forEach((curve) => this.drawCurve(curve, visibility));
     curves.forEach((curve) => this.drawOffset(curve, visibility_offset));
     // curves.forEach((curve) =>
     //   this.showPointsWithIndex(curve.offsetData.points)
@@ -66,6 +80,7 @@ export default class CanvasView {
     paper.view.update();
   }
 
+  //fonction de debug qui affiche l'order des points de la courbe
   showPointsWithIndex(points, radius = 15, color = "blue") {
     points.forEach((pt, i) => {
       // Créer le cercle
@@ -88,16 +103,28 @@ export default class CanvasView {
     });
   }
 
+  //Dessine la courbe d'offset à partir d'un tableau de points sur le canvas
   drawOffset(curve, visibility = true) {
     if (!visibility || !curve.offsetData?.points?.length) return;
 
     // --- Dessin de la courbe d’offset ---
-    const bez = new paper.Path({
+    const offsetCurve = new paper.Path({
       strokeColor: "green",
-      strokeWidth: 1,
+      strokeWidth: 2,
     });
 
-    bez.addSegments(curve.offsetData.points);
+    offsetCurve.addSegments(curve.offsetData.points);
+    offsetCurve.sendToBack();
+  }
+
+  // --- Méthode d’export PNG ---
+  exportAsImage(filename = "graphe.png") {
+    if (!this.canvas) return;
+    const dataURL = this.canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = dataURL;
+    link.download = filename;
+    link.click();
   }
 
   // Affiche les lignes de tangente sur le canvas

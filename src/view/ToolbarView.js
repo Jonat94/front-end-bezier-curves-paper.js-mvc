@@ -8,6 +8,7 @@ export default class ToolbarView {
     this.offsetBtn = document.getElementById("addOffsetBtn");
     this.offsetSlider = document.getElementById("offsetSlider");
     this.offsetValue = document.getElementById("offsetValue");
+    this.export = document.getElementById("exportBtn");
   }
 
   bindSlider(handler) {
@@ -64,5 +65,9 @@ export default class ToolbarView {
 
   setSelectedCurve(index) {
     this.curveSelect.value = index;
+  }
+
+  bindExport(handler) {
+    this.export.addEventListener("click", handler);
   }
 }
