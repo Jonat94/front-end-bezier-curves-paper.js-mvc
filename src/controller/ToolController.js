@@ -1,32 +1,32 @@
 export default class ToolController {
-  constructor(model, toolbarView, canView) {
-    this.model = model;
-    this.toolbarView = toolbarView;
+  constructor(mod, tlbView, canView) {
+    this.model = mod;
+    this.toolbarView = tlbView;
     this.canvasView = canView;
     this.model.createNewCurve();
     this.toolbarView.updateCurveList(this.model.curves);
 
     this.toolbarView.bindSlider((e) => {
       const value = parseFloat(e.target.value);
-      offsetValue.textContent = value;
+      this.toolbarView.offsetValue.textContent = value;
 
-      const curve = model.curves[model.currentCurveIndex];
+      const curve = this.model.curves[this.model.currentCurveIndex];
       if (!curve) return;
 
       // Mettre à jour l'offset de la courbe
-      model.curves[model.currentCurveIndex].offsetData.offset = value;
+      this.model.curves[this.model.currentCurveIndex].offsetData.offset = value;
 
       // Recalculer l'offset avec les points de la courbe
-      const points = model.getPointsFromCurves(model.curves); // renvoi les points echantilloné des courbes principal
+      const points = this.model.getPointsFromCurves(this.model.curves); // renvoi les points echantilloné des courbes principal
       points.forEach((point, index) =>
-        model.computeOffsetFromPoints(this.model.curves[index], point)
+        this.model.computeOffsetFromPoints(this.model.curves[index], point)
       );
 
       // 3Rerender la courbe avec la nouvelle offset
       this.canvasView.renderCurves(
-        model.curves,
-        model.handlesVisible,
-        model.offsetVisible
+        this.model.curves,
+        this.model.handlesVisible,
+        this.model.offsetVisible
       );
     });
 
@@ -79,7 +79,7 @@ export default class ToolController {
     this.toolbarView.bindToggleBackground(() => {
       this.model.backgroundVisible = !this.model.backgroundVisible;
       console.log("toggle background", this.model.backgroundVisible);
-      this.canvasView.setBackground(model.backgroundVisible);
+      this.canvasView.setBackground(this.model.backgroundVisible);
     });
 
     this.toolbarView.bindOffset(() => {
