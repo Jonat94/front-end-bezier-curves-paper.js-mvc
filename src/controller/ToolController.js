@@ -7,6 +7,7 @@ export default class ToolController {
     this.toolbarView.updateCurveList(this.model.curves);
     this.toolbarView.updateBackgroundCbx(this.model.backgroundVisible);
     this.toolbarView.updateHandlesViewCbx(this.model.handlesVisible);
+    this.toolbarView.updateOffsetViewCbx(this.model.offsetVisible);
 
     this.toolbarView.bindSlider((e) => {
       const value = parseFloat(e.target.value);

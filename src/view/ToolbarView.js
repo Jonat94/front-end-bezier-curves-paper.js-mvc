@@ -5,7 +5,7 @@ export default class ToolbarView {
     this.deleteBtn = document.getElementById("deleteBtn");
     this.addCurveBtn = document.getElementById("addCurveBtn");
     this.curveSelect = document.getElementById("curveSelect");
-    this.offsetBtn = document.getElementById("addOffsetBtn");
+    this.addOffsetCbxBtn = document.getElementById("offsetCbx");
     this.offsetSlider = document.getElementById("offsetSlider");
     this.offsetValue = document.getElementById("offsetValue");
     this.export = document.getElementById("exportBtn");
@@ -24,7 +24,7 @@ export default class ToolbarView {
   }
 
   bindOffset(handler) {
-    this.offsetBtn.addEventListener("click", handler);
+    this.addOffsetCbxBtn.addEventListener("click", handler);
   }
 
   bindToggleHandles(handler) {
@@ -70,6 +70,9 @@ export default class ToolbarView {
     this.offsetValue.value = offsetValue;
     this.offsetValue.innerText = offsetValue;
     // Add new options
+  }
+  updateOffsetViewCbx(visible) {
+    this.addOffsetCbxBtn.checked = visible;
   }
 
   setSelectedCurve(index) {
