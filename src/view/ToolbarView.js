@@ -1,6 +1,6 @@
 export default class ToolbarView {
   constructor() {
-    this.toggleHandlesBtn = document.getElementById("toggleHandlesBtn");
+    this.toggleHandlesCbx = document.getElementById("toggleHandlesCbx");
     this.deletePointBtn = document.getElementById("deletePointBtn");
     this.deleteBtn = document.getElementById("deleteBtn");
     this.addCurveBtn = document.getElementById("addCurveBtn");
@@ -9,11 +9,14 @@ export default class ToolbarView {
     this.offsetSlider = document.getElementById("offsetSlider");
     this.offsetValue = document.getElementById("offsetValue");
     this.export = document.getElementById("exportBtn");
-    this.toggleBackgroundBtn = document.getElementById("toggleBackgroundBtn");
+    this.toggleBackgroundCbx = document.getElementById("toggleBackgroundCbx");
   }
 
   bindToggleBackground(handler) {
-    this.toggleBackgroundBtn.addEventListener("click", handler);
+    this.toggleBackgroundCbx.addEventListener("click", handler);
+  }
+  updateBackgroundCbx(backgroundVisible) {
+    this.toggleBackgroundCbx.checked = backgroundVisible;
   }
 
   bindSlider(handler) {
@@ -25,7 +28,11 @@ export default class ToolbarView {
   }
 
   bindToggleHandles(handler) {
-    this.toggleHandlesBtn.addEventListener("click", handler);
+    this.toggleHandlesCbx.addEventListener("click", handler);
+  }
+
+  updateHandlesViewCbx(handlesVisible) {
+    this.toggleHandlesCbx.checked = handlesVisible;
   }
 
   bindAddCurve(handler) {
@@ -49,9 +56,6 @@ export default class ToolbarView {
 
   updateCurveList(curveNames) {
     this.curveSelect.innerHTML = "";
-
-    // Add new options
-
     curveNames.forEach((curve, index) => {
       const option = document.createElement("option");
       option.value = index;

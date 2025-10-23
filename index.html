@@ -18,15 +18,15 @@
 <body>
 
     <button id="deleteBtn">Effacer la courbe sélectionné</button>
-    <button id="toggleHandlesBtn">Masquer / Afficher les points</button>
+    <input type="checkbox" id="toggleHandlesCbx">Afficher les points
     <button id="deletePointBtn">Supprimer le point sélectionné</button>
     <select id="curveSelect"></select>
     <button id="addCurveBtn">Ajouter une nouvelle courbe</button>
-    <button id="addOffsetBtn">Masquer / Afficher les courbes paralleles</button>
+    <button id="addOffsetBtn">Masquer / Afficher la courbes paralleles</button>
     <label for="offsetSlider">Offset de la courbe :</label>
     <input type="range" id="offsetSlider" min="0" max="200" value="50" step="1">
     <span id="offsetValue">10</span>
-    <button id="toggleBackgroundBtn">Masquer / Afficher le fond</button>
+    <input type="checkbox" id="toggleBackgroundCbx">Afficher le fond
     <button id="exportBtn">Exporter en png</button>
 
     <canvas id="canvas" width="1000" height="500"></canvas>

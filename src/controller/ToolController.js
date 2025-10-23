@@ -5,6 +5,8 @@ export default class ToolController {
     this.canvasView = canView;
     this.model.createNewCurve();
     this.toolbarView.updateCurveList(this.model.curves);
+    this.toolbarView.updateBackgroundCbx(this.model.backgroundVisible);
+    this.toolbarView.updateHandlesViewCbx(this.model.handlesVisible);
 
     this.toolbarView.bindSlider((e) => {
       const value = parseFloat(e.target.value);
@@ -58,7 +60,7 @@ export default class ToolController {
 
     this.toolbarView.bindToggleHandles(() => {
       this.model.handlesVisible = !this.model.handlesVisible;
-      //console.log("toggle");
+      console.log("toggle handles");
       this.canvasView.renderCurves(
         this.model.curves,
         this.model.handlesVisible,

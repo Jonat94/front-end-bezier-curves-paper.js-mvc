@@ -17,16 +17,22 @@ export default class CanvasView {
     this.foregroundLayer.activate();
   }
 
-  //definie la veisibilité du fond
+  //definie la visibilité du fond
   setBackground(visibility) {
     if (visibility) this.backgroundLayer.visible = true;
     else this.backgroundLayer.visible = false;
+  }
+
+  //definie la visibilité des handles
+  setHandlesVisible(visibility) {
+    console.log("aaaaaa");
   }
 
   //efface tous les elements du premier plan
   clear() {
     this.foregroundLayer.removeChildren();
   }
+
   //dessine une courbe dans le canvase
   drawCurve(curve, visibility = true) {
     const path = new paper.Path();
