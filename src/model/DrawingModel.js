@@ -1,6 +1,6 @@
 import * as ClipperLib from "clipper-lib";
 import paper from "../paperSetup.js";
-
+("mode strict");
 export default class DrawingModel {
   constructor() {
     //console.log("Paper project ID:", paper.project);
@@ -90,13 +90,17 @@ export default class DrawingModel {
     curve.handles.forEach((p) => path.add(p.segt));
 
     // Filtrer les points existants dans offsetData
-    let belowPoints = curve.offsetData.points.filter((pt) => {
+    let belowPoints = curve.offsetData.points.filter((pt, index) => {
       const paperPt = new paper.Point(pt.x, pt.y);
       const nearest = path.getNearestLocation(paperPt);
       const tangent = path.getTangentAt(nearest.offset).normalize();
       const normal = tangent.rotate(-90).normalize(); // vers le bas
       const vec = paperPt.subtract(nearest.point);
-      return vec.dot(normal) < 0; // <0 si le point est en dessous
+      //console.log("hhhhhhhh" + vec.dot(normal) + " " + index);
+      return (
+        //vec.dot(normal) < 0 &&
+        vec.dot(normal) < -1 * curve.offsetData.offset + 0.1 //Ajustement pour eviter que certaine points passent au dessus de la normal dans certain cas avec un angle tres aigue
+      ); // <0 si le point est en dessous
     });
 
     // Réordonner pour que le point le plus proche du début devienne le premier
@@ -128,11 +132,11 @@ export default class DrawingModel {
     const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
     this.curves.forEach((curve, i) => {
       const points = allPoints[i];
-      this.computeOffsetFromPoints(curve, points); // envoi les points offset calculé au modele pour filtrage et stockage
+      this.computeOffsetFromPoints(curve, points); // envoi les points offset calculé a computeOffsetFromPoints pour filtrage et stockage
     });
   }
 
-  //retourn l'echantillonga de toutes les courbes de bezier dans un array
+  //retourne l'echantillonage de toutes les courbes de bezier dans un array
   getPointsFromCurves() {
     return this.curves.map((curve) => {
       const path = new paper.Path();
@@ -153,7 +157,7 @@ export default class DrawingModel {
 
   //Cette fonction trie les points d’offset d’une courbe pour qu’ils suivent l’ordre de la courbe principale
   // en fonction de leur position la plus proche sur celle-ci.
-  sortOffsetPointsAlongCurve(curve, sampleStep = 5) {
+  sortOffsetPointsAlongCurve(curve) {
     if (!curve.offsetData?.points?.length) return [];
 
     // Créer un path temporaire à partir des points de la courbe principal

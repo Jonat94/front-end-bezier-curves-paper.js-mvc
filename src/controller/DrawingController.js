@@ -15,7 +15,7 @@ export default class DrawingController {
     const tool = new paper.Tool();
 
     tool.onMouseDown = (event) => {
-      console.log("tu as clické ", event.point);
+      //console.log("tu as clické ", event.point);
       const curve = this.model.curves[this.model.currentCurveIndex];
       if (!curve) return;
 
