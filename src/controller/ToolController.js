@@ -80,6 +80,48 @@ export default class ToolController {
       );
     });
 
+    this.toolbarView.bindSave(() => {
+      this.model.exportCurve();
+      console.log("export");
+    });
+
+    this.toolbarView.bindImport((event) => {
+      const file = event.target.files[0]; // Récupère le fichier choisi
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result; // Contenu du fichier JSON
+        try {
+          //const data = JSON.parse(content);
+          //console.log("JSON importé :", data);
+
+          // Charger les données dans ton modèle
+          this.model.importCurve(content);
+
+          // Redessiner les courbes sur le canvas
+          // controller.view.renderCurves(
+          //     controller.model.curves,
+          //     controller.model.handlesVisible,
+          //     controller.model.offsetVisible
+          // );
+          this.model.computeOffset();
+          this.canvasView.renderCurves(
+            this.model.curves,
+            this.model.handlesVisible,
+            this.model.offsetVisible
+          );
+          this.toolbarView.updateCurveList(this.model.curves);
+
+          this.model.currentCurveIndex = 0;
+        } catch (err) {
+          console.error("Erreur JSON :", err);
+        }
+      };
+
+      reader.readAsText(file); // Lit le fichier comme texte
+    });
+
     this.toolbarView.bindToggleBackground(() => {
       this.model.backgroundVisible = !this.model.backgroundVisible;
       console.log("toggle background", this.model.backgroundVisible);

@@ -64,7 +64,7 @@ export default class DrawingModel {
       let lastPt = null;
       offsetPointsRaw.forEach((pt) => {
         //reduit le nombre de point à calsculer
-        if (!lastPt || pt.getDistance(lastPt) >= 4) {
+        if (!lastPt || pt.getDistance(lastPt) >= 2) {
           //ajoute les coordonnées des points de l'offeset dans ofsetdata
           curve.offsetData.points.push(pt);
           lastPt = pt;
@@ -98,7 +98,7 @@ export default class DrawingModel {
       const vec = paperPt.subtract(nearest.point);
       //console.log("hhhhhhhh" + vec.dot(normal) + " " + index);
       return (
-        //vec.dot(normal) < 0 &&
+        // vec.dot(normal) < 0
         vec.dot(normal) < -1 * curve.offsetData.offset + 0.1 //Ajustement pour eviter que certaine points passent au dessus de la normal dans certain cas avec un angle tres aigue
       ); // <0 si le point est en dessous
     });
@@ -281,5 +281,50 @@ export default class DrawingModel {
     } else if (this.currentCurveIndex >= this.curves.length) {
       this.currentCurveIndex = this.curves.length - 1; // Aller à la dernière courbe
     }
+  }
+
+  exportCurve() {
+    const jsonData = JSON.stringify(this.curves[this.currentCurveIndex]);
+    const blob = new Blob([jsonData], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `drawing${this.currentCurveIndex}.json`;
+    link.click();
+    console.log(jsonData);
+  }
+
+  importCurve(jsonData) {
+    console.log(jsonData);
+    //const reader = new FileReader();
+    //reader.onload = (e) => {
+    //const content = e.target.result; // Contenu du fichier JSON
+    const data = JSON.parse(jsonData);
+    console.log("lllllll", data);
+    let curve;
+    curve = data;
+    const handles = data.handles.map((h) => ({
+      id: h.id,
+      inPointId: h.inPointId,
+      outPointId: h.outPointId,
+      segt: new paper.Segment(
+        new paper.Point(h.segt[1][0], h.segt[1][1]),
+        new paper.Point(h.segt[2][0], h.segt[2][1]),
+        new paper.Point(h.segt[3][0], h.segt[3][1])
+      ),
+    }));
+    console.log("oooooooooo", handles);
+    curve.handles = handles;
+
+    console.log("jjjj", curve);
+    this.curves.push(curve);
+    // controller.model.fromJSON(content); // Charge dans le modèle
+    // controller.view.renderCurves(
+    //   controller.model.curves,
+    //   controller.model.handlesVisible,
+    //   controller.model.offsetVisible
+    // );
+    //};
+
+    // reader.readAsText(file); // Lit le fichier en tant que texte
   }
 }

@@ -25,7 +25,7 @@ export default class DrawingController {
         stroke: true, // (optionnel) détecte aussi les bords
         tolerance: 5, // marge d’erreur (px)
       });
-
+      //TESTER AUSSI SI L'ITEM EST SUR LA COURBE SELCETIONNEE
       if (
         hit &&
         hit.item &&

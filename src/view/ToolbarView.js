@@ -10,6 +10,8 @@ export default class ToolbarView {
     this.offsetValue = document.getElementById("offsetValue");
     this.export = document.getElementById("exportBtn");
     this.toggleBackgroundCbx = document.getElementById("toggleBackgroundCbx");
+    this.save = document.getElementById("saveBtn");
+    this.importInput = document.getElementById("importFile");
   }
 
   bindToggleBackground(handler) {
@@ -81,5 +83,11 @@ export default class ToolbarView {
 
   bindExport(handler) {
     this.export.addEventListener("click", handler);
+  }
+  bindSave(handler) {
+    this.save.addEventListener("click", handler);
+  }
+  bindImport(handler) {
+    this.importInput.addEventListener("change", handler);
   }
 }
