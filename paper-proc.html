@@ -90,7 +90,7 @@
                     //il faut maintenant filtrer les points qui nous interesse.
 
 
-                    //this.filterPointsAbove(curve); // semble inutile en fait avec le trie des points
+                    this.filterPointsAbove(curve); // semble inutile en fait avec le trie des points
 
                     this.filterOffsetPointsBelowCurve(curve);
 
@@ -115,7 +115,7 @@
                     const vec = paperPt.subtract(nearest.point);
                     //console.log("hhhhhhhh" + vec.dot(normal) + " " + index);
                     return (
-                        //vec.dot(normal) < 0 &&
+                        //vec.dot(normal) < 0
                         vec.dot(normal) < -1 * curve.offsetData.offset + 0.9 //Ajustement pour eviter que certaine points passent au dessus de la normal dans certain cas avec un angle tres aigue
                     ); // <0 si le point est en dessous
                 });
@@ -246,7 +246,7 @@
                         line: null,
                         sampleStep: 5,
                         scale: 100,
-                        offset: 10,
+                        offset: 20,
                     },
                 });
                 this.currentCurveIndex = this.curves.length - 1; // mettre à jour l'index de la courbe courante

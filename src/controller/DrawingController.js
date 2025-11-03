@@ -33,24 +33,16 @@ export default class DrawingController {
           hit.item.data.type == "bezier_in" ||
           hit.item.data.type == "bezier_out")
       ) {
-        if (
-          hit.item.data.type == "bezier_in" ||
-          hit.item.data.type == "bezier_out"
-        ) {
-          //console.log("item clické", hit.item);
-          this.model.selectedItem = hit.item;
-
-          // console.log("Handle Bézier sélectionné parmi :", curve.handles);
-          this.dragOffset = event.point.subtract(
-            this.model.selectedItem.position
-          );
-          return;
-        }
         // Si un élément a été cliqué
-        const item = hit.item;
+        //const item =
         //console.log("Tu as cliqué sur :", item);
+        let test = this.isItemOnSelectedCurve(
+          hit.item,
+          this.model.curves[this.model.currentCurveIndex]
+        );
+        console.log(test);
 
-        this.model.selectedItem = item;
+        this.model.selectedItem = hit.item;
         this.dragOffset = event.point.subtract(
           this.model.selectedItem.position
         );
@@ -84,23 +76,33 @@ export default class DrawingController {
         );
 
         let tab;
-        if (this.model.selectedItem.data.type == "circle") {
+        if (
+          this.model.selectedItem.data.type == "circle" &&
+          this.isItemOnSelectedCurve(this.model.selectedItem, curve)
+        ) {
           //TO DO verifier que l'item selectionné appartient bien à la courbe selectionné.
-          //console.log("circle");
+          console.log("hhhhh", this.model.selectedItem.data);
+          console.log("lllll", curve.handles);
           tab = curve.handles.filter(
             (e) => e.id == this.model.selectedItem.data.id
           );
           tab[0].segt.point = tab[0].segt.point.add(event.delta);
         }
 
-        if (this.model.selectedItem.data.type == "bezier_in") {
+        if (
+          this.model.selectedItem.data.type == "bezier_in" &&
+          this.isItemOnSelectedCurve(this.model.selectedItem, curve)
+        ) {
           tab = curve.handles.filter(
             (e) => e.inPointId == this.model.selectedItem.data.id
           );
           tab[0].segt.handleIn = tab[0].segt.handleIn.add(event.delta);
         }
 
-        if (this.model.selectedItem.data.type == "bezier_out") {
+        if (
+          this.model.selectedItem.data.type == "bezier_out" &&
+          this.isItemOnSelectedCurve(this.model.selectedItem, curve)
+        ) {
           tab = curve.handles.filter(
             (e) => e.outPointId == this.model.selectedItem.data.id
           );
@@ -124,5 +126,23 @@ export default class DrawingController {
         this.model.offsetVisible
       );
     };
+  }
+
+  /**
+   * Vérifie si l'item sélectionné appartient à la courbe actuellement sélectionnée
+   * @param {Object} itemData - data de l'item Paper.js sélectionné (hit.item.data)
+   * @param {Object} curve - courbe actuellement sélectionnée (model.curves[currentCurveIndex])
+   * @returns {boolean} true si l'item appartient à la courbe, false sinon
+   */
+  isItemOnSelectedCurve(itemData, curve) {
+    console.log("tttttt", itemData, curve.handles);
+    if (!itemData || !curve || !curve.handles) return false;
+    console.log("mmmmmmmm");
+    return curve.handles.some(
+      (h) =>
+        h.id === itemData.data.id ||
+        h.inPointId === itemData.data.id ||
+        h.outPointId === itemData.data.id
+    );
   }
 }
