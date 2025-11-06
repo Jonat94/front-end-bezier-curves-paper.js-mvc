@@ -71,59 +71,95 @@ export default class DrawingModel {
         }
       });
 
-      //ici le tableau points contient la totalité des points de la courbe offset
-      //il faut maintenant filtrer les points qui nous interesse.
-      this.filterPointsAbove(curve);
-
-      this.filterOffsetPointsBelowCurve(curve);
-
-      this.sortOffsetPointsAlongCurve(curve);
+      //Faire commencer le tableau au point le plus proche du debut de la courbe
+      this.alignOffsetStart(curve);
+      // Inversion du tableau pour avoir la courbe de dessous
+      curve.offsetData.points.reverse();
+      // Récupérer l'indice du point le plus proche de la fin
+      const closestIndex = this.getClosestOffsetPointToEnd(curve);
+      // Garde seulement les points du debut du tableau jusqu'à closestIndex inclus
+      curve.offsetData.points = curve.offsetData.points.slice(
+        0,
+        closestIndex + 1
+      );
+      //retirer les bords de la courbe pour eviter d'avoir des arrondis.
+      this.filterCornerPoints(curve);
     }
   }
 
-  filterOffsetPointsBelowCurve(curve) {
-    if (!curve.offsetData?.points?.length) return [];
+  // acctuellement supprime les coté de la courbe offset
+  filterCornerPoints(curve) {
+    //creation d'une nouvelle courbe de bezier avec les points de la courbe principale
+    let start = curve.handles[0].segt.point;
+    let end = curve.handles[curve.handles.length - 1].segt.point;
+    const filteredPoints = [];
 
-    // Créer un path temporaire à partir des handles
-    const path = new paper.Path();
-    path.visible = false;
-    curve.handles.forEach((p) => path.add(p.segt));
+    // filtrage des points proches des extrémités pour ouvrir la courbe dee chaque coté
+    curve.offsetData.points.forEach((pt) => {
+      const distStart = pt.getDistance(start);
+      const distEnd = pt.getDistance(end);
 
-    // Filtrer les points existants dans offsetData
-    let belowPoints = curve.offsetData.points.filter((pt, index) => {
-      const paperPt = new paper.Point(pt.x, pt.y);
-      const nearest = path.getNearestLocation(paperPt);
-      const tangent = path.getTangentAt(nearest.offset).normalize();
-      const normal = tangent.rotate(-90).normalize(); // vers le bas
-      const vec = paperPt.subtract(nearest.point);
-      //console.log("hhhhhhhh" + vec.dot(normal) + " " + index);
-      return (
-        // vec.dot(normal) < 0
-        vec.dot(normal) < -1 * curve.offsetData.offset + 0.1 //Ajustement pour eviter que certaine points passent au dessus de la normal dans certain cas avec un angle tres aigue
-      ); // <0 si le point est en dessous
+      // Si le point est à une distance d'un offset du début ou de la fin de la courbe principale,
+      // on le supprime du tableau.
+      if (
+        distStart <= curve.offsetData.offset + 1 ||
+        distEnd <= curve.offsetData.offset + 1
+      ) {
+        //console.log("Point supprimé (trop proche des extrémités)");
+      } else {
+        filteredPoints.push(pt); // sinon on place le points dans le tableau filtré
+      }
     });
+    // Remplacer l'ancien tableau tableau de point par le nouveau tableau filtré
+    curve.offsetData.points = filteredPoints;
+  }
 
-    // Réordonner pour que le point le plus proche du début devienne le premier
-    const start = curve.handles[0].segt.point;
+  getClosestOffsetPointToEnd(curve) {
+    if (!curve.offsetData?.points?.length || !curve.handles?.length)
+      return null;
+
+    // Dernier point de la courbe principale
+    const endPoint = curve.handles[curve.handles.length - 1].segt.point;
+
+    let minDistance = Infinity;
     let closestIndex = 0;
-    let minDist = Infinity;
-    belowPoints.forEach((pt, i) => {
-      const dist = new paper.Point(pt.x, pt.y).getDistance(start);
-      if (dist < minDist) {
-        minDist = dist;
+
+    curve.offsetData.points.forEach((pt, i) => {
+      const d = pt.getDistance(endPoint);
+      if (d < minDistance) {
+        minDistance = d;
         closestIndex = i;
       }
     });
 
-    if (closestIndex > 0) {
-      belowPoints = [
-        ...belowPoints.slice(closestIndex),
-        ...belowPoints.slice(0, closestIndex),
-      ];
-    }
+    return closestIndex;
+  }
 
-    // Mettre à jour offsetData.points
-    curve.offsetData.points = belowPoints;
+  // Décale les indices du tableau de points d'offset pour l'aligner
+  // avec le début de la courbe principale
+  alignOffsetStart(curve) {
+    if (!curve.offsetData?.points?.length || !curve.handles?.length) return;
+
+    // Premier point de la courbe principale
+    const startPoint = curve.handles[0].segt.point;
+
+    // Cherche l’index du point d’offset le plus proche du début de la courbe principale
+    let minDist = Infinity;
+    let bestIndex = 0;
+
+    curve.offsetData.points.forEach((pt, i) => {
+      const d = pt.getDistance(startPoint);
+      if (d < minDist) {
+        minDist = d;
+        bestIndex = i;
+      }
+    });
+
+    // Rotation du tableau : on met bestIndex en premier
+    curve.offsetData.points = [
+      ...curve.offsetData.points.slice(bestIndex),
+      ...curve.offsetData.points.slice(0, bestIndex),
+    ];
   }
 
   //retourne un echantillonage des courbes principales
@@ -153,60 +189,6 @@ export default class DrawingModel {
       }
       return sampledPoints;
     });
-  }
-
-  //Cette fonction trie les points d’offset d’une courbe pour qu’ils suivent l’ordre de la courbe principale
-  // en fonction de leur position la plus proche sur celle-ci.
-  sortOffsetPointsAlongCurve(curve) {
-    if (!curve.offsetData?.points?.length) return [];
-
-    // Créer un path temporaire à partir des points de la courbe principal
-    const path = new paper.Path();
-    path.visible = false;
-    curve.handles.forEach((p) => path.add(p.segt));
-
-    // Pour chaque point d'offset, trouver sa position le plus proche de la courbe principale
-    const pointsWithOffset = curve.offsetData.points.map((pt) => {
-      const paperPt = new paper.Point(pt.x, pt.y);
-      const location = path.getNearestLocation(paperPt);
-      return { pt, offset: location.offset };
-    });
-
-    // Trier les points selon leur position la plus proche de la courbe principal
-    pointsWithOffset.sort((a, b) => a.offset - b.offset);
-
-    // Extraire seulement les points triés
-    const sortedPoints = pointsWithOffset.map((p) => p.pt);
-
-    // Mettre à jour offsetData points
-    curve.offsetData.points = sortedPoints;
-  }
-
-  // acctuellement supprime les coté de la courbe offset
-  filterPointsAbove(curve) {
-    //creation d'une nouvelle courbe de bezier avec les points de la courbe principale
-    let start = curve.handles[0].segt.point;
-    let end = curve.handles[curve.handles.length - 1].segt.point;
-    const filteredPoints = [];
-
-    // filtrage des points proches des extrémités pour ouvrir la courbe dee chaque coté
-    curve.offsetData.points.forEach((pt) => {
-      const distStart = pt.getDistance(start);
-      const distEnd = pt.getDistance(end);
-
-      // Si le point est à une distance d'un offset du début ou de la fin de la courbe principale,
-      // on le supprime du tableau.
-      if (
-        distStart <= curve.offsetData.offset + 1 ||
-        distEnd <= curve.offsetData.offset + 1
-      ) {
-        //console.log("Point supprimé (trop proche des extrémités)");
-      } else {
-        filteredPoints.push(pt); // sinon on place le points dans le tableau filtré
-      }
-    });
-    // Remplacer l'ancien tableau tableau de point par le nouveau tableau filtré
-    curve.offsetData.points = filteredPoints;
   }
 
   //supprime le point sélctionné (a réécrire)...
@@ -295,9 +277,6 @@ export default class DrawingModel {
 
   importCurve(jsonData) {
     console.log(jsonData);
-    //const reader = new FileReader();
-    //reader.onload = (e) => {
-    //const content = e.target.result; // Contenu du fichier JSON
     const data = JSON.parse(jsonData);
     console.log("lllllll", data);
     let curve;
@@ -312,10 +291,10 @@ export default class DrawingModel {
         new paper.Point(h.segt[3][0], h.segt[3][1])
       ),
     }));
-    console.log("oooooooooo", handles);
+    //console.log("oooooooooo", handles);
     curve.handles = handles;
 
-    console.log("jjjj", curve);
+    //console.log("jjjj", curve);
     this.curves.push(curve);
   }
 }

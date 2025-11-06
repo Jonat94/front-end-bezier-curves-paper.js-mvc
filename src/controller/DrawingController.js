@@ -40,7 +40,7 @@ export default class DrawingController {
           hit.item,
           this.model.curves[this.model.currentCurveIndex]
         );
-        console.log(test);
+        //console.log(test);
 
         this.model.selectedItem = hit.item;
         this.dragOffset = event.point.subtract(
@@ -81,8 +81,8 @@ export default class DrawingController {
           this.isItemOnSelectedCurve(this.model.selectedItem, curve)
         ) {
           //TO DO verifier que l'item selectionné appartient bien à la courbe selectionné.
-          console.log("hhhhh", this.model.selectedItem.data);
-          console.log("lllll", curve.handles);
+          //console.log("hhhhh", this.model.selectedItem.data);
+          //console.log("lllll", curve.handles);
           tab = curve.handles.filter(
             (e) => e.id == this.model.selectedItem.data.id
           );
@@ -135,9 +135,9 @@ export default class DrawingController {
    * @returns {boolean} true si l'item appartient à la courbe, false sinon
    */
   isItemOnSelectedCurve(itemData, curve) {
-    console.log("tttttt", itemData, curve.handles);
+    //console.log("tttttt", itemData, curve.handles);
     if (!itemData || !curve || !curve.handles) return false;
-    console.log("mmmmmmmm");
+    //console.log("mmmmmmmm");
     return curve.handles.some(
       (h) =>
         h.id === itemData.data.id ||

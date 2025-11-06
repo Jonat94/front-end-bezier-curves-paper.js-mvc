@@ -124,7 +124,7 @@ export default class ToolController {
 
     this.toolbarView.bindToggleBackground(() => {
       this.model.backgroundVisible = !this.model.backgroundVisible;
-      console.log("toggle background", this.model.backgroundVisible);
+      //console.log("toggle background", this.model.backgroundVisible);
       this.canvasView.setBackground(this.model.backgroundVisible);
     });
 
@@ -135,7 +135,7 @@ export default class ToolController {
 
   renderOffset() {
     const curves = this.model.curves;
-    console.log(" masquer offset");
+    //console.log(" masquer offset");
     this.model.offsetVisible = !this.model.offsetVisible;
     this.canvasView.renderCurves(
       this.model.curves,
