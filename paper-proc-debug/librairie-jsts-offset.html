@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Offset interactif avec handles</title>
+    <script src="https://unpkg.com/paper@0.12.15/dist/paper-full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsts/2.6.2/jsts.min.js"></script>
+    <style>
+        canvas {
+            width: 800px;
+            height: 600px;
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" resize></canvas>
+    <script>
+        paper.setup('myCanvas');
+
+        // ====== Modèle pour gérer les points et handles ======
+        class CurveModel {
+            constructor() {
+                this.points = []; // {seg: paper.Segment, in: handle, out: handle, circle, inCircle, outCircle}
+                this.offsetPath = null;
+            }
+
+            addPoint(pos) {
+                const seg = new paper.Segment(pos, new paper.Point(-50, 0), new paper.Point(50, 0));
+                const circle = new paper.Path.Circle({ center: pos, radius: 6, fillColor: 'red' });
+                const inCircle = new paper.Path.Circle({ center: pos.add(seg.handleIn), radius: 4, fillColor: 'blue' });
+                const outCircle = new paper.Path.Circle({ center: pos.add(seg.handleOut), radius: 4, fillColor: 'blue' });
+
+                this.points.push({ seg, circle, inCircle, outCircle });
+                return this.points[this.points.length - 1];
+            }
+        }
+
+        // ====== Calcul offset via JSTS ======
+        function computeOffset(curveModel, distance = 40) {
+            if (curveModel.points.length < 2) return;
+            const gf = new jsts.geom.GeometryFactory();
+            const coords = curveModel.points.map(p => new jsts.geom.Coordinate(p.seg.point.x, p.seg.point.y));
+            const line = gf.createLineString(coords);
+            const buffer = line.buffer(distance);
+            const shell = buffer.getExteriorRing();
+            const shellCoords = shell.getCoordinates();
+            const offsetPts = shellCoords.map(c => new paper.Point(c.x, c.y));
+
+            // Filtrer côté unique
+            const mainPath = new paper.Path(curveModel.points.map(p => p.seg));
+            const filtered = offsetPts.filter(pt => {
+                const loc = mainPath.getNearestLocation(pt);
+                const tangent = mainPath.getTangentAt(loc.offset);
+                if (!tangent) return false;
+                const normal = tangent.rotate(-90).normalize();
+                const vec = pt.subtract(loc.point);
+                return vec.dot(normal) > 0;
+            });
+
+            if (curveModel.offsetPath) curveModel.offsetPath.remove();
+            curveModel.offsetPath = new paper.Path({
+                strokeColor: 'green',
+                strokeWidth: 2
+            });
+            curveModel.offsetPath.addSegments(filtered);
+            mainPath.remove();
+            paper.view.update();
+        }
+
+        // ====== Initialisation ======
+        const model = new CurveModel();
+
+        // Ajouter quelques points par défaut
+        model.addPoint(new paper.Point(100, 300));
+        model.addPoint(new paper.Point(300, 100));
+        model.addPoint(new paper.Point(500, 300));
+        model.addPoint(new paper.Point(700, 200));
+
+        computeOffset(model);
+
+        // ====== Interaction ======
+        let selected = null;
+        let dragOffset = null;
+        const tool = new paper.Tool();
+
+        tool.onMouseDown = function (event) {
+            for (let p of model.points) {
+                if (p.circle.contains(event.point)) {
+                    selected = p;
+                    dragOffset = event.point.subtract(p.seg.point);
+                    return;
+                }
+                if (p.inCircle.contains(event.point)) {
+                    selected = p;
+                    selected.dragHandle = 'in';
+                    dragOffset = event.point.subtract(p.seg.point.add(p.seg.handleIn));
+                    return;
+                }
+                if (p.outCircle.contains(event.point)) {
+                    selected = p;
+                    selected.dragHandle = 'out';
+                    dragOffset = event.point.subtract(p.seg.point.add(p.seg.handleOut));
+                    return;
+                }
+            }
+        }
+
+        tool.onMouseDrag = function (event) {
+            if (!selected) return;
+            if (selected.dragHandle === 'in') {
+                selected.seg.handleIn = event.point.subtract(selected.seg.point).subtract(dragOffset);
+                selected.inCircle.position = selected.seg.point.add(selected.seg.handleIn);
+            } else if (selected.dragHandle === 'out') {
+                selected.seg.handleOut = event.point.subtract(selected.seg.point).subtract(dragOffset);
+                selected.outCircle.position = selected.seg.point.add(selected.seg.handleOut);
+            } else {
+                selected.seg.point = event.point.subtract(dragOffset);
+                selected.circle.position = selected.seg.point;
+                selected.inCircle.position = selected.seg.point.add(selected.seg.handleIn);
+                selected.outCircle.position = selected.seg.point.add(selected.seg.handleOut);
+            }
+
+            computeOffset(model);
+        }
+
+        tool.onMouseUp = function (event) {
+            selected = null;
+            dragOffset = null;
+            delete selected?.dragHandle;
+        }
+
+    </script>
+</body>
+
+</html>

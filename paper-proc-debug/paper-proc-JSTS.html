@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <title>template paper.js</title>
+    <script src="https://unpkg.com/paper@0.12.15/dist/paper-full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/clipper.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsts@2.7.0/dist/jsts.min.js"></script>
+
+    <style>
+        canvas {
+            width: 800px;
+            height: 600px;
+            background-color: rgb(239, 239, 239);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" resize></canvas>
+
+    <script type="text/javascript">
+
+
+        class DrawingModel {
+            constructor() {
+                this.curves = [];
+                this._idCounter = 0;
+                this.curveCounter = 0;
+                this.handlesVisible = true;
+                this.offsetVisible = true;
+                this.backgroundVisible = false;
+                this.selectedItem = null;
+                this.createNewCurve();
+
+                this.enableFilterCornerPoints = true;
+                this.enableFilterOffsetPointsBelowCurve = true;
+                this.enableSortOffsetPointsAlongCurve = true;
+
+                this.pointQuantity = 5;
+                this.vectorDotNormal = true;
+            }
+
+            // Calcul de l'offset avec JSTS
+            computeOffsetFromPoints(curve, points) {
+                if (!points || points.length < 2) return;
+
+                const geometryFactory = new jsts.geom.GeometryFactory();
+                const coordArray = points.map(pt => new jsts.geom.Coordinate(pt.x, pt.y));
+                const lineString = geometryFactory.createLineString(coordArray);
+
+                // Création du buffer pour l'offset
+                const bufferOp = new jsts.operation.buffer.BufferOp(lineString);
+                const bufferGeometry = bufferOp.getResultGeometry(curve.offsetData.offset);
+
+                // Conversion en points Paper.js
+                const offsetCoords = bufferGeometry.getCoordinates();
+                curve.offsetData.points = offsetCoords.map(c => new paper.Point(c.x, c.y));
+
+                // Réduction du nombre de points si besoin
+                for (let i = curve.offsetData.points.length - 1; i >= 0; i--) {
+                    if (i % this.pointQuantity !== 0) {
+                        curve.offsetData.points.splice(i, 1);
+                    }
+                }
+
+                // Application des filtres existants
+                this.alignOffsetStart(curve);
+                const closestIndex = this.getClosestOffsetPointToEnd(curve);
+                curve.offsetData.points = curve.offsetData.points.slice(0, closestIndex + 1);
+
+                if (this.enableFilterCornerPoints) {
+                    this.filterCornerPoints(curve);
+                }
+            }
+
+            computeOffset() {
+                if (!this.curves) return;
+                const allPoints = this.getPointsFromCurves(this.curves);
+                this.curves.forEach((curve, i) => {
+                    const points = allPoints[i];
+                    this.computeOffsetFromPoints(curve, points);
+                });
+            }
+
+            getPointsFromCurves() {
+                return this.curves.map((curve) => {
+                    const path = new paper.Path();
+                    path.visible = false;
+                    curve.handles.forEach((p) => path.add(p.segt));
+
+                    const sampledPoints = [];
+                    for (let s = 0; s <= path.length; s += curve.offsetData.sampleStep) {
+                        const p = path.getPointAt(s);
+                        if (p) sampledPoints.push(p);
+                    }
+                    return sampledPoints;
+                });
+            }
+
+            getClosestOffsetPointToEnd(curve) {
+                if (!curve.offsetData?.points?.length || !curve.handles?.length) return null;
+                const endPoint = curve.handles[curve.handles.length - 1].segt.point;
+
+                let minDistance = Infinity;
+                let closestIndex = 0;
+
+                curve.offsetData.points.forEach((pt, i) => {
+                    const d = pt.getDistance(endPoint);
+                    if (d < minDistance) {
+                        minDistance = d;
+                        closestIndex = i;
+                    }
+                });
+
+                return closestIndex;
+            }
+
+            alignOffsetStart(curve) {
+                if (!curve.offsetData?.points?.length || !curve.handles?.length) return;
+                const startPoint = curve.handles[0].segt.point;
+
+                let minDist = Infinity;
+                let bestIndex = 0;
+
+                curve.offsetData.points.forEach((pt, i) => {
+                    const d = pt.getDistance(startPoint);
+                    if (d < minDist) {
+                        minDist = d;
+                        bestIndex = i;
+                    }
+                });
+
+                curve.offsetData.points = [
+                    ...curve.offsetData.points.slice(bestIndex),
+                    ...curve.offsetData.points.slice(0, bestIndex)
+                ];
+            }
+
+            filterCornerPoints(curve) {
+                let start = curve.handles[0].segt.point;
+                let end = curve.handles[curve.handles.length - 1].segt.point;
+                const filteredPoints = [];
+
+                curve.offsetData.points.forEach((pt) => {
+                    const distStart = pt.getDistance(start);
+                    const distEnd = pt.getDistance(end);
+                    if (distStart > curve.offsetData.offset + 1 && distEnd > curve.offsetData.offset + 1) {
+                        filteredPoints.push(pt);
+                    }
+                });
+
+                curve.offsetData.points = filteredPoints;
+            }
+
+            clear() {
+                this.shapes = [];
+                this.selectedShape = null;
+            }
+
+            createNewCurve(name = `Courbe ${++this.curveCounter}`) {
+                const handles = [];
+                this.curves.push({
+                    name,
+                    handles,
+                    offsetData: {
+                        points: [],
+                        line: null,
+                        sampleStep: 5,
+                        offset: 20,
+                    },
+                });
+                this.currentCurveIndex = this.curves.length - 1;
+            }
+
+            generateId(prefix = "id") {
+                this._idCounter += 1;
+                return `${prefix}-${this._idCounter}`;
+            }
+        }
+
+
+
+
+
+    </script>
+</body>
+
+</html>

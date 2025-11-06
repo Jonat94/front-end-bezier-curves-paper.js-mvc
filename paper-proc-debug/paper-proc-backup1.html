@@ -18,7 +18,7 @@
 <body>
     <canvas id="myCanvas" resize></canvas>
 
-    <script text="text/javascript">
+    <script type="text/javascript">
         class DrawingModel {
             constructor() {
                 this.curves = []; // array des courbes sur le canvas
@@ -29,6 +29,17 @@
                 this.backgroundVisible = false; //Flag permettant de specifier si le fond doit s'afficher.
                 this.selectedItem = null; //item paper selectionné sur le canvas (à placer dans la vue)
                 this.createNewCurve(); //cree la premiere courbe vide
+
+                //DEBUG :
+                //this.processCurve = true;
+
+                this.enableFilterCornerPoints = true;
+                this.enableFilterOffsetPointsBelowCurve = true;
+                this.enableSortOffsetPointsAlongCurve = true;
+
+
+                this.pointQuantity = 5;
+                this.vectorDotNormal = true;
             }
 
             //construit le tableau à partir de tous les points echantillioné sur la courbe
@@ -74,29 +85,52 @@
                                 pt.Y / curve.offsetData.scale
                             )
                     );
-
+                    console.log(offsetPointsRaw[10].getDistance(offsetPointsRaw[15]));
                     //Reduction du nombre de point calculé pour accélérer les calcules
-                    let lastPt = null;
-                    offsetPointsRaw.forEach((pt) => {
-                        //reduit le nombre de point à calsculer
-                        if (!lastPt || pt.getDistance(lastPt) >= 4) {
+                    if (false) {
+                        let lastPt = null;
+                        offsetPointsRaw.forEach((pt) => {
+                            //reduit le nombre de point à calculer
+                            if (!lastPt || pt.getDistance(lastPt) >= this.pointQuantity) {
+                                //ajoute les coordonnées des points de l'offset dans ofsetdata
+                                curve.offsetData.points.push(pt);
+                                lastPt = pt;
+                            }
+                        });
+                    } else {
+
+                        offsetPointsRaw.forEach((pt) => {
+                            //reduit le nombre de point à calculer
+
                             //ajoute les coordonnées des points de l'offeset dans ofsetdata
                             curve.offsetData.points.push(pt);
-                            lastPt = pt;
+                        });
+                        // console.log("gggggggg" + curve.offsetData.points.length);
+                        for (let i = curve.offsetData.points.length - 1; i >= 0; i--) {
+                            if (i % this.pointQuantity !== 0) { // supprime les indices impairs
+                                curve.offsetData.points.splice(i, 1);
+                            }
                         }
-                    });
+                        // console.log(curve.offsetData.points.length);
+
+
+                    }
 
                     //ici le tableau points contient la totalité des points de la courbe offset
                     //il faut maintenant filtrer les points qui nous interesse.
 
+                    if (this.enableFilterCornerPoints == true) {
+                        this.filterCornerPoints(curve);
+                    }// semble inutile en fait avec le trie des points
+                    if (this.enableSortOffsetPointsAlongCurve == true)
+                        this.sortOffsetPointsAlongCurve(curve);
+                    if (this.enableFilterOffsetPointsBelowCurve == true)
+                        this.filterOffsetPointsBelowCurve(curve);
 
-                    this.filterPointsAbove(curve); // semble inutile en fait avec le trie des points
-
-                    this.filterOffsetPointsBelowCurve(curve);
-
-                    this.sortOffsetPointsAlongCurve(curve);
                 }
             }
+
+
 
             filterOffsetPointsBelowCurve(curve) {
                 if (!curve.offsetData?.points?.length) return [];
@@ -113,31 +147,33 @@
                     const tangent = path.getTangentAt(nearest.offset).normalize();
                     const normal = tangent.rotate(-90).normalize(); // vers le bas
                     const vec = paperPt.subtract(nearest.point);
-                    //console.log("hhhhhhhh" + vec.dot(normal) + " " + index);
-                    return (
-                        //vec.dot(normal) < 0
-                        vec.dot(normal) < -1 * curve.offsetData.offset + 0.9 //Ajustement pour eviter que certaine points passent au dessus de la normal dans certain cas avec un angle tres aigue
-                    ); // <0 si le point est en dessous
+                    // console.log("hhhhhhhh vec.dot(normal) : " + this.vectorDotNormal + " - " + vec.dot(normal) + " " + index);
+
+
+                    if (this.vectorDotNormal) { return vec.dot(normal) < 0 }
+                    else { return vec.dot(normal) < -1 * curve.offsetData.offset + 0.9; }
+                    //vec.dot(normal) < -1 * curve.offsetData.offset + 0.9 //Ajustement pour eviter que certaine points passent au dessus de la normal dans certain cas avec un angle tres aigue
+                    // <0 si le point est en dessous
                 });
 
                 // Réordonner pour que le point le plus proche du début devienne le premier
-                const start = curve.handles[0].segt.point;
-                let closestIndex = 0;
-                let minDist = Infinity;
-                belowPoints.forEach((pt, i) => {
-                    const dist = new paper.Point(pt.x, pt.y).getDistance(start);
-                    if (dist < minDist) {
-                        minDist = dist;
-                        closestIndex = i;
-                    }
-                });
-
-                if (closestIndex > 0) {
-                    belowPoints = [
-                        ...belowPoints.slice(closestIndex),
-                        ...belowPoints.slice(0, closestIndex),
-                    ];
-                }
+                /*    const start = curve.handles[0].segt.point;
+                    let closestIndex = 0;
+                    let minDist = Infinity;
+                    belowPoints.forEach((pt, i) => {
+                        const dist = new paper.Point(pt.x, pt.y).getDistance(start);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closestIndex = i;
+                        }
+                    });
+    
+                    if (closestIndex > 0) {
+                        belowPoints = [
+                            ...belowPoints.slice(closestIndex),
+                            ...belowPoints.slice(0, closestIndex),
+                        ];
+                    }*/
 
                 // Mettre à jour offsetData.points
                 curve.offsetData.points = belowPoints;
@@ -146,7 +182,7 @@
             //retourne un echantillonage des courbes principales
             computeOffset() {
                 if (!this.curves) return;
-                console.log("aaaaaaaaa", this.curves);
+                //console.log("aaaaaaaaa", this.curves);
                 const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
                 this.curves.forEach((curve, i) => {
                     const points = allPoints[i];
@@ -202,7 +238,7 @@
             }
 
             // acctuellement supprime les coté de la courbe offset
-            filterPointsAbove(curve) {
+            filterCornerPoints(curve) {
                 //creation d'une nouvelle courbe de bezier avec les points de la courbe principale
                 let start = curve.handles[0].segt.point;
                 let end = curve.handles[curve.handles.length - 1].segt.point;
@@ -257,6 +293,7 @@
                 this._idCounter += 1;
                 return `${prefix}-${this._idCounter}`;
             }
+
 
 
         }
@@ -385,13 +422,62 @@
                         this.model.offsetVisible
                     );
                 };
+
+                tool.onKeyDown = (event) => {
+                    if (event.key === "space") {
+                        console.log("Barre d'espace pressée !");
+                        //this.model.processCurve = !this.model.processCurve;
+
+                    }
+                    if (event.key === "a") {
+                        console.log("Barre d'espace pressée !");
+                        this.model.enableFilterCornerPoints = !this.model.enableFilterCornerPoints;
+                        console.log("enableFilterCornerPoints:" + this.model.enableFilterCornerPoints);
+                    }
+                    if (event.key === "z") {
+                        this.model.enableFilterOffsetPointsBelowCurve = !this.model.enableFilterOffsetPointsBelowCurve;
+                        console.log("enableFilterOffsetPointsBelowCurve:" + this.model.enableFilterOffsetPointsBelowCurve);
+
+
+                    }
+                    if (event.key === "e") {
+                        this.model.enableSortOffsetPointsAlongCurve = !this.model.enableSortOffsetPointsAlongCurve;
+                        console.log("enableSortOffsetPointsAlongCurve:" + this.model.enableSortOffsetPointsAlongCurve);
+
+                    }
+
+                    if (event.key === "p") {
+                        console.log("pointQuantity" + this.model.pointQuantity);
+
+                        this.model.pointQuantity = this.model.pointQuantity + 1
+
+                    }
+                    if (event.key === "o") {
+                        console.log("pointQuantity" + this.model.pointQuantity);
+
+                        this.model.pointQuantity = this.model.pointQuantity - 1
+
+                    }
+                    if (event.key === "i") {
+                        this.model.vectorDotNormal = !this.model.vectorDotNormal;
+                    }
+
+                    this.model.computeOffset();
+                    this.view.renderCurves(
+                        this.model.curves,
+                        this.model.handlesVisible,
+                        this.model.offsetVisible
+                    );
+                };
             }
+
         }
 
         class CanvasView {
             constructor(canvasElement) {
                 this.foregroundLayer = new paper.Layer();
                 this.foregroundLayer.activate();
+                this.displayPoints = true;
             }
 
             //efface tous les elements du premier plan
@@ -454,9 +540,11 @@
                 curves.forEach((curve) => this.drawOffset(curve, visibility_offset));
 
                 //Affiche les points de l'offset a decomenter si besoin
-                // curves.forEach((curve) =>
-                //   this.showPointsWithIndex(curve.offsetData.points)
-                // );
+                if (this.displayPoints) {
+                    curves.forEach((curve) =>
+                        this.showPointsWithIndex(curve.offsetData.points)
+                    );
+                }
 
                 paper.view.update();
             }
@@ -464,7 +552,7 @@
 
 
             //fonction de debug qui affiche l'order des points de la courbe
-            showPointsWithIndex(points, radius = 5, color = "blue") {
+            showPointsWithIndex(points, radius = 7, color = "blue") {
                 points.forEach((pt, i) => {
                     // Créer le cercle
                     const circle = new paper.Path.Circle({
@@ -480,7 +568,7 @@
                         point: pt.add(new paper.Point(-radius / 2, radius / 2)), // léger décalage pour centrer
                         content: i.toString(),
                         fillColor: "white",
-                        fontSize: radius * 2,
+                        fontSize: 10,
                         justification: "center",
                     });
                 });

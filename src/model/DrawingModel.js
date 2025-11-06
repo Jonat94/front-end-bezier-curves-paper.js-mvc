@@ -317,14 +317,5 @@ export default class DrawingModel {
 
     console.log("jjjj", curve);
     this.curves.push(curve);
-    // controller.model.fromJSON(content); // Charge dans le modèle
-    // controller.view.renderCurves(
-    //   controller.model.curves,
-    //   controller.model.handlesVisible,
-    //   controller.model.offsetVisible
-    // );
-    //};
-
-    // reader.readAsText(file); // Lit le fichier en tant que texte
   }
 }

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <title>template paper.js</title>
+    <script src="https://unpkg.com/paper@0.12.15/dist/paper-full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/clipper.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsts/2.6.2/jsts.min.js"></script>
+    <style>
+        canvas {
+            width: 800px;
+            height: 600px;
+            background-color: rgb(239, 239, 239);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" resize></canvas>
+
+    <script type="text/javascript">
+        class DrawingModel {
+            constructor() {
+                this.curves = []; // array des courbes sur le canvas
+                this._idCounter = 0; //compteur de cercle ajouté au canvas
+                this.curveCounter = 0; // numero de la courbe créée pour pouvoir l'identifier uniquement
+                this.handlesVisible = true; //flag permettant de specifier si il faut afficher les poingées
+                this.offsetVisible = true; //flag permettant de specifier si il faut afficher l'offset
+                this.backgroundVisible = false; //Flag permettant de specifier si le fond doit s'afficher.
+                this.selectedItem = null; //item paper selectionné sur le canvas (à placer dans la vue)
+                this.createNewCurve(); //cree la premiere courbe vide
+
+                //DEBUG :
+                //this.processCurve = true;
+
+                this.enableFilterCornerPoints = true;
+                this.enableFilterOffsetPointsBelowCurve = true;
+                this.enableSortOffsetPointsAlongCurve = true;
+
+
+                this.pointQuantity = 5;
+                this.vectorDotNormal = true;
+            }
+
+            //construit le tableau à partir de tous les points echantillioné sur la courbe
+            // pour ne conserver que la partie qui est sous la courbe.
+            // Remplace entièrement computeOffsetFromPoints
+            computeOffsetFromPoints(curve, points) {
+                if (!points || points.length < 2) return;
+
+                // --- Étape 1 : Conversion en LineString JSTS ---
+                const coords = points.map(pt => new jsts.geom.Coordinate(pt.x, pt.y));
+                const geometryFactory = new jsts.geom.GeometryFactory();
+                const line = geometryFactory.createLineString(coords);
+
+                // --- Étape 2 : Calcul du buffer (offset) ---
+                // Le paramètre offset est la distance à appliquer
+                const bufferGeometry = line.buffer(curve.offsetData.offset);
+
+                // --- Étape 3 : Récupération des coordonnées du buffer ---
+                let bufferCoords = bufferGeometry.getCoordinates();
+
+                // --- Étape 4 : Conversion en paper.Point ---
+                curve.offsetData.points = bufferCoords.map(c => new paper.Point(c.x, c.y));
+
+                // --- Étape 5 : Réduction du nombre de points (optionnel) ---
+                const step = this.pointQuantity;
+                curve.offsetData.points = curve.offsetData.points.filter((pt, i) => i % step === 0);
+
+                // --- Étape 6 : Alignement au début de la courbe principale ---
+                this.alignOffsetStart(curve);
+
+                // --- Étape 7 : Garder seulement jusqu’au point le plus proche de la fin ---
+                const closestIndex = this.getClosestOffsetPointToEnd(curve);
+                curve.offsetData.points = curve.offsetData.points.slice(0, closestIndex + 1);
+
+                // --- Étape 8 : Filtrage des points trop proches des extrémités ---
+                this.filterCornerPoints(curve);
+            }
+
+
+
+            // acctuellement supprime les coté de la courbe offset
+            filterCornerPoints(curve) {
+                //creation d'une nouvelle courbe de bezier avec les points de la courbe principale
+                let start = curve.handles[0].segt.point;
+                let end = curve.handles[curve.handles.length - 1].segt.point;
+                const filteredPoints = [];
+
+                // filtrage des points proches des extrémités pour ouvrir la courbe dee chaque coté
+                curve.offsetData.points.forEach((pt) => {
+                    const distStart = pt.getDistance(start);
+                    const distEnd = pt.getDistance(end);
+
+                    // Si le point est à une distance d'un offset du début ou de la fin de la courbe principale,
+                    // on le supprime du tableau.
+                    if (
+                        distStart <= curve.offsetData.offset + 1 ||
+                        distEnd <= curve.offsetData.offset + 1
+                    ) {
+                        console.log("Point supprimé (trop proche des extrémités)");
+                    } else {
+                        filteredPoints.push(pt); // sinon on place le points dans le tableau filtré
+                    }
+                });
+                // Remplacer l'ancien tableau tableau de point par le nouveau tableau filtré
+                curve.offsetData.points = filteredPoints;
+            }
+
+            getClosestOffsetPointToEnd(curve) {
+                if (!curve.offsetData?.points?.length || !curve.handles?.length) return null;
+
+                // Dernier point de la courbe principale
+                const endPoint = curve.handles[curve.handles.length - 1].segt.point;
+
+                let minDistance = Infinity;
+                let closestIndex = 0;
+
+                curve.offsetData.points.forEach((pt, i) => {
+                    const d = pt.getDistance(endPoint);
+                    if (d < minDistance) {
+                        minDistance = d;
+                        closestIndex = i;
+                    }
+                });
+
+                return closestIndex;
+            }
+
+            // Décale les indices du tableau de points d'offset pour l'aligner
+            // avec le début de la courbe principale
+            alignOffsetStart(curve) {
+                if (!curve.offsetData?.points?.length || !curve.handles?.length) return;
+
+                // Premier point de la courbe principale
+                const startPoint = curve.handles[0].segt.point;
+
+                // Cherche l’index du point d’offset le plus proche du début de la courbe principale
+                let minDist = Infinity;
+                let bestIndex = 0;
+
+                curve.offsetData.points.forEach((pt, i) => {
+                    const d = pt.getDistance(startPoint);
+                    if (d < minDist) {
+                        minDist = d;
+                        bestIndex = i;
+                    }
+                });
+
+                // Rotation du tableau : on met bestIndex en premier
+                curve.offsetData.points = [
+                    ...curve.offsetData.points.slice(bestIndex),
+                    ...curve.offsetData.points.slice(0, bestIndex)
+                ];
+            }
+
+
+            //retourne un echantillonage des courbes principales
+            computeOffset() {
+                if (!this.curves) return;
+                //console.log("aaaaaaaaa", this.curves);
+                const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
+                this.curves.forEach((curve, i) => {
+                    const points = allPoints[i];
+                    this.computeOffsetFromPoints(curve, points); // envoi les points offset calculé a computeOffsetFromPoints pour filtrage et stockage
+                    //console.log(curve);
+                });
+            }
+
+            //retourne l'echantillonage de toutes les courbes de bezier dans un array
+            getPointsFromCurves() {
+                return this.curves.map((curve) => {
+                    const path = new paper.Path();
+                    path.visible = false;
+
+                    // --- Création d'un chemin Bézier invisibel de la courbe principal ---
+                    curve.handles.forEach((p) => path.add(p.segt));
+
+                    // --- echantillonage des points le long du chemin ---
+                    const sampledPoints = [];
+                    for (let s = 0; s <= path.length; s += curve.offsetData.sampleStep) {
+                        const p = path.getPointAt(s);
+                        if (p) sampledPoints.push(p);
+                    }
+                    return sampledPoints;
+                });
+            }
+
+            //Cette fonction trie les points d’offset d’une courbe pour qu’ils suivent l’ordre de la courbe principale
+            // en fonction de leur position la plus proche sur celle-ci.
+            sortOffsetPointsAlongCurve(curve) {
+                if (!curve.offsetData?.points?.length) return [];
+
+                // Créer un path temporaire à partir des points de la courbe principale
+                const path = new paper.Path();
+                path.visible = false;
+                curve.handles.forEach((p) => path.add(p.segt));
+
+                // Pour chaque point d'offset, trouver sa position la plus proche de la courbe principale
+                const pointsWithOffset = curve.offsetData.points.map((pt) => {
+                    const paperPt = new paper.Point(pt.x, pt.y);
+                    const location = path.getNearestLocation(paperPt);
+                    return { pt, offset: location.offset };
+                });
+
+                // Trier les points selon leur position le long de la courbe principale
+                pointsWithOffset.sort((a, b) => a.offset - b.offset);
+                const sortedPoints = pointsWithOffset.map((p) => p.pt);
+
+                // --- Nouvel ordre : placer en début le point le plus "sous" le premier point de la courbe principale ---
+                const firstCurvePoint = curve.handles[0].segt.point;
+
+                // Trouver l'index du point avec le plus grand y inférieur ou égal au premier point de la courbe
+                let startIndex = 0;
+                let maxYBelow = -Infinity;
+
+                sortedPoints.forEach((pt, i) => {
+                    if (pt.y >= firstCurvePoint.y && pt.y > maxYBelow) {
+                        maxYBelow = pt.y;
+                        startIndex = i;
+                    }
+                });
+
+                // Réorganiser le tableau pour que ce point soit le premier
+                curve.offsetData.points = [
+                    ...sortedPoints.slice(startIndex),
+                    ...sortedPoints.slice(0, startIndex)
+                ];
+
+
+
+            }
+
+            // acctuellement supprime les coté de la courbe offset
+            filterCornerPoints(curve) {
+                //creation d'une nouvelle courbe de bezier avec les points de la courbe principale
+                let start = curve.handles[0].segt.point;
+                let end = curve.handles[curve.handles.length - 1].segt.point;
+                const filteredPoints = [];
+
+                // filtrage des points proches des extrémités pour ouvrir la courbe dee chaque coté
+                curve.offsetData.points.forEach((pt) => {
+                    const distStart = pt.getDistance(start);
+                    const distEnd = pt.getDistance(end);
+
+                    // Si le point est à une distance d'un offset du début ou de la fin de la courbe principale,
+                    // on le supprime du tableau.
+                    if (
+                        distStart <= curve.offsetData.offset + 1 ||
+                        distEnd <= curve.offsetData.offset + 1
+                    ) {
+                        console.log("Point supprimé (trop proche des extrémités)");
+                    } else {
+                        filteredPoints.push(pt); // sinon on place le points dans le tableau filtré
+                    }
+                });
+                // Remplacer l'ancien tableau tableau de point par le nouveau tableau filtré
+                curve.offsetData.points = filteredPoints;
+            }
+
+            //efface le canvas paper
+            clear() {
+                this.shapes = [];
+                this.selectedShape = null;
+            }
+
+            // //Ajout une courbe vide sur le canvas en faisant un ajout d'objet dans le tableau curves
+            createNewCurve(name = `Courbe ${++this.curveCounter}`) {
+                const handles = [];
+                this.curves.push({
+                    name,
+                    //path,
+                    handles,
+                    offsetData: {
+                        points: [],
+                        line: null,
+                        sampleStep: 5,
+                        scale: 100,
+                        offset: 20,
+                    },
+                });
+                this.currentCurveIndex = this.curves.length - 1; // mettre à jour l'index de la courbe courante
+            }
+
+            //permet d'incrementer un id , utilisé pour identifier chaque point du canvas de facon unique
+            generateId(prefix = "id") {
+                this._idCounter += 1;
+                return `${prefix}-${this._idCounter}`;
+            }
+
+
+
+        }
+
+        class DrawingController {
+            constructor(model, view) {
+                this.model = model;
+                this.view = view;
+                this.currentPath = null;
+                this.tempShape = null;
+                this.startPoint = null;
+                this.dragOffset = null;
+                this._setupTool();
+            }
+
+            _setupTool() {
+                const tool = new paper.Tool();
+
+                tool.onMouseDown = (event) => {
+                    console.log("tu as clické ", event.point);
+                    const curve = this.model.curves[this.model.currentCurveIndex];
+                    if (!curve) return;
+
+                    // On effectue un hit-test à l'endroit du clic
+                    const hit = paper.project.hitTest(event.point, {
+                        fill: true, // détecte les clics sur les zones remplies
+                        stroke: true, // (optionnel) détecte aussi les bords
+                        tolerance: 5, // marge d’erreur (px)
+                    });
+
+                    if (
+                        hit &&
+                        hit.item &&
+                        (hit.item.data.type == "circle" ||
+                            hit.item.data.type == "bezier_in" ||
+                            hit.item.data.type == "bezier_out")
+                    ) {
+                        if (
+                            hit.item.data.type == "bezier_in" ||
+                            hit.item.data.type == "bezier_out"
+                        ) {
+                            //console.log("item clické", hit.item);
+                            this.model.selectedItem = hit.item;
+
+                            // console.log("Handle Bézier sélectionné parmi :", curve.handles);
+                            this.dragOffset = event.point.subtract(
+                                this.model.selectedItem.position
+                            );
+                            return;
+                        }
+                        // Si un élément a été cliqué
+                        const item = hit.item;
+                        //console.log("Tu as cliqué sur :", item);
+
+                        this.model.selectedItem = item;
+                        this.dragOffset = event.point.subtract(
+                            this.model.selectedItem.position
+                        );
+                    } else {
+                        // Si on clique ailleurs, créer un petit point
+                        this.dragOffset = null;
+                        let idShape = this.model.generateId();
+                        let idIn = this.model.generateId();
+                        let idOut = this.model.generateId();
+                        curve.handles.push({
+                            id: idShape,
+                            segt: new paper.Segment(
+                                new paper.Point(event.point.x, event.point.y),
+                                new paper.Point(-50, 0),
+                                new paper.Point(50, 0)
+                            ),
+                            inPointId: idIn,
+                            outPointId: idOut,
+                        });
+                        console.log("Clic vide, nouveau point ajouté à", curve);
+                    }
+                };
+
+                // Quand on déplace la souris (drag actif)
+                tool.onMouseDrag = (event) => {
+                    const curve = this.model.curves[this.model.currentCurveIndex];
+                    if (!curve) return;
+                    if (this.model.selectedItem) {
+                        this.model.selectedItem.position = event.point.subtract(
+                            this.dragOffset
+                        );
+
+                        let tab;
+                        if (this.model.selectedItem.data.type == "circle") {
+                            //TO DO verifier que l'item selectionné appartient bien à la courbe selectionné.
+                            //console.log("circle");
+                            tab = curve.handles.filter(
+                                (e) => e.id == this.model.selectedItem.data.id
+                            );
+                            tab[0].segt.point = tab[0].segt.point.add(event.delta);
+                        }
+
+                        if (this.model.selectedItem.data.type == "bezier_in") {
+                            tab = curve.handles.filter(
+                                (e) => e.inPointId == this.model.selectedItem.data.id
+                            );
+                            tab[0].segt.handleIn = tab[0].segt.handleIn.add(event.delta);
+                        }
+
+                        if (this.model.selectedItem.data.type == "bezier_out") {
+                            tab = curve.handles.filter(
+                                (e) => e.outPointId == this.model.selectedItem.data.id
+                            );
+                            tab[0].segt.handleOut = tab[0].segt.handleOut.add(event.delta);
+                        }
+
+                        this.model.computeOffset();
+                        this.view.renderCurves(
+                            this.model.curves,
+                            this.model.handlesVisible,
+                            this.model.offsetVisible
+                        );
+                    }
+                };
+
+                tool.onMouseUp = (event) => {
+                    this.model.computeOffset();
+                    this.view.renderCurves(
+                        this.model.curves,
+                        this.model.handlesVisible,
+                        this.model.offsetVisible
+                    );
+                };
+
+                tool.onKeyDown = (event) => {
+                    if (event.key === "space") {
+                        console.log("Barre d'espace pressée !");
+                        this.view.displayPoints = !this.view.displayPoints;
+                        //this.model.processCurve = !this.model.processCurve;
+
+                    }
+                    if (event.key === "a") {
+                        console.log("Barre d'espace pressée !");
+                        this.model.enableFilterCornerPoints = !this.model.enableFilterCornerPoints;
+                        console.log("enableFilterCornerPoints:" + this.model.enableFilterCornerPoints);
+                    }
+                    if (event.key === "z") {
+                        this.model.enableFilterOffsetPointsBelowCurve = !this.model.enableFilterOffsetPointsBelowCurve;
+                        console.log("enableFilterOffsetPointsBelowCurve:" + this.model.enableFilterOffsetPointsBelowCurve);
+
+
+                    }
+                    if (event.key === "e") {
+                        this.model.enableSortOffsetPointsAlongCurve = !this.model.enableSortOffsetPointsAlongCurve;
+                        console.log("enableSortOffsetPointsAlongCurve:" + this.model.enableSortOffsetPointsAlongCurve);
+
+                    }
+
+                    if (event.key === "p") {
+                        console.log("pointQuantity" + this.model.pointQuantity);
+
+                        this.model.pointQuantity = this.model.pointQuantity + 1
+
+                    }
+                    if (event.key === "o") {
+                        console.log("pointQuantity" + this.model.pointQuantity);
+
+                        this.model.pointQuantity = this.model.pointQuantity - 1
+
+                    }
+                    if (event.key === "i") {
+                        this.model.vectorDotNormal = !this.model.vectorDotNormal;
+                    }
+
+                    this.model.computeOffset();
+                    this.view.renderCurves(
+                        this.model.curves,
+                        this.model.handlesVisible,
+                        this.model.offsetVisible
+                    );
+                };
+            }
+
+        }
+
+        class CanvasView {
+            constructor(canvasElement) {
+                this.foregroundLayer = new paper.Layer();
+                this.foregroundLayer.activate();
+                this.displayPoints = false;
+            }
+
+            //efface tous les elements du premier plan
+            clear() {
+                this.foregroundLayer.removeChildren();
+            }
+
+            //dessine une courbe dans le canvase
+            drawCurve(curve, visibility = true) {
+                const path = new paper.Path();
+
+                path.strokeColor = "#000000";
+                path.strokeWidth = curve.currentStrokeWidth || 2;
+
+                curve.handles.forEach((p, index) => {
+                    path.add(p.segt);
+                    if (!visibility) return;
+                    //ajoute un cercle rouge pour chaque point de la courbe
+                    this.makeCircle(
+                        p.segt.point,
+                        "#ff0000",
+                        p.id,
+                        "circle",
+                        p.inPointId,
+                        p.outPointId
+                    );
+                    //ajoute un cercle bleu pour la première poignée
+                    this.makeCircle(
+                        p.segt.point.add(p.segt.handleIn),
+                        "#1e25fbff",
+                        p.inPointId,
+                        "bezier_in"
+                    );
+                    //ajoute un cercle bleu pour la deuxième poignée
+                    this.makeCircle(
+                        p.segt.point.add(p.segt.handleOut),
+                        "#1e25fbff",
+                        p.outPointId,
+                        "bezier_out"
+                    );
+                });
+                this.updateHandleLines(curve, visibility);
+            }
+
+            // Crée un cercle interactif
+            makeCircle(point, color, id, type, inPtId, outPtId) {
+                const c = new paper.Path.Circle(point, 4);
+                c.fillColor = color;
+                c.data.type = type;
+                c.data.id = id;
+                c.data.inPointId = inPtId;
+                c.data.outPointId = outPtId;
+                return c;
+            }
+
+            //Dessine la courbes principale et son offset sur le canvas
+            renderCurves(curves, visibility, visibility_offset) {
+                this.clear();
+                curves.forEach((curve) => this.drawCurve(curve, visibility));
+                curves.forEach((curve) => this.drawOffset(curve, visibility_offset));
+
+                //Affiche les points de l'offset a decomenter si besoin
+                if (this.displayPoints) {
+                    curves.forEach((curve) =>
+                        this.showPointsWithIndex(curve.offsetData.points)
+                    );
+                }
+
+                paper.view.update();
+            }
+
+
+
+            //fonction de debug qui affiche l'order des points de la courbe
+            showPointsWithIndex(points, radius = 7, color = "blue") {
+                points.forEach((pt, i) => {
+                    // Créer le cercle
+                    const circle = new paper.Path.Circle({
+                        center: pt,
+                        radius: radius,
+                        fillColor: color,
+                        strokeColor: "black",
+                        strokeWidth: 1,
+                    });
+
+                    // Ajouter le texte au centre du cercle
+                    const text = new paper.PointText({
+                        point: pt.add(new paper.Point(-radius / 2, radius / 2)), // léger décalage pour centrer
+                        content: i.toString(),
+                        fillColor: "white",
+                        fontSize: 10,
+                        justification: "center",
+                    });
+                });
+            }
+
+            //Dessine la courbe d'offset à partir d'un tableau de points sur le canvas
+            drawOffset(curve, visibility = true) {
+                if (!visibility || !curve.offsetData?.points?.length) return;
+
+                // --- Dessin de la courbe d’offset ---
+                const offsetCurve = new paper.Path({
+                    strokeColor: "green",
+                    strokeWidth: 2,
+                });
+
+                offsetCurve.addSegments(curve.offsetData.points);
+                offsetCurve.sendToBack();
+            }
+
+            // Affiche les lignes de tangente sur le canvas
+            updateHandleLines(curve, visibility = true) {
+                if (!visibility) return;
+                for (let i = 0; i < curve.handles.length; i++) {
+                    const point = curve.handles[i].segt.point;
+                    const hIn = curve.handles[i].segt.handleIn.add(point);
+                    const hOut = curve.handles[i].segt.handleOut.add(point);
+                    // console.log(curve.handles[i].segt.handleIn);
+                    const lineIn = new paper.Path.Line({
+                        from: point,
+                        to: hIn,
+                        strokeColor: "gray",
+                        strokeWidth: 1,
+                        dashArray: [4, 4],
+                    });
+                    lineIn.sendToBack();
+                    const lineOut = new paper.Path.Line({
+                        from: point,
+                        to: hOut,
+                        strokeColor: "gray",
+                        strokeWidth: 1,
+                        dashArray: [4, 4],
+                    });
+                    lineOut.sendToBack();
+                }
+            }
+        }
+
+        paper.setup('myCanvas');
+        let model = new DrawingModel();
+        let view = new CanvasView();
+        let controller = new DrawingController(model, view);
+
+    </script>
+</body>
+
+</html>

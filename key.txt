@@ -1,0 +1,10 @@
+
+o augmente
+p reduit le nombre de points
+
+a enableFilterPointsAbove
+z enableFilterOffsetPointsBelowCurve
+e enableSortOffsetPointsAlongCurve
+
+espace affiche les points
+
