@@ -61,6 +61,8 @@ export default class DrawingController {
       }
 
       // --- Sinon → ajout d'un nouveau point ---
+      if (!this.model.handlesVisible) return;
+
       let idShape = this.model.generateId();
       let idIn = this.model.generateId();
       let idOut = this.model.generateId();

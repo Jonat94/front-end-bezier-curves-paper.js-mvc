@@ -1,11 +1,20 @@
+"use strict";
 import paper from "../paperSetup.js";
-("use strict");
+
 export default class CanvasView {
   constructor(canvasElement) {
     paper.setup(canvasElement);
     this.canvas = canvasElement;
     this.backgroundLayer = new paper.Layer();
     this.foregroundLayer = new paper.Layer();
+    // Ajouter le fond
+    const raster = new paper.Raster("/images/paper.jpg");
+    raster.position = paper.view.center;
+    // Réduire l'image à 50% de sa taille
+    raster.scale(0.4);
+    raster.sendToBack(); // toujours derrière les formes
+    this.backgroundLayer.addChild(raster);
+    // Toujours dessiner sur le layer du dessus
     this.foregroundLayer.activate();
   }
 
@@ -13,6 +22,7 @@ export default class CanvasView {
     this.foregroundLayer.removeChildren();
   }
 
+  //Dessine la courbes principale et son offset sur le canvas
   renderCurves(
     curves,
     showHandles = true,
@@ -27,8 +37,8 @@ export default class CanvasView {
       this.drawCurve(curve, showHandles, selectedItem);
 
       // dessiner tous les offsets
-      if (showOffsets && curve.offsets.length) {
-        curve.offsets.forEach((offsetData) => {
+      if (showOffsets && curve.offsetsData.length) {
+        curve.offsetsData.forEach((offsetData) => {
           if (offsetData.points.length > 1) {
             this.drawOffset(offsetData);
             this.fillBetweenCurves(curve, offsetData, fillColor);
@@ -87,6 +97,12 @@ export default class CanvasView {
       .forEach((pt) => fillPath.add(new paper.Point(pt.x, pt.y)));
     fillPath.closed = true;
     fillPath.sendToBack();
+  }
+
+  //definie la visibilité du fond
+  setBackground(visibility) {
+    if (visibility) this.backgroundLayer.visible = true;
+    else this.backgroundLayer.visible = false;
   }
 
   makeCircle(point, color, id, type, inPtId, outPtId) {

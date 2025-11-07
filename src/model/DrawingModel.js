@@ -19,7 +19,7 @@ export default class DrawingModel {
     this.curves.push({
       name,
       handles,
-      offsets: [
+      offsetsData: [
         {
           points: [],
           line: null,
@@ -57,15 +57,17 @@ export default class DrawingModel {
 
     this.curves.forEach((curve, i) => {
       const points = allPoints[i];
-      curve.offsets.forEach((offsetData) => {
+      curve.offsetsData.forEach((offsetData) => {
         this.computeOffsetFromPoints(curve, points, offsetData);
       });
     });
   }
 
   computeOffsetFromPoints(curve, points, offsetData) {
-    if (!points || points.length < 2) return;
-
+    if (!points || points.length < 2) {
+      offsetData.points = []; // <-- vider l'ancien offset
+      return;
+    }
     const pts = points.map((pt) => ({
       X: Math.round(pt.x * offsetData.scale),
       Y: Math.round(pt.y * offsetData.scale),
@@ -157,13 +159,34 @@ export default class DrawingModel {
     offsetData.points = filteredPoints;
   }
 
+  moveCurrentCurve(dx, dy) {
+    const curve = this.curves[this.currentCurveIndex];
+    if (!curve) return;
+    const delta = new paper.Point(dx, dy);
+    curve.handles.forEach((h) => {
+      h.segt.point = h.segt.point.add(delta);
+    });
+    this.computeOffset();
+  }
+
+  //supprime le point sélctionné (a réécrire)...
+  deletePoint(id) {
+    let tab;
+    tab = this.curves[this.currentCurveIndex].handles.filter((h) => {
+      return h.id == id;
+    });
+    let index = this.curves[this.currentCurveIndex].handles.indexOf(tab[0]);
+    this.curves[this.currentCurveIndex].handles.splice(index, 1);
+    this.computeOffset();
+  }
+
   getPointsFromCurves() {
     return this.curves.map((curve) => {
       const path = new paper.Path();
       path.visible = false;
       curve.handles.forEach((p) => path.add(p.segt));
       const sampledPoints = [];
-      for (let s = 0; s <= path.length; s += curve.offsets[0].sampleStep) {
+      for (let s = 0; s <= path.length; s += curve.offsetsData[0].sampleStep) {
         const p = path.getPointAt(s);
         if (p) sampledPoints.push(p);
       }
