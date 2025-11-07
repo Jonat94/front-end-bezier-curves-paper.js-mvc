@@ -1,4 +1,4 @@
-("mode strict");
+("use strict");
 export default class ToolController {
   constructor(mod, tlbView, canView, drawController) {
     this.model = mod;

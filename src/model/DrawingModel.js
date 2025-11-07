@@ -1,6 +1,6 @@
 import * as ClipperLib from "clipper-lib";
 import paper from "../paperSetup.js";
-("mode strict");
+("use strict");
 export default class DrawingModel {
   constructor() {
     //console.log("Paper project ID:", paper.project);
@@ -63,7 +63,7 @@ export default class DrawingModel {
       let lastPt = null;
       offsetPointsRaw.forEach((pt) => {
         //reduit le nombre de point à calsculer
-        if (!lastPt || pt.getDistance(lastPt) >= 2) {
+        if (!lastPt || pt.getDistance(lastPt) >= 4) {
           //ajoute les coordonnées des points de l'offeset dans ofsetdata
           curve.offsetData.points.push(pt);
           lastPt = pt;
@@ -161,33 +161,31 @@ export default class DrawingModel {
     ];
   }
 
-  //retourne un echantillonage des courbes principales
-  // computeOffset() {
-  //   if (!this.curves) return;
-  //   const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
-  //   this.curves.forEach((curve, i) => {
-  //     const points = allPoints[i];
-  //     this.computeOffsetFromPoints(curve, points); // envoi les points offset calculé a computeOffsetFromPoints pour filtrage et stockage
-  //   });
-  // }
+  moveCurrentCurve(dx, dy) {
+    const curve = this.curves[this.currentCurveIndex];
+    if (!curve) return;
+    const delta = new paper.Point(dx, dy);
+    curve.handles.forEach((h) => {
+      h.segt.point = h.segt.point.add(delta);
+    });
+
+    this.computeOffset();
+  }
 
   computeOffset() {
-    if (!this.curves) return;
-    for (const curve of this.curves) {
-      // Si la courbe a moins de 2 points, pas d'offset possible
+    if (!this.curves?.length) return;
+
+    const allPoints = this.getPointsFromCurves(this.curves);
+
+    this.curves.forEach((curve, i) => {
       if (!curve.handles || curve.handles.length < 2) {
-        curve.offsetData.points = []; // vider l'offset
-        continue;
+        curve.offsetData.points = [];
+        return;
       }
 
-      const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
-      this.curves.forEach((curve, i) => {
-        const points = allPoints[i];
-        this.computeOffsetFromPoints(curve, points); // envoi les points offset calculé a computeOffsetFromPoints pour filtrage et stockage
-      });
-
-      // ... ton code actuel ...
-    }
+      const points = allPoints[i];
+      this.computeOffsetFromPoints(curve, points);
+    });
   }
 
   //retourne l'echantillonage de toutes les courbes de bezier dans un array

@@ -1,4 +1,4 @@
-// src/paperSetup.js
+("use strict");
 import paper from "paper";
 
 export function initPaper(canvasId = "canvas") {

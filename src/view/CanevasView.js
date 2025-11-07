@@ -1,5 +1,5 @@
 import paper from "../paperSetup.js";
-
+("use strict");
 export default class CanvasView {
   constructor(canvasElement) {
     paper.setup(canvasElement);
