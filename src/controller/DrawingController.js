@@ -41,6 +41,15 @@ export default class DrawingController {
       ) {
         this.selectedItem = hit.item;
         this.dragOffset = event.point.subtract(hit.item.position);
+
+        this.model.computeOffset();
+        this.view.renderCurves(
+          this.model.curves,
+          this.model.handlesVisible,
+          this.model.offsetVisible,
+          this.selectedItem
+        );
+
         return;
       }
 
@@ -99,7 +108,7 @@ export default class DrawingController {
           this.model.curves,
           this.model.handlesVisible,
           this.model.offsetVisible,
-          null
+          this.selectedItem
         );
         return;
       }
@@ -111,21 +120,27 @@ export default class DrawingController {
         let tab;
         if (this.selectedItem.data.type === "circle") {
           tab = curve.handles.filter((h) => h.id === this.selectedItem.data.id);
-          tab[0].segt.point = tab[0].segt.point.add(event.delta);
+          if (tab[0]) {
+            tab[0].segt.point = tab[0].segt.point.add(event.delta);
+          }
         }
 
         if (this.selectedItem.data.type === "bezier_in") {
           tab = curve.handles.filter(
             (h) => h.inPointId === this.selectedItem.data.id
           );
-          tab[0].segt.handleIn = tab[0].segt.handleIn.add(event.delta);
+          if (tab[0]) {
+            tab[0].segt.handleIn = tab[0].segt.handleIn.add(event.delta);
+          }
         }
 
         if (this.selectedItem.data.type === "bezier_out") {
           tab = curve.handles.filter(
             (h) => h.outPointId === this.selectedItem.data.id
           );
-          tab[0].segt.handleOut = tab[0].segt.handleOut.add(event.delta);
+          if (tab[0]) {
+            tab[0].segt.handleOut = tab[0].segt.handleOut.add(event.delta);
+          }
         }
 
         this.model.computeOffset();
