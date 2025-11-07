@@ -1,6 +1,6 @@
+"use strict";
 import * as ClipperLib from "clipper-lib";
 import paper from "../paperSetup.js";
-("use strict");
 
 export default class DrawingModel {
   constructor() {
@@ -14,43 +14,28 @@ export default class DrawingModel {
     this.backgroundVisible = true;
   }
 
+  // Crée une nouvelle courbe avec trois offsets par défaut
   createNewCurve(name = `Courbe ${++this.curveCounter}`) {
     const handles = [];
     this.curves.push({
       name,
       handles,
       offsetsData: [
-        {
-          points: [],
-          line: null,
-          sampleStep: 5,
-          scale: 100,
-          offset: 10,
-        },
-        {
-          points: [],
-          line: null,
-          sampleStep: 5,
-          scale: 100,
-          offset: 30,
-        },
-        {
-          points: [],
-          line: null,
-          sampleStep: 5,
-          scale: 100,
-          offset: 60,
-        },
+        { points: [], line: null, sampleStep: 5, scale: 100, offset: 10 },
+        { points: [], line: null, sampleStep: 5, scale: 100, offset: 30 },
+        { points: [], line: null, sampleStep: 5, scale: 100, offset: 60 },
       ],
     });
     this.currentCurveIndex = this.curves.length - 1;
   }
 
+  // Génère un ID unique
   generateId(prefix = "id") {
     this._idCounter += 1;
     return `${prefix}-${this._idCounter}`;
   }
 
+  // Calcule tous les offsets pour toutes les courbes
   computeOffset() {
     if (!this.curves?.length) return;
     const allPoints = this.getPointsFromCurves();
@@ -63,11 +48,13 @@ export default class DrawingModel {
     });
   }
 
+  // Calcule un offset à partir de points
   computeOffsetFromPoints(curve, points, offsetData) {
     if (!points || points.length < 2) {
-      offsetData.points = []; // <-- vider l'ancien offset
+      offsetData.points = [];
       return;
     }
+
     const pts = points.map((pt) => ({
       X: Math.round(pt.x * offsetData.scale),
       Y: Math.round(pt.y * offsetData.scale),
@@ -87,6 +74,7 @@ export default class DrawingModel {
       return;
     }
 
+    // Sélectionne la solution avec le plus de points
     let best = solution_paths[0];
     for (let i = 1; i < solution_paths.length; i++) {
       if (solution_paths[i].length > best.length) best = solution_paths[i];
@@ -96,7 +84,7 @@ export default class DrawingModel {
       (pt) => new paper.Point(pt.X / offsetData.scale, pt.Y / offsetData.scale)
     );
 
-    // réduction des points
+    // Réduction des points trop proches
     offsetData.points = [];
     let lastPt = null;
     offsetPointsRaw.forEach((pt) => {
@@ -113,11 +101,14 @@ export default class DrawingModel {
     this.filterCornerPoints(curve, offsetData);
   }
 
+  // Aligne le début de l'offset avec le premier point de la courbe
   alignOffsetStart(curve, offsetData) {
     if (!offsetData?.points?.length || !curve.handles?.length) return;
+
     const startPoint = curve.handles[0].segt.point;
     let minDist = Infinity;
     let bestIndex = 0;
+
     offsetData.points.forEach((pt, i) => {
       const d = pt.getDistance(startPoint);
       if (d < minDist) {
@@ -125,17 +116,22 @@ export default class DrawingModel {
         bestIndex = i;
       }
     });
-    offsetData.points = [
-      ...offsetData.points.slice(bestIndex),
-      ...offsetData.points.slice(0, bestIndex),
-    ];
+
+    const reordered = [];
+    for (let i = bestIndex; i < offsetData.points.length; i++)
+      reordered.push(offsetData.points[i]);
+    for (let i = 0; i < bestIndex; i++) reordered.push(offsetData.points[i]);
+    offsetData.points = reordered;
   }
 
+  // Trouve le point de l'offset le plus proche de la fin de la courbe
   getClosestOffsetPointToEnd(curve, offsetData) {
     if (!offsetData?.points?.length || !curve.handles?.length) return 0;
+
     const endPoint = curve.handles[curve.handles.length - 1].segt.point;
     let minDistance = Infinity;
     let closestIndex = 0;
+
     offsetData.points.forEach((pt, i) => {
       const d = pt.getDistance(endPoint);
       if (d < minDistance) {
@@ -146,6 +142,7 @@ export default class DrawingModel {
     return closestIndex;
   }
 
+  // Filtre les points trop proches des extrémités
   filterCornerPoints(curve, offsetData) {
     const start = curve.handles[0].segt.point;
     const end = curve.handles[curve.handles.length - 1].segt.point;
@@ -159,9 +156,11 @@ export default class DrawingModel {
     offsetData.points = filteredPoints;
   }
 
+  // Déplace la courbe entière
   moveCurrentCurve(dx, dy) {
     const curve = this.curves[this.currentCurveIndex];
     if (!curve) return;
+
     const delta = new paper.Point(dx, dy);
     curve.handles.forEach((h) => {
       h.segt.point = h.segt.point.add(delta);
@@ -169,22 +168,25 @@ export default class DrawingModel {
     this.computeOffset();
   }
 
-  //supprime le point sélctionné (a réécrire)...
+  // Supprime un point par ID
   deletePoint(id) {
-    let tab;
-    tab = this.curves[this.currentCurveIndex].handles.filter((h) => {
-      return h.id == id;
-    });
-    let index = this.curves[this.currentCurveIndex].handles.indexOf(tab[0]);
-    this.curves[this.currentCurveIndex].handles.splice(index, 1);
+    const curve = this.curves[this.currentCurveIndex];
+    if (!curve) return;
+
+    const index = curve.handles.findIndex((h) => h.id === id);
+    if (index >= 0) {
+      curve.handles.splice(index, 1);
+    }
     this.computeOffset();
   }
 
+  // Retourne tous les points échantillonnés des courbes
   getPointsFromCurves() {
     return this.curves.map((curve) => {
       const path = new paper.Path();
       path.visible = false;
       curve.handles.forEach((p) => path.add(p.segt));
+
       const sampledPoints = [];
       for (let s = 0; s <= path.length; s += curve.offsetsData[0].sampleStep) {
         const p = path.getPointAt(s);
@@ -195,30 +197,23 @@ export default class DrawingModel {
     });
   }
 
-  //supprime la courbe en cours de modification
+  // Supprime la courbe courante
   deleteCurrentCurve() {
     if (
       this.currentCurveIndex < 0 ||
       this.currentCurveIndex >= this.curves.length
-    ) {
-      console.warn("Aucune courbe à supprimer.");
+    )
       return;
-    }
 
-    // Supprimer le chemin de Paper.js
-    //this.curves[this.currentCurveIndex].path.remove();
-
-    // Supprimer la courbe du tableau
     this.curves.splice(this.currentCurveIndex, 1);
-
-    // Mettre à jour l'index de la courbe courante
     if (this.curves.length === 0) {
-      this.currentCurveIndex = -1; // Aucune courbe restante
+      this.currentCurveIndex = -1;
     } else if (this.currentCurveIndex >= this.curves.length) {
-      this.currentCurveIndex = this.curves.length - 1; // Aller à la dernière courbe
+      this.currentCurveIndex = this.curves.length - 1;
     }
   }
 
+  // Export JSON de la courbe courante
   exportCurve() {
     const jsonData = JSON.stringify(this.curves[this.currentCurveIndex]);
     const blob = new Blob([jsonData], { type: "application/json" });
@@ -226,15 +221,11 @@ export default class DrawingModel {
     link.href = URL.createObjectURL(blob);
     link.download = `drawing${this.currentCurveIndex}.json`;
     link.click();
-    console.log(jsonData);
   }
 
+  // Import JSON
   importCurve(jsonData) {
-    console.log(jsonData);
     const data = JSON.parse(jsonData);
-    console.log("lllllll", data);
-    let curve;
-    curve = data;
     const handles = data.handles.map((h) => ({
       id: h.id,
       inPointId: h.inPointId,
@@ -245,10 +236,7 @@ export default class DrawingModel {
         new paper.Point(h.segt[3][0], h.segt[3][1])
       ),
     }));
-    //console.log("oooooooooo", handles);
-    curve.handles = handles;
-
-    //console.log("jjjj", curve);
-    this.curves.push(curve);
+    data.handles = handles;
+    this.curves.push(data);
   }
 }

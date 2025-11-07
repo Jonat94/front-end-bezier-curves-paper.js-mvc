@@ -1,16 +1,30 @@
-("use strict");
+"use strict";
+
 export default class ToolController {
-  constructor(mod, tlbView, canView, drawController) {
-    this.model = mod;
-    this.toolbarView = tlbView;
-    this.canvasView = canView;
+  constructor(model, toolbarView, canvasView, drawController) {
+    this.model = model;
+    this.toolbarView = toolbarView;
+    this.canvasView = canvasView;
     this.drawController = drawController;
+
+    // Créer une première courbe
     this.model.createNewCurve();
+
+    // Mise à jour de l'interface initiale
     this.toolbarView.updateCurveList(this.model.curves);
     this.toolbarView.updateBackgroundCbx(this.model.backgroundVisible);
     this.toolbarView.updateHandlesViewCbx(this.model.handlesVisible);
     this.toolbarView.updateOffsetViewCbx(this.model.offsetVisible);
 
+    // Lier tous les événements de la toolbar
+    this._bindEvents();
+  }
+
+  /**
+   * Lier tous les événements de la toolbar
+   */
+  _bindEvents() {
+    // --- Slider pour l'offset ---
     this.toolbarView.bindSlider((e) => {
       const value = parseFloat(e.target.value);
       this.toolbarView.offsetValue.textContent = value;
@@ -19,15 +33,15 @@ export default class ToolController {
       if (!curve) return;
 
       // Mettre à jour l'offset de la courbe
-      this.model.curves[this.model.currentCurveIndex].offsetData.offset = value;
+      if (curve.offsetData) curve.offsetData.offset = value;
 
-      // Recalculer l'offset avec les points de la courbe
-      const points = this.model.getPointsFromCurves(this.model.curves); // renvoi les points echantilloné des courbes principal
-      points.forEach((point, index) =>
-        this.model.computeOffsetFromPoints(this.model.curves[index], point)
-      );
+      // Recalculer les offsets pour toutes les courbes
+      const pointsArray = this.model.getPointsFromCurves();
+      pointsArray.forEach((points, index) => {
+        this.model.computeOffsetFromPoints(this.model.curves[index], points);
+      });
 
-      // 3Rerender la courbe avec la nouvelle offset
+      // Re-render la courbe
       this.canvasView.renderCurves(
         this.model.curves,
         this.model.handlesVisible,
@@ -35,35 +49,37 @@ export default class ToolController {
       );
     });
 
+    // --- Ajouter une nouvelle courbe ---
     this.toolbarView.bindAddCurve(() => {
       this.model.createNewCurve();
       this.toolbarView.updateCurveList(this.model.curves);
       this.toolbarView.setSelectedCurve(this.model.currentCurveIndex);
-      // this.toolbarView.updateOffsetValue(
-      //   this.model.curves[this.model.currentCurveIndex].offsetData.offset
-      // );
     });
 
+    // --- Supprimer la courbe courante ---
     this.toolbarView.bindDeleteCurve(() => {
       this.model.deleteCurrentCurve();
       this.toolbarView.updateCurveList(this.model.curves);
       this.canvasView.renderCurves(this.model.curves);
     });
 
+    // --- Exporter le canvas en PNG ---
     this.toolbarView.bindExport(() => {
       this.canvasView.exportAsImage("mon_dessin.png");
     });
 
+    // --- Sélection d'une courbe dans la liste ---
     this.toolbarView.bindCurveSelect((index) => {
       this.model.currentCurveIndex = index;
-      this.toolbarView.updateOffsetValue(
-        this.model.curves[index].offsetData.offset
-      );
+      const curve = this.model.curves[index];
+      if (curve.offsetData) {
+        this.toolbarView.updateOffsetValue(curve.offsetData.offset);
+      }
     });
 
+    // --- Toggle affichage des poignées ---
     this.toolbarView.bindToggleHandles(() => {
       this.model.handlesVisible = !this.model.handlesVisible;
-      console.log("toggle handles");
       this.canvasView.renderCurves(
         this.model.curves,
         this.model.handlesVisible,
@@ -71,33 +87,33 @@ export default class ToolController {
       );
     });
 
+    // --- Supprimer un point sélectionné ---
     this.toolbarView.bindDeletePoint(() => {
-      console.log("aaaaa", this.drawController);
-      if (this.drawController.selectedItem)
-        this.model.deletePoint(this.drawController.selectedItem?.data.id);
-      this.drawController.selectedItem = null;
-      //this.canvasView.renderCurves(this.model.curves);
-      // this.model.computeOffset();
+      if (this.drawController.selectedItem) {
+        const id = this.drawController.selectedItem.data.id;
+        this.model.deletePoint(id);
+        this.drawController.selectedItem = null;
+      }
       this.canvasView.renderCurves(
         this.model.curves,
         this.model.handlesVisible,
         this.model.offsetVisible
       );
-      console.log("bbbbb", this.drawController);
     });
 
+    // --- Sauvegarder la courbe actuelle ---
     this.toolbarView.bindSave(() => {
       this.model.exportCurve();
-      console.log("export");
     });
 
+    // --- Importer une courbe depuis un fichier JSON ---
     this.toolbarView.bindImport((event) => {
-      const file = event.target.files[0]; // Récupère le fichier choisi
+      const file = event.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        const content = e.target.result; // Contenu du fichier JSON
+        const content = e.target.result;
         try {
           this.model.importCurve(content);
           this.model.computeOffset();
@@ -107,30 +123,30 @@ export default class ToolController {
             this.model.offsetVisible
           );
           this.toolbarView.updateCurveList(this.model.curves);
-
           this.model.currentCurveIndex = 0;
         } catch (err) {
           console.error("Erreur JSON :", err);
         }
       };
-
-      reader.readAsText(file); // Lit le fichier comme texte
+      reader.readAsText(file);
     });
 
+    // --- Toggle affichage du fond ---
     this.toolbarView.bindToggleBackground(() => {
       this.model.backgroundVisible = !this.model.backgroundVisible;
-      //console.log("toggle background", this.model.backgroundVisible);
       this.canvasView.setBackground(this.model.backgroundVisible);
     });
 
+    // --- Toggle affichage des offsets ---
     this.toolbarView.bindOffset(() => {
       this.renderOffset();
     });
   }
 
+  /**
+   * Toggle affichage des offsets et re-render
+   */
   renderOffset() {
-    const curves = this.model.curves;
-    //console.log(" masquer offset");
     this.model.offsetVisible = !this.model.offsetVisible;
     this.canvasView.renderCurves(
       this.model.curves,

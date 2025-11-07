@@ -1,6 +1,12 @@
-("use strict");
+"use strict";
+
+/**
+ * Classe gérant la barre d'outils pour l'édition des courbes.
+ * Elle lie les éléments HTML aux callbacks et fournit des méthodes de mise à jour.
+ */
 export default class ToolbarView {
   constructor() {
+    // Références vers les éléments DOM
     this.toggleHandlesCbx = document.getElementById("toggleHandlesCbx");
     this.deletePointBtn = document.getElementById("deletePointBtn");
     this.deleteBtn = document.getElementById("deleteBtn");
@@ -15,11 +21,12 @@ export default class ToolbarView {
     this.importInput = document.getElementById("importFile");
   }
 
+  // ---------------------------
+  // --- Méthodes de binding ---
+  // ---------------------------
+
   bindToggleBackground(handler) {
     this.toggleBackgroundCbx.addEventListener("click", handler);
-  }
-  updateBackgroundCbx(backgroundVisible) {
-    this.toggleBackgroundCbx.checked = backgroundVisible;
   }
 
   bindSlider(handler) {
@@ -32,10 +39,6 @@ export default class ToolbarView {
 
   bindToggleHandles(handler) {
     this.toggleHandlesCbx.addEventListener("click", handler);
-  }
-
-  updateHandlesViewCbx(handlesVisible) {
-    this.toggleHandlesCbx.checked = handlesVisible;
   }
 
   bindAddCurve(handler) {
@@ -56,7 +59,32 @@ export default class ToolbarView {
     this.deleteBtn.addEventListener("click", handler);
   }
 
+  bindExport(handler) {
+    this.export.addEventListener("click", handler);
+  }
+
+  bindSave(handler) {
+    this.save.addEventListener("click", handler);
+  }
+
+  bindImport(handler) {
+    this.importInput.addEventListener("change", handler);
+  }
+
+  // ---------------------------
+  // --- Méthodes de mise à jour ---
+  // ---------------------------
+
+  updateBackgroundCbx(backgroundVisible) {
+    this.toggleBackgroundCbx.checked = backgroundVisible;
+  }
+
+  updateHandlesViewCbx(handlesVisible) {
+    this.toggleHandlesCbx.checked = handlesVisible;
+  }
+
   updateCurveList(curveNames) {
+    // Vide la liste avant de la remplir
     this.curveSelect.innerHTML = "";
     curveNames.forEach((curve, index) => {
       const option = document.createElement("option");
@@ -71,21 +99,12 @@ export default class ToolbarView {
     this.offsetValue.value = offsetValue;
     this.offsetValue.innerText = offsetValue;
   }
+
   updateOffsetViewCbx(visible) {
     this.addOffsetCbxBtn.checked = visible;
   }
 
   setSelectedCurve(index) {
     this.curveSelect.value = index;
-  }
-
-  bindExport(handler) {
-    this.export.addEventListener("click", handler);
-  }
-  bindSave(handler) {
-    this.save.addEventListener("click", handler);
-  }
-  bindImport(handler) {
-    this.importInput.addEventListener("change", handler);
   }
 }

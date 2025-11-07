@@ -1,5 +1,5 @@
+"use strict";
 import paper from "../paperSetup.js";
-("use strict");
 
 export default class DrawingController {
   constructor(model, view) {
@@ -15,6 +15,9 @@ export default class DrawingController {
     this._setupTool();
   }
 
+  /**
+   * Initialise l'outil Paper.js et ses événements
+   */
   _setupTool() {
     const tool = new paper.Tool();
 
@@ -31,13 +34,11 @@ export default class DrawingController {
         tolerance: 8,
       });
 
-      // --- Si clic sur un point / poignée → on la sélectionne ---
+      // --- Clic sur un point ou poignée ---
       if (
         hit &&
         hit.item &&
-        (hit.item.data.type === "circle" ||
-          hit.item.data.type === "bezier_in" ||
-          hit.item.data.type === "bezier_out")
+        ["circle", "bezier_in", "bezier_out"].includes(hit.item.data.type)
       ) {
         this.selectedItem = hit.item;
         this.dragOffset = event.point.subtract(hit.item.position);
@@ -49,32 +50,31 @@ export default class DrawingController {
           this.model.offsetVisible,
           this.selectedItem
         );
-
         return;
       }
 
-      // --- Sinon, test si clic sur la courbe (au moins 2 points) ---
+      // --- Clic sur la courbe (au moins 2 points) ---
       if (curve.handles.length >= 2) {
-        const path = new paper.Path(curve.handles.map((h) => h.segt));
-        const nearest = path.getNearestPoint(event.point);
+        const path = new paper.Path();
+        curve.handles.forEach((h) => path.add(h.segt));
 
+        const nearest = path.getNearestPoint(event.point);
         if (nearest && nearest.getDistance(event.point) < 10) {
           this.isDraggingCurve = true;
           this.lastMousePos = event.point;
           this.selectedItem = null;
-          path.remove(); // supprimer le path temporaire
+          path.remove();
           return;
         }
-
-        path.remove(); // supprimer le path temporaire si pas proche
+        path.remove();
       }
 
       // --- Sinon → ajout d'un nouveau point ---
       if (!this.model.handlesVisible) return;
 
-      let idShape = this.model.generateId();
-      let idIn = this.model.generateId();
-      let idOut = this.model.generateId();
+      const idShape = this.model.generateId();
+      const idIn = this.model.generateId();
+      const idOut = this.model.generateId();
 
       curve.handles.push({
         id: idShape,
@@ -117,30 +117,39 @@ export default class DrawingController {
       if (this.selectedItem) {
         this.selectedItem.position = event.point.subtract(this.dragOffset);
 
-        let tab;
-        if (this.selectedItem.data.type === "circle") {
-          tab = curve.handles.filter((h) => h.id === this.selectedItem.data.id);
-          if (tab[0]) {
-            tab[0].segt.point = tab[0].segt.point.add(event.delta);
-          }
-        }
+        let targetHandles;
 
-        if (this.selectedItem.data.type === "bezier_in") {
-          tab = curve.handles.filter(
-            (h) => h.inPointId === this.selectedItem.data.id
-          );
-          if (tab[0]) {
-            tab[0].segt.handleIn = tab[0].segt.handleIn.add(event.delta);
-          }
-        }
+        switch (this.selectedItem.data.type) {
+          case "circle":
+            targetHandles = curve.handles.filter(
+              (h) => h.id === this.selectedItem.data.id
+            );
+            if (targetHandles[0]) {
+              targetHandles[0].segt.point = targetHandles[0].segt.point.add(
+                event.delta
+              );
+            }
+            break;
 
-        if (this.selectedItem.data.type === "bezier_out") {
-          tab = curve.handles.filter(
-            (h) => h.outPointId === this.selectedItem.data.id
-          );
-          if (tab[0]) {
-            tab[0].segt.handleOut = tab[0].segt.handleOut.add(event.delta);
-          }
+          case "bezier_in":
+            targetHandles = curve.handles.filter(
+              (h) => h.inPointId === this.selectedItem.data.id
+            );
+            if (targetHandles[0]) {
+              targetHandles[0].segt.handleIn =
+                targetHandles[0].segt.handleIn.add(event.delta);
+            }
+            break;
+
+          case "bezier_out":
+            targetHandles = curve.handles.filter(
+              (h) => h.outPointId === this.selectedItem.data.id
+            );
+            if (targetHandles[0]) {
+              targetHandles[0].segt.handleOut =
+                targetHandles[0].segt.handleOut.add(event.delta);
+            }
+            break;
         }
 
         this.model.computeOffset();
@@ -170,9 +179,13 @@ export default class DrawingController {
 
   /**
    * Vérifie si l'item sélectionné appartient à la courbe sélectionnée
+   * @param {object} itemData
+   * @param {object} curve
+   * @returns {boolean}
    */
   isItemOnSelectedCurve(itemData, curve) {
     if (!itemData || !curve || !curve.handles) return false;
+
     return curve.handles.some(
       (h) =>
         h.id === itemData.data.id ||
