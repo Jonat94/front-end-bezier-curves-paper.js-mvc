@@ -13,7 +13,7 @@ export default class ToolController {
     // Mise à jour de l'interface initiale
     this.toolbarView.updateCurveList(this.model.curves);
     this.toolbarView.updateBackgroundCbx(this.model.backgroundVisible);
-    this.toolbarView.updateHandlesViewCbx(this.model.handlesVisible);
+    this.toolbarView.updateHandlesViewCbx(this.drawController.handlesVisible);
     this.toolbarView.updateOffsetViewCbx(this.model.offsetVisible);
 
     // Lier tous les événements de la toolbar
@@ -44,7 +44,7 @@ export default class ToolController {
       // Re-render la courbe
       this.canvasView.renderCurves(
         this.model.curves,
-        this.model.handlesVisible,
+        this.drawController.handlesVisible,
         this.model.offsetVisible
       );
     });
@@ -79,10 +79,10 @@ export default class ToolController {
 
     // --- Toggle affichage des poignées ---
     this.toolbarView.bindToggleHandles(() => {
-      this.model.handlesVisible = !this.model.handlesVisible;
+      this.drawController.handlesVisible = !this.drawController.handlesVisible;
       this.canvasView.renderCurves(
         this.model.curves,
-        this.model.handlesVisible,
+        this.drawController.handlesVisible,
         this.model.offsetVisible
       );
     });
@@ -96,7 +96,7 @@ export default class ToolController {
       }
       this.canvasView.renderCurves(
         this.model.curves,
-        this.model.handlesVisible,
+        this.drawController.handlesVisible,
         this.model.offsetVisible
       );
     });
@@ -119,7 +119,7 @@ export default class ToolController {
           this.model.computeOffset();
           this.canvasView.renderCurves(
             this.model.curves,
-            this.model.handlesVisible,
+            this.drawController.handlesVisible,
             this.model.offsetVisible
           );
           this.toolbarView.updateCurveList(this.model.curves);
@@ -150,7 +150,7 @@ export default class ToolController {
     this.model.offsetVisible = !this.model.offsetVisible;
     this.canvasView.renderCurves(
       this.model.curves,
-      this.model.handlesVisible,
+      this.drawController.handlesVisible,
       this.model.offsetVisible
     );
   }

@@ -47,7 +47,7 @@ export default class DrawingController {
         this.model.computeOffset();
         this.view.renderCurves(
           this.model.curves,
-          this.model.handlesVisible,
+          this.handlesVisible,
           this.model.offsetVisible,
           this.selectedItem
         );
@@ -71,7 +71,7 @@ export default class DrawingController {
       }
 
       // --- Sinon → ajout d'un nouveau point ---
-      if (!this.model.handlesVisible) return;
+      if (!this.handlesVisible) return;
 
       const idShape = this.model.generateId();
       const idIn = this.model.generateId();
@@ -107,7 +107,7 @@ export default class DrawingController {
         this.model.moveCurrentCurve(dx, dy);
         this.view.renderCurves(
           this.model.curves,
-          this.model.handlesVisible,
+          this.handlesVisible,
           this.model.offsetVisible,
           this.selectedItem
         );
@@ -156,7 +156,7 @@ export default class DrawingController {
         this.model.computeOffset();
         this.view.renderCurves(
           this.model.curves,
-          this.model.handlesVisible,
+          this.handlesVisible,
           this.model.offsetVisible,
           this.selectedItem
         );
@@ -171,7 +171,7 @@ export default class DrawingController {
       this.model.computeOffset();
       this.view.renderCurves(
         this.model.curves,
-        this.model.handlesVisible,
+        this.handlesVisible,
         this.model.offsetVisible,
         this.selectedItem
       );

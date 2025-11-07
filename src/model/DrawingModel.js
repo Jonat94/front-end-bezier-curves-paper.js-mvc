@@ -4,12 +4,11 @@ import paper from "../paperSetup.js";
 
 export default class DrawingModel {
   constructor() {
-    this.currentStrokeWidth = 20;
+    //this.currentStrokeWidth = 20;
     this.currentCurveIndex = -1;
     this.curves = [];
     this._idCounter = 0;
     this.curveCounter = 0;
-    this.handlesVisible = true;
     this.offsetVisible = true;
     this.backgroundVisible = true;
     this.offsetPointsDistance = 4;
