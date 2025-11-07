@@ -49,7 +49,6 @@ export default class ToolbarView {
 
   bindDeletePoint(handler) {
     this.deletePointBtn.addEventListener("click", handler);
-    //console.log("clic delete");
   }
 
   bindDeleteCurve(handler) {
@@ -67,11 +66,9 @@ export default class ToolbarView {
   }
 
   updateOffsetValue(offsetValue) {
-    // this.curveSelect.innerHTML = "";
     this.offsetSlider.value = offsetValue;
     this.offsetValue.value = offsetValue;
     this.offsetValue.innerText = offsetValue;
-    // Add new options
   }
   updateOffsetViewCbx(visible) {
     this.addOffsetCbxBtn.checked = visible;

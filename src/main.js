@@ -14,7 +14,7 @@ window.onload = () => {
   const model = new DrawingModel();
   const canvasView = new CanvasView(canvas);
   const toolbarView = new ToolbarView();
+  const drawingController = new DrawingController(model, canvasView);
 
-  new ToolController(model, toolbarView, canvasView);
-  new DrawingController(model, canvasView);
+  new ToolController(model, toolbarView, canvasView, drawingController);
 };

@@ -23,18 +23,13 @@ export default class CanvasView {
     else this.backgroundLayer.visible = false;
   }
 
-  //definie la visibilité des handles
-  // setHandlesVisible(visibility) {
-  //   console.log("aaaaaa");
-  // }
-
   //efface tous les elements du premier plan
   clear() {
     this.foregroundLayer.removeChildren();
   }
 
   //dessine une courbe dans le canvase
-  drawCurve(curve, visibility = true) {
+  drawCurve(curve, visibility = true, selectedItem) {
     const path = new paper.Path();
 
     path.strokeColor = "#000000";
@@ -43,10 +38,13 @@ export default class CanvasView {
     curve.handles.forEach((p, index) => {
       path.add(p.segt);
       if (!visibility) return;
+      console.log("llllll", selectedItem);
       //ajoute un cercle rouge pour chaque point de la courbe
+      let dotColor = "#ff0000";
+      if (selectedItem?.contains(p.segt.point)) dotColor = "#2cff61ff";
       this.makeCircle(
         p.segt.point,
-        "#ff0000",
+        dotColor,
         p.id,
         "circle",
         p.inPointId,
@@ -86,25 +84,25 @@ export default class CanvasView {
     curves,
     visibility = true,
     visibility_offset = true,
+    selectedItem = null,
     fillColor = "rgba(0,150,255,0.2)"
   ) {
     this.clear();
-
+    console.log("rrr", selectedItem);
     curves.forEach((curve) => {
       // Dessine la courbe principale
-      this.drawCurve(curve, visibility);
+      this.drawCurve(curve, visibility, selectedItem);
 
-      // Dessine la courbe offset
-      this.drawOffset(curve, visibility_offset);
+      // Dessine la courbe offset si la courbe principal à plus de deux points
+      if (visibility_offset && curve.offsetData.points.length > 1) {
+        this.drawOffset(curve, visibility_offset);
+      }
 
       // Remplit la zone entre la courbe principale et son offset
       if (visibility_offset && curve.offsetData?.points?.length) {
         this.fillBetweenCurves(curve, fillColor);
       }
     });
-
-    // 🔍 Optionnel : afficher les normales pour debug
-    // curves.forEach((curve) => this.drawNormalsFacingOffset(curve));
 
     paper.view.update();
   }
@@ -163,64 +161,6 @@ export default class CanvasView {
     offsetCurve.addSegments(curve.offsetData.points);
     offsetCurve.sendToBack();
   }
-
-  // Affiche les normales des points de la courbe d'offset en face des échantillons de la courbe principale
-  // drawNormalsFacingOffset(curve, length = 25, color = "red") {
-  //   if (!curve?.offsetData?.points?.length || !curve.handles?.length) return;
-
-  //   // Crée le chemin principal
-  //   const mainPath = new paper.Path();
-  //   mainPath.visible = false;
-  //   curve.handles.forEach((p) => mainPath.add(p.segt));
-
-  //   // Supprime les anciennes normales
-  //   paper.project.activeLayer.children
-  //     .filter((item) => item.data && item.data.type === "normal-debug")
-  //     .forEach((item) => item.remove());
-
-  //   // On prend le premier point d'offset pour déterminer le côté
-  //   const refOffset = new paper.Point(
-  //     curve.offsetData.points[0].x,
-  //     curve.offsetData.points[0].y
-  //   );
-  //   const nearestRef = mainPath.getNearestLocation(refOffset);
-  //   const tangentRef = mainPath.getTangentAt(nearestRef.offset).normalize();
-  //   const normal1Ref = tangentRef.rotate(90).normalize();
-  //   const normal2Ref = tangentRef.rotate(-90).normalize();
-  //   const side =
-  //     normal1Ref.dot(nearestRef.point.subtract(refOffset)) >
-  //     normal2Ref.dot(nearestRef.point.subtract(refOffset))
-  //       ? normal1Ref
-  //       : normal2Ref;
-
-  //   // Pour chaque point d'offset
-  //   curve.offsetData.points.forEach((ptRaw) => {
-  //     const offsetPt = new paper.Point(ptRaw.x, ptRaw.y);
-
-  //     // Tangente et normales à ce point sur la courbe principale
-  //     const nearest = mainPath.getNearestLocation(offsetPt);
-  //     if (!nearest) return;
-
-  //     const tangent = mainPath.getTangentAt(nearest.offset).normalize();
-  //     const normal1 = tangent.rotate(90).normalize();
-  //     const normal2 = tangent.rotate(-90).normalize();
-
-  //     // Choisir la normale correspondant au côté de référence
-  //     const normal = normal1.dot(side) > normal2.dot(side) ? normal1 : normal2;
-
-  //     // Dessiner la normale
-  //     const normalLine = new paper.Path.Line({
-  //       from: offsetPt,
-  //       to: offsetPt.add(normal.multiply(length)),
-  //       strokeColor: color,
-  //       strokeWidth: 2,
-  //       dashArray: [4, 3],
-  //     });
-  //     normalLine.data.type = "normal-debug";
-  //   });
-
-  //   mainPath.remove();
-  // }
 
   // --- Méthode d’export PNG ---
   exportAsImage(filename = "graphe.png") {

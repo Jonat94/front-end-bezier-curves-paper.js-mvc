@@ -13,7 +13,6 @@ export default class DrawingModel {
     this.handlesVisible = true; //flag permettant de specifier si il faut afficher les poingées
     this.offsetVisible = true; //flag permettant de specifier si il faut afficher l'offset
     this.backgroundVisible = true; //Flag permettant de specifier si le fond doit s'afficher.
-    this.selectedItem = null; //item paper selectionné sur le canvas (à placer dans la vue)
   }
 
   //construit le tableau à partir de tous les points echantillioné sur la courbe
@@ -163,13 +162,32 @@ export default class DrawingModel {
   }
 
   //retourne un echantillonage des courbes principales
+  // computeOffset() {
+  //   if (!this.curves) return;
+  //   const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
+  //   this.curves.forEach((curve, i) => {
+  //     const points = allPoints[i];
+  //     this.computeOffsetFromPoints(curve, points); // envoi les points offset calculé a computeOffsetFromPoints pour filtrage et stockage
+  //   });
+  // }
+
   computeOffset() {
     if (!this.curves) return;
-    const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
-    this.curves.forEach((curve, i) => {
-      const points = allPoints[i];
-      this.computeOffsetFromPoints(curve, points); // envoi les points offset calculé a computeOffsetFromPoints pour filtrage et stockage
-    });
+    for (const curve of this.curves) {
+      // Si la courbe a moins de 2 points, pas d'offset possible
+      if (!curve.handles || curve.handles.length < 2) {
+        curve.offsetData.points = []; // vider l'offset
+        continue;
+      }
+
+      const allPoints = this.getPointsFromCurves(this.curves); //--> recupere le tableau des points de l'offset de chaque courbe
+      this.curves.forEach((curve, i) => {
+        const points = allPoints[i];
+        this.computeOffsetFromPoints(curve, points); // envoi les points offset calculé a computeOffsetFromPoints pour filtrage et stockage
+      });
+
+      // ... ton code actuel ...
+    }
   }
 
   //retourne l'echantillonage de toutes les courbes de bezier dans un array
@@ -192,10 +210,10 @@ export default class DrawingModel {
   }
 
   //supprime le point sélctionné (a réécrire)...
-  deletePoint() {
+  deletePoint(id) {
     let tab;
     tab = this.curves[this.currentCurveIndex].handles.filter((h) => {
-      return h.id == this.selectedItem.data.id;
+      return h.id == id;
     });
     let index = this.curves[this.currentCurveIndex].handles.indexOf(tab[0]);
     this.curves[this.currentCurveIndex].handles.splice(index, 1);

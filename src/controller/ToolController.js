@@ -1,9 +1,10 @@
 ("mode strict");
 export default class ToolController {
-  constructor(mod, tlbView, canView) {
+  constructor(mod, tlbView, canView, drawController) {
     this.model = mod;
     this.toolbarView = tlbView;
     this.canvasView = canView;
+    this.drawController = drawController;
     this.model.createNewCurve();
     this.toolbarView.updateCurveList(this.model.curves);
     this.toolbarView.updateBackgroundCbx(this.model.backgroundVisible);
@@ -71,13 +72,18 @@ export default class ToolController {
     });
 
     this.toolbarView.bindDeletePoint(() => {
-      this.model.deletePoint();
-      this.canvasView.renderCurves(this.model.curves);
+      console.log("aaaaa", this.drawController);
+      if (this.drawController.selectedItem)
+        this.model.deletePoint(this.drawController.selectedItem?.data.id);
+      this.drawController.selectedItem = null;
+      //this.canvasView.renderCurves(this.model.curves);
+      // this.model.computeOffset();
       this.canvasView.renderCurves(
         this.model.curves,
         this.model.handlesVisible,
         this.model.offsetVisible
       );
+      console.log("bbbbb", this.drawController);
     });
 
     this.toolbarView.bindSave(() => {
@@ -93,18 +99,7 @@ export default class ToolController {
       reader.onload = (e) => {
         const content = e.target.result; // Contenu du fichier JSON
         try {
-          //const data = JSON.parse(content);
-          //console.log("JSON importé :", data);
-
-          // Charger les données dans ton modèle
           this.model.importCurve(content);
-
-          // Redessiner les courbes sur le canvas
-          // controller.view.renderCurves(
-          //     controller.model.curves,
-          //     controller.model.handlesVisible,
-          //     controller.model.offsetVisible
-          // );
           this.model.computeOffset();
           this.canvasView.renderCurves(
             this.model.curves,
