@@ -39,9 +39,9 @@ export default class ToolController {
       this.model.createNewCurve();
       this.toolbarView.updateCurveList(this.model.curves);
       this.toolbarView.setSelectedCurve(this.model.currentCurveIndex);
-      this.toolbarView.updateOffsetValue(
-        this.model.curves[this.model.currentCurveIndex].offsetData.offset
-      );
+      // this.toolbarView.updateOffsetValue(
+      //   this.model.curves[this.model.currentCurveIndex].offsetData.offset
+      // );
     });
 
     this.toolbarView.bindDeleteCurve(() => {

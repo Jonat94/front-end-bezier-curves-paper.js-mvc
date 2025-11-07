@@ -195,6 +195,30 @@ export default class DrawingModel {
     });
   }
 
+  //supprime la courbe en cours de modification
+  deleteCurrentCurve() {
+    if (
+      this.currentCurveIndex < 0 ||
+      this.currentCurveIndex >= this.curves.length
+    ) {
+      console.warn("Aucune courbe à supprimer.");
+      return;
+    }
+
+    // Supprimer le chemin de Paper.js
+    //this.curves[this.currentCurveIndex].path.remove();
+
+    // Supprimer la courbe du tableau
+    this.curves.splice(this.currentCurveIndex, 1);
+
+    // Mettre à jour l'index de la courbe courante
+    if (this.curves.length === 0) {
+      this.currentCurveIndex = -1; // Aucune courbe restante
+    } else if (this.currentCurveIndex >= this.curves.length) {
+      this.currentCurveIndex = this.curves.length - 1; // Aller à la dernière courbe
+    }
+  }
+
   exportCurve() {
     const jsonData = JSON.stringify(this.curves[this.currentCurveIndex]);
     const blob = new Blob([jsonData], { type: "application/json" });
