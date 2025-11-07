@@ -39,7 +39,7 @@ export default class DrawingModel {
           line: null,
           sampleStep: 5,
           scale: 100,
-          offset: 40,
+          offset: 60,
         },
       ],
     });

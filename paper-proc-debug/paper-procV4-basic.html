@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <title>template paper.js</title>
+    <script src="https://unpkg.com/paper@0.12.15/dist/paper-full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/clipper.js"></script>
+    <style>
+        canvas {
+            width: 1000px;
+            height: 600px;
+            background-color: rgb(239, 239, 239);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" resize></canvas>
+
+    <script type="text/javascript">
+
+        class DrawingModel {
+            constructor() {
+                this.currentStrokeWidth = 2;
+                this.currentCurveIndex = -1;
+                this.curves = [];
+                this._idCounter = 0;
+                this.curveCounter = 0;
+                this.handlesVisible = true;
+                this.offsetVisible = true;
+            }
+
+            createNewCurve(name = `Courbe ${++this.curveCounter}`) {
+                const handles = [];
+                this.curves.push({
+                    name,
+                    handles,
+                    offsets: [
+                        {
+                            points: [],
+                            sampleStep: 5,
+                            scale: 100,
+                            offset: 10,
+                        },
+                        {
+                            points: [],
+                            sampleStep: 5,
+                            scale: 100,
+                            offset: 30,
+                        },
+                        {
+                            points: [],
+                            sampleStep: 5,
+                            scale: 100,
+                            offset: 50,
+                        }
+
+                    ],
+                });
+                this.currentCurveIndex = this.curves.length - 1;
+            }
+
+            generateId(prefix = "id") {
+                this._idCounter += 1;
+                return `${prefix}-${this._idCounter}`;
+            }
+
+            computeOffset() {
+                if (!this.curves?.length) return;
+                const allPoints = this.getPointsFromCurves();
+
+                this.curves.forEach((curve, i) => {
+                    const points = allPoints[i];
+                    curve.offsets.forEach((offsetData) => {
+                        this.computeOffsetFromPoints(curve, points, offsetData);
+                    });
+                });
+            }
+
+            computeOffsetFromPoints(curve, points, offsetData) {
+                if (!points || points.length < 2) return;
+
+                const pts = points.map((pt) => ({
+                    X: Math.round(pt.x * offsetData.scale),
+                    Y: Math.round(pt.y * offsetData.scale),
+                }));
+
+                const co = new ClipperLib.ClipperOffset();
+                co.AddPath(pts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenRound);
+                const solution_paths = new ClipperLib.Paths();
+                co.Execute(solution_paths, offsetData.offset * offsetData.scale);
+
+                if (!solution_paths.length) {
+                    offsetData.points = [];
+                    return;
+                }
+
+                let best = solution_paths[0];
+                for (let i = 1; i < solution_paths.length; i++) {
+                    if (solution_paths[i].length > best.length) best = solution_paths[i];
+                }
+
+                const offsetPointsRaw = best.map(
+                    (pt) => new paper.Point(pt.X / offsetData.scale, pt.Y / offsetData.scale)
+                );
+
+                offsetData.points = [];
+                let lastPt = null;
+                offsetPointsRaw.forEach((pt) => {
+                    if (!lastPt || pt.getDistance(lastPt) >= 4) {
+                        offsetData.points.push(pt);
+                        lastPt = pt;
+                    }
+                });
+
+                this.alignOffsetStart(curve, offsetData);
+                offsetData.points.reverse();
+                const closestIndex = this.getClosestOffsetPointToEnd(curve, offsetData);
+                offsetData.points = offsetData.points.slice(0, closestIndex + 1);
+                this.filterCornerPoints(curve, offsetData);
+            }
+
+            alignOffsetStart(curve, offsetData) {
+                if (!offsetData?.points?.length || !curve.handles?.length) return;
+                const startPoint = curve.handles[0].segt.point;
+                let minDist = Infinity;
+                let bestIndex = 0;
+                offsetData.points.forEach((pt, i) => {
+                    const d = pt.getDistance(startPoint);
+                    if (d < minDist) {
+                        minDist = d;
+                        bestIndex = i;
+                    }
+                });
+                offsetData.points = [
+                    ...offsetData.points.slice(bestIndex),
+                    ...offsetData.points.slice(0, bestIndex),
+                ];
+            }
+
+            getClosestOffsetPointToEnd(curve, offsetData) {
+                if (!offsetData?.points?.length || !curve.handles?.length) return 0;
+                const endPoint = curve.handles[curve.handles.length - 1].segt.point;
+                let minDistance = Infinity;
+                let closestIndex = 0;
+                offsetData.points.forEach((pt, i) => {
+                    const d = pt.getDistance(endPoint);
+                    if (d < minDistance) {
+                        minDistance = d;
+                        closestIndex = i;
+                    }
+                });
+                return closestIndex;
+            }
+
+            filterCornerPoints(curve, offsetData) {
+                const start = curve.handles[0].segt.point;
+                const end = curve.handles[curve.handles.length - 1].segt.point;
+                const filteredPoints = offsetData.points.filter((pt) => {
+                    const distStart = pt.getDistance(start);
+                    const distEnd = pt.getDistance(end);
+                    return distStart > offsetData.offset + 1 && distEnd > offsetData.offset + 1;
+                });
+                offsetData.points = filteredPoints;
+            }
+
+            getPointsFromCurves() {
+                return this.curves.map((curve) => {
+                    const path = new paper.Path();
+                    path.visible = false;
+                    curve.handles.forEach((p) => path.add(p.segt));
+                    const sampledPoints = [];
+                    const step = curve.offsets[0]?.sampleStep || 5;
+                    for (let s = 0; s <= path.length; s += step) {
+                        const p = path.getPointAt(s);
+                        if (p) sampledPoints.push(p);
+                    }
+                    path.remove();
+                    return sampledPoints;
+                });
+            }
+
+
+        }
+
+        class CanvasView {
+            constructor(canvasElement) {
+                paper.setup(canvasElement);
+                this.canvas = canvasElement;
+                this.foregroundLayer = new paper.Layer();
+                this.foregroundLayer.activate();
+            }
+
+            clear() {
+                this.foregroundLayer.removeChildren();
+            }
+
+            renderCurves(curves, showHandles = true, showOffsets = true, selectedItem = null, fillColor = "rgba(0,150,255,0.2)") {
+                this.clear();
+
+                curves.forEach((curve) => {
+                    this.drawCurve(curve, showHandles, selectedItem);
+
+                    if (showOffsets && curve.offsets.length) {
+                        curve.offsets.forEach((offsetData) => {
+                            if (offsetData.points.length > 1) {
+                                this.drawOffset(offsetData);
+                                this.fillBetweenCurves(curve, offsetData, fillColor);
+                            }
+                        });
+                    }
+                });
+
+                paper.view.update();
+            }
+
+            drawCurve(curve, visibility = true, selectedItem) {
+                const path = new paper.Path({ strokeColor: "#000", strokeWidth: curve.currentStrokeWidth || 2 });
+                curve.handles.forEach((p) => {
+                    path.add(p.segt);
+                    if (!visibility) return;
+                    this.makeCircle(p.segt.point, selectedItem?.contains(p.segt.point) ? "#2cff61ff" : "#ff0000", p.id, "circle", p.inPointId, p.outPointId);
+                    this.makeCircle(p.segt.point.add(p.segt.handleIn), "#1e25fbff", p.inPointId, "bezier_in");
+                    this.makeCircle(p.segt.point.add(p.segt.handleOut), "#1e25fbff", p.outPointId, "bezier_out");
+                });
+                this.updateHandleLines(curve, visibility);
+            }
+
+            drawOffset(offsetData) {
+                const path = new paper.Path({ strokeColor: "green", strokeWidth: 2 });
+                offsetData.points.forEach((pt) => path.add(new paper.Point(pt.x, pt.y)));
+                path.sendToBack();
+            }
+
+            fillBetweenCurves(curve, offsetData, color) {
+                const fillPath = new paper.Path({ fillColor: color });
+                curve.handles.forEach((h) => fillPath.add(h.segt));
+                offsetData.points.slice().reverse().forEach((pt) => fillPath.add(new paper.Point(pt.x, pt.y)));
+                fillPath.closed = true;
+                fillPath.sendToBack();
+            }
+
+            makeCircle(point, color, id, type, inPtId, outPtId) {
+                const c = new paper.Path.Circle(point, 4);
+                c.fillColor = color;
+                c.data = { type, id, inPointId: inPtId, outPointId: outPtId };
+                return c;
+            }
+
+            updateHandleLines(curve, visibility = true) {
+                if (!visibility) return;
+                curve.handles.forEach((h) => {
+                    const pt = h.segt.point;
+                    [h.segt.handleIn, h.segt.handleOut].forEach((handle) => {
+                        const line = new paper.Path.Line({ from: pt, to: pt.add(handle), strokeColor: "gray", strokeWidth: 1, dashArray: [4, 4] });
+                        line.sendToBack();
+                    });
+                });
+            }
+        }
+
+        class DrawingController {
+            constructor(model, view) {
+                this.model = model;
+                this.view = view;
+                this.selectedItem = null;
+                this.dragOffset = null;
+                this.isDraggingCurve = false;
+                this.lastMousePos = null;
+                this._setupTool();
+            }
+
+            _setupTool() {
+                const tool = new paper.Tool();
+
+                tool.onMouseDown = (event) => {
+                    const curve = this.model.curves[this.model.currentCurveIndex];
+                    if (!curve) return;
+
+                    const hit = paper.project.hitTest(event.point, { fill: true, stroke: true, tolerance: 8 });
+                    if (hit && hit.item && ["circle", "bezier_in", "bezier_out"].includes(hit.item.data?.type)) {
+                        this.selectedItem = hit.item;
+                        this.dragOffset = event.point.subtract(hit.item.position);
+                        return;
+                    }
+
+                    // Ajouter un nouveau point
+                    const idShape = this.model.generateId();
+                    const idIn = this.model.generateId();
+                    const idOut = this.model.generateId();
+                    curve.handles.push({ id: idShape, segt: new paper.Segment(new paper.Point(event.point.x, event.point.y), new paper.Point(-50, 0), new paper.Point(50, 0)), inPointId: idIn, outPointId: idOut });
+                    this.selectedItem = null;
+                };
+
+                tool.onMouseDrag = (event) => {
+                    const curve = this.model.curves[this.model.currentCurveIndex];
+                    if (!curve) return;
+
+                    if (this.selectedItem) {
+                        this.selectedItem.position = event.point.subtract(this.dragOffset);
+                        let tab;
+                        if (this.selectedItem.data.type === "circle") {
+                            tab = curve.handles.filter((h) => h.id === this.selectedItem.data.id);
+                            tab[0].segt.point = tab[0].segt.point.add(event.delta);
+                        }
+                        if (this.selectedItem.data.type === "bezier_in") {
+                            tab = curve.handles.filter((h) => h.inPointId === this.selectedItem.data.id);
+                            tab[0].segt.handleIn = tab[0].segt.handleIn.add(event.delta);
+                        }
+                        if (this.selectedItem.data.type === "bezier_out") {
+                            tab = curve.handles.filter((h) => h.outPointId === this.selectedItem.data.id);
+                            tab[0].segt.handleOut = tab[0].segt.handleOut.add(event.delta);
+                        }
+                        this.model.computeOffset();
+                        this.view.renderCurves(this.model.curves, this.model.handlesVisible, this.model.offsetVisible, this.selectedItem);
+                    }
+                };
+
+                tool.onMouseUp = () => {
+                    this.isDraggingCurve = false;
+                    this.model.computeOffset();
+                    this.view.renderCurves(this.model.curves, this.model.handlesVisible, this.model.offsetVisible, this.selectedItem);
+                };
+            }
+        }
+
+        // --- Exemple d'initialisation ---
+        const canvas = document.getElementById("myCanvas");
+        const model = new DrawingModel();
+        const view = new CanvasView(canvas);
+        const controller = new DrawingController(model, view);
+
+        model.createNewCurve();
+        view.renderCurves(model.curves);
+
+
+    </script>
+</body>
+
+</html>
