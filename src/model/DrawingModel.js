@@ -194,4 +194,37 @@ export default class DrawingModel {
       return sampledPoints;
     });
   }
+
+  exportCurve() {
+    const jsonData = JSON.stringify(this.curves[this.currentCurveIndex]);
+    const blob = new Blob([jsonData], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `drawing${this.currentCurveIndex}.json`;
+    link.click();
+    console.log(jsonData);
+  }
+
+  importCurve(jsonData) {
+    console.log(jsonData);
+    const data = JSON.parse(jsonData);
+    console.log("lllllll", data);
+    let curve;
+    curve = data;
+    const handles = data.handles.map((h) => ({
+      id: h.id,
+      inPointId: h.inPointId,
+      outPointId: h.outPointId,
+      segt: new paper.Segment(
+        new paper.Point(h.segt[1][0], h.segt[1][1]),
+        new paper.Point(h.segt[2][0], h.segt[2][1]),
+        new paper.Point(h.segt[3][0], h.segt[3][1])
+      ),
+    }));
+    //console.log("oooooooooo", handles);
+    curve.handles = handles;
+
+    //console.log("jjjj", curve);
+    this.curves.push(curve);
+  }
 }

@@ -128,4 +128,14 @@ export default class CanvasView {
       });
     });
   }
+
+  // --- Méthode d’export PNG ---
+  exportAsImage(filename = "graphe.png") {
+    if (!this.canvas) return;
+    const dataURL = this.canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = dataURL;
+    link.download = filename;
+    link.click();
+  }
 }
