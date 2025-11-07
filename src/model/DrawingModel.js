@@ -4,13 +4,11 @@ import paper from "../paperSetup.js";
 
 export default class DrawingModel {
   constructor() {
-    //this.currentStrokeWidth = 20;
+    this.currentStrokeWidth = 4;
     this.currentCurveIndex = -1;
     this.curves = [];
-    this._idCounter = 0;
+    this.idCounter = 0;
     this.curveCounter = 0;
-    this.offsetVisible = true;
-    this.backgroundVisible = true;
     this.offsetPointsDistance = 4;
     this.clipperScale = 500;
     this.sampleStep = 5;
@@ -23,18 +21,19 @@ export default class DrawingModel {
       name,
       handles,
       offsetsData: [
-        { points: [], line: null, offset: 10 },
-        { points: [], line: null, offset: 30 },
-        { points: [], line: null, offset: 60 },
+        { points: [], offset: 12 },
+        { points: [], offset: 30 },
+        { points: [], offset: 60 },
       ],
+      strokeWidth: this.currentStrokeWidth,
     });
     this.currentCurveIndex = this.curves.length - 1;
   }
 
   // Génère un ID unique
   generateId(prefix = "id") {
-    this._idCounter += 1;
-    return `${prefix}-${this._idCounter}`;
+    this.idCounter += 1;
+    return `${prefix}-${this.idCounter}`;
   }
 
   // Calcule tous les offsets pour toutes les courbes

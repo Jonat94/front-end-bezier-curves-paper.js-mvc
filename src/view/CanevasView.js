@@ -64,7 +64,7 @@ export default class CanvasView {
   drawCurve(curve, visibility = true, selectedItem) {
     const path = new paper.Path({
       strokeColor: "#000",
-      strokeWidth: curve.currentStrokeWidth || 2,
+      strokeWidth: curve.strokeWidth || 2,
     });
 
     curve.handles.forEach((p) => {

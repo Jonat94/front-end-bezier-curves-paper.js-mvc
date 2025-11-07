@@ -9,6 +9,8 @@ export default class DrawingController {
     this.selectedItem = null;
     this.dragOffset = null;
     this.handlesVisible = true;
+    this.backgroundVisible = true;
+    this.offsetVisible = true;
 
     this.isDraggingCurve = false;
     this.lastMousePos = null;
@@ -48,7 +50,7 @@ export default class DrawingController {
         this.view.renderCurves(
           this.model.curves,
           this.handlesVisible,
-          this.model.offsetVisible,
+          this.offsetVisible,
           this.selectedItem
         );
         return;
@@ -108,7 +110,7 @@ export default class DrawingController {
         this.view.renderCurves(
           this.model.curves,
           this.handlesVisible,
-          this.model.offsetVisible,
+          this.offsetVisible,
           this.selectedItem
         );
         return;
@@ -157,7 +159,7 @@ export default class DrawingController {
         this.view.renderCurves(
           this.model.curves,
           this.handlesVisible,
-          this.model.offsetVisible,
+          this.offsetVisible,
           this.selectedItem
         );
       }
@@ -172,7 +174,7 @@ export default class DrawingController {
       this.view.renderCurves(
         this.model.curves,
         this.handlesVisible,
-        this.model.offsetVisible,
+        this.offsetVisible,
         this.selectedItem
       );
     };
