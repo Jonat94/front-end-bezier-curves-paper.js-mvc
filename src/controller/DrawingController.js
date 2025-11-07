@@ -8,6 +8,7 @@ export default class DrawingController {
 
     this.selectedItem = null;
     this.dragOffset = null;
+    this.handlesVisible = true;
 
     this.isDraggingCurve = false;
     this.lastMousePos = null;

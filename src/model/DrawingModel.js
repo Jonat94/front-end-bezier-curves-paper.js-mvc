@@ -12,6 +12,9 @@ export default class DrawingModel {
     this.handlesVisible = true;
     this.offsetVisible = true;
     this.backgroundVisible = true;
+    this.offsetPointsDistance = 4;
+    this.clipperScale = 500;
+    this.sampleStep = 5;
   }
 
   // Crée une nouvelle courbe avec trois offsets par défaut
@@ -21,9 +24,9 @@ export default class DrawingModel {
       name,
       handles,
       offsetsData: [
-        { points: [], line: null, sampleStep: 5, scale: 100, offset: 10 },
-        { points: [], line: null, sampleStep: 5, scale: 100, offset: 30 },
-        { points: [], line: null, sampleStep: 5, scale: 100, offset: 60 },
+        { points: [], line: null, offset: 10 },
+        { points: [], line: null, offset: 30 },
+        { points: [], line: null, offset: 60 },
       ],
     });
     this.currentCurveIndex = this.curves.length - 1;
@@ -39,7 +42,6 @@ export default class DrawingModel {
   computeOffset() {
     if (!this.curves?.length) return;
     const allPoints = this.getPointsFromCurves();
-
     this.curves.forEach((curve, i) => {
       const points = allPoints[i];
       curve.offsetsData.forEach((offsetData) => {
@@ -56,8 +58,8 @@ export default class DrawingModel {
     }
 
     const pts = points.map((pt) => ({
-      X: Math.round(pt.x * offsetData.scale),
-      Y: Math.round(pt.y * offsetData.scale),
+      X: Math.round(pt.x * this.clipperScale),
+      Y: Math.round(pt.y * this.clipperScale),
     }));
 
     const co = new ClipperLib.ClipperOffset();
@@ -67,28 +69,28 @@ export default class DrawingModel {
       ClipperLib.EndType.etOpenRound
     );
     const solution_paths = new ClipperLib.Paths();
-    co.Execute(solution_paths, offsetData.offset * offsetData.scale);
-
+    co.Execute(solution_paths, offsetData.offset * this.clipperScale);
     if (!solution_paths.length) {
       offsetData.points = [];
       return;
     }
 
-    // Sélectionne la solution avec le plus de points
+    // Sélectionne le tracé avec le plus de points
     let best = solution_paths[0];
     for (let i = 1; i < solution_paths.length; i++) {
       if (solution_paths[i].length > best.length) best = solution_paths[i];
     }
 
     const offsetPointsRaw = best.map(
-      (pt) => new paper.Point(pt.X / offsetData.scale, pt.Y / offsetData.scale)
+      (pt) =>
+        new paper.Point(pt.X / this.clipperScale, pt.Y / this.clipperScale)
     );
 
     // Réduction des points trop proches
     offsetData.points = [];
     let lastPt = null;
     offsetPointsRaw.forEach((pt) => {
-      if (!lastPt || pt.getDistance(lastPt) >= 4) {
+      if (!lastPt || pt.getDistance(lastPt) >= this.offsetPointsDistance) {
         offsetData.points.push(pt);
         lastPt = pt;
       }
@@ -188,7 +190,7 @@ export default class DrawingModel {
       curve.handles.forEach((p) => path.add(p.segt));
 
       const sampledPoints = [];
-      for (let s = 0; s <= path.length; s += curve.offsetsData[0].sampleStep) {
+      for (let s = 0; s <= path.length; s += this.sampleStep) {
         const p = path.getPointAt(s);
         if (p) sampledPoints.push(p);
       }
