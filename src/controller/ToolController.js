@@ -59,7 +59,9 @@ export default class ToolController {
       this.canvasView.renderCurves(
         this.model.curves,
         this.drawController.handlesVisible,
-        this.drawController.offsetVisible
+        this.drawController.offsetVisible,
+        null,
+        this.model.currentCurveIndex
       );
     });
 
@@ -81,7 +83,9 @@ export default class ToolController {
       this.canvasView.renderCurves(
         this.model.curves,
         this.drawController.handlesVisible,
-        this.drawController.offsetVisible
+        this.drawController.offsetVisible,
+        null,
+        this.model.currentCurveIndex
       );
     });
 
@@ -103,7 +107,9 @@ export default class ToolController {
       this.canvasView.renderCurves(
         this.model.curves,
         this.drawController.handlesVisible,
-        this.drawController.offsetVisible
+        this.drawController.offsetVisible,
+        null,
+        this.model.currentCurveIndex
       );
     });
 
@@ -142,7 +148,9 @@ export default class ToolController {
       this.canvasView.renderCurves(
         this.model.curves,
         this.drawController.handlesVisible,
-        this.drawController.offsetVisible
+        this.drawController.offsetVisible,
+        null,
+        this.model.currentCurveIndex
       );
     });
 
@@ -156,6 +164,13 @@ export default class ToolController {
       this.model.currentCurveIndex = index;
       const curve = this.model.curves[index];
       this._updateOffsetUI(curve);
+      this.canvasView.renderCurves(
+        this.model.curves,
+        this.drawController.handlesVisible,
+        this.drawController.offsetVisible,
+        null,
+        this.model.currentCurveIndex
+      );
     });
 
     // --- Toggle affichage des poignées ---
@@ -164,7 +179,9 @@ export default class ToolController {
       this.canvasView.renderCurves(
         this.model.curves,
         this.drawController.handlesVisible,
-        this.drawController.offsetVisible
+        this.drawController.offsetVisible,
+        null,
+        this.model.currentCurveIndex
       );
     });
 
@@ -178,7 +195,9 @@ export default class ToolController {
       this.canvasView.renderCurves(
         this.model.curves,
         this.drawController.handlesVisible,
-        this.drawController.offsetVisible
+        this.drawController.offsetVisible,
+        null,
+        this.model.currentCurveIndex
       );
     });
 
@@ -201,7 +220,9 @@ export default class ToolController {
           this.canvasView.renderCurves(
             this.model.curves,
             this.drawController.handlesVisible,
-            this.drawController.offsetVisible
+            this.drawController.offsetVisible,
+            null,
+            this.model.currentCurveIndex
           );
           this.toolbarView.updateCurveList(this.model.curves);
           this.model.currentCurveIndex = 0;
@@ -233,7 +254,9 @@ export default class ToolController {
     this.canvasView.renderCurves(
       this.model.curves,
       this.drawController.handlesVisible,
-      this.drawController.offsetVisible
+      this.drawController.offsetVisible,
+      null,
+      this.model.currentCurveIndex
     );
   }
 }

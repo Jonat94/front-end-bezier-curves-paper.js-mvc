@@ -51,7 +51,8 @@ export default class DrawingController {
           this.model.curves,
           this.handlesVisible,
           this.offsetVisible,
-          this.selectedItem
+          this.selectedItem,
+          this.model.currentCurveIndex
         );
         return;
       }
@@ -111,7 +112,8 @@ export default class DrawingController {
           this.model.curves,
           this.handlesVisible,
           this.offsetVisible,
-          this.selectedItem
+          this.selectedItem,
+          this.model.currentCurveIndex
         );
         return;
       }
@@ -160,7 +162,8 @@ export default class DrawingController {
           this.model.curves,
           this.handlesVisible,
           this.offsetVisible,
-          this.selectedItem
+          this.selectedItem,
+          this.model.currentCurveIndex
         );
       }
     };
@@ -175,7 +178,8 @@ export default class DrawingController {
         this.model.curves,
         this.handlesVisible,
         this.offsetVisible,
-        this.selectedItem
+        this.selectedItem,
+        this.model.currentCurveIndex
       );
     };
   }

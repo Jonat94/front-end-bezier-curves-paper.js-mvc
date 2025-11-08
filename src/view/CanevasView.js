@@ -38,15 +38,17 @@ export default class CanvasView {
     showHandles = true,
     showOffsets = true,
     selectedItem = null,
+    selectedCurveIndex = null,
     fillColor = "rgba(0,150,255,0.2)"
   ) {
     this.clear();
 
-    curves.forEach((curve) => {
-      // Dessiner la courbe principale
-      this.drawCurve(curve, showHandles, selectedItem);
+    curves.forEach((curve, index) => {
+      // Afficher les points uniquement sur la courbe sélectionnée
+      const displayHandles = showHandles && index === selectedCurveIndex;
+      this.drawCurve(curve, displayHandles, selectedItem);
 
-      // Dessiner tous les offsets
+      // Dessiner les offsets
       if (showOffsets && curve.offsetsData.length) {
         curve.offsetsData.forEach((offsetData) => {
           if (offsetData.points.length > 1) {
