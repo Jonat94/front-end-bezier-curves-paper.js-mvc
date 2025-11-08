@@ -6,34 +6,38 @@ export default class CanvasView {
     paper.setup(canvasElement);
     this.canvas = canvasElement;
 
-    // Création des calques
+    // Calques
     this.backgroundLayer = new paper.Layer();
     this.foregroundLayer = new paper.Layer();
 
-    // Ajouter le fond
+    // Ajouter un fond (image)
     const raster = new paper.Raster("/images/paper.jpg");
     raster.position = paper.view.center;
-    raster.scale(0.4); // réduire à 40% de sa taille
-    raster.sendToBack(); // toujours derrière les formes
+    raster.scale(0.4);
+    raster.sendToBack();
     this.backgroundLayer.addChild(raster);
-
     this.backgroundLayer.visible = false;
 
-    // Toujours dessiner sur le calque du dessus
     this.foregroundLayer.activate();
-
-    this.offsetsVisible = [true, true, false];
   }
 
-  /**
-   * Supprime tout ce qui est dessiné sur le calque avant
-   */
+  // -----------------------------
+  // ---- Méthodes de rendu ----
+  // -----------------------------
+
   clear() {
     this.foregroundLayer.removeChildren();
   }
 
   /**
    * Dessine toutes les courbes et leurs offsets
+   * @param {Array} curves - tableau des courbes
+   * @param {boolean} showHandles - afficher les handles
+   * @param {boolean} showOffsets - afficher les offsets
+   * @param {object|null} selectedItem - item sélectionné
+   * @param {number|null} selectedCurveIndex - index de la courbe sélectionnée
+   * @param {string} fillColor - couleur du remplissage entre courbe et offset
+   * @param {object} offsetsVisibleByCurve - {curveIndex: [true, false, true]}
    */
   renderCurves(
     curves,
@@ -41,22 +45,27 @@ export default class CanvasView {
     showOffsets = true,
     selectedItem = null,
     selectedCurveIndex = null,
-    fillColor = "rgba(0,150,255,0.2)"
+    fillColor = "rgba(0,150,255,0.2)",
+    offsetsVisibleByCurve = {}
   ) {
     this.clear();
 
-    curves.forEach((curve, index) => {
-      // Afficher les points uniquement sur la courbe sélectionnée
-      const displayHandles = showHandles && index === selectedCurveIndex;
+    curves.forEach((curve, curveIndex) => {
+      const displayHandles = showHandles && curveIndex === selectedCurveIndex;
       this.drawCurve(curve, displayHandles, selectedItem);
 
-      // Dessiner les offsets
       if (showOffsets && curve.offsetsData.length) {
+        const offsetsVisible = offsetsVisibleByCurve[curveIndex] || [
+          true,
+          true,
+          true,
+        ];
+
         curve.offsetsData.forEach((offsetData, offsetIndex) => {
-          if (offsetData.points.length > 1) {
-            this.drawOffset(offsetData);
-            this.fillBetweenCurves(curve, offsetData, fillColor);
-          }
+          if (!offsetsVisible[offsetIndex] || offsetData.points.length < 2)
+            return;
+          this.drawOffset(offsetData);
+          this.fillBetweenCurves(curve, offsetData, fillColor);
         });
       }
     });
@@ -64,9 +73,6 @@ export default class CanvasView {
     paper.view.update();
   }
 
-  /**
-   * Dessine une courbe principale et ses poignées
-   */
   drawCurve(curve, visibility = true, selectedItem) {
     const path = new paper.Path({
       strokeColor: "#000",
@@ -103,30 +109,22 @@ export default class CanvasView {
       );
     });
 
-    // Lignes des poignées
     this.updateHandleLines(curve, visibility);
   }
 
-  /**
-   * Dessine un offset
-   */
   drawOffset(offsetData) {
-    console.log("kkkkkkkk", offsetData);
     const path = new paper.Path({ strokeColor: "green", strokeWidth: 2 });
     offsetData.points.forEach((pt) => path.add(new paper.Point(pt.x, pt.y)));
     path.sendToBack();
   }
 
-  /**
-   * Remplit l’espace entre la courbe principale et son offset
-   */
   fillBetweenCurves(curve, offsetData, color) {
     const fillPath = new paper.Path({ fillColor: color });
 
-    // Ajouter les points de la courbe principale
+    // Courbe principale
     curve.handles.forEach((h) => fillPath.add(h.segt));
 
-    // Ajouter les points de l'offset (inversement)
+    // Offset inverse
     for (let i = offsetData.points.length - 1; i >= 0; i--) {
       const pt = offsetData.points[i];
       fillPath.add(new paper.Point(pt.x, pt.y));
@@ -136,21 +134,10 @@ export default class CanvasView {
     fillPath.sendToBack();
   }
 
-  /**
-   * Définit la visibilité du fond
-   */
-  setBackground(visibility) {
-    this.backgroundLayer.visible = !!visibility;
+  setBackground(visible) {
+    this.backgroundLayer.visible = !!visible;
   }
 
-  setOffset1Visible(index, offset1Visible) {
-    this.offsetsVisible[index] = offset1Visible;
-    console.log("offsetsVisible", this.offsetsVisible);
-  }
-
-  /**
-   * Crée un cercle pour les points et poignées
-   */
   makeCircle(point, color, id, type, inPtId, outPtId) {
     const circle = new paper.Path.Circle(point, 4);
     circle.fillColor = color;
@@ -158,12 +145,8 @@ export default class CanvasView {
     return circle;
   }
 
-  /**
-   * Dessine les lignes reliant le point central aux poignées
-   */
   updateHandleLines(curve, visibility = true) {
     if (!visibility) return;
-
     curve.handles.forEach((h) => {
       const pt = h.segt.point;
       [h.segt.handleIn, h.segt.handleOut].forEach((handle) => {
@@ -179,37 +162,20 @@ export default class CanvasView {
     });
   }
 
-  /**
-   * Export du canvas en image PNG
-   */
-  // exportAsImage(filename = "graphe.png") {
-  //   if (!this.canvas) return;
-  //   const dataURL = this.canvas.toDataURL("image/png");
-  //   const link = document.createElement("a");
-  //   link.href = dataURL;
-  //   link.download = filename;
-  //   link.click();
-  // }
-
   exportAsImage(filename = "graphe.png", withBackground = true) {
     if (!this.canvas) return;
-
-    // Créer un canvas temporaire pour l’export
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = this.canvas.width;
     tempCanvas.height = this.canvas.height;
     const ctx = tempCanvas.getContext("2d");
 
     if (withBackground) {
-      // Fond blanc si demandé
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
     }
 
-    // Copier le contenu du canvas original
     ctx.drawImage(this.canvas, 0, 0);
 
-    // Export
     const dataURL = tempCanvas.toDataURL("image/png");
     const link = document.createElement("a");
     link.href = dataURL;

@@ -6,27 +6,31 @@
  */
 export default class ToolbarView {
   constructor() {
-    // Références vers les éléments DOM
-    this.toggleHandlesCbx = document.getElementById("toggleHandlesCbx");
-    this.deletePointBtn = document.getElementById("deletePointBtn");
-    this.deleteBtn = document.getElementById("deleteBtn");
-    this.addCurveBtn = document.getElementById("addCurveBtn");
-    this.curveSelect = document.getElementById("curveSelect");
-    this.addOffsetCbxBtn = document.getElementById("offsetCbx");
+    // ⚡ Vérification existence des éléments DOM
+    this.toggleHandlesCbx = document.getElementById("toggleHandlesCbx") || null;
+    this.deletePointBtn = document.getElementById("deletePointBtn") || null;
+    this.deleteBtn = document.getElementById("deleteBtn") || null;
+    this.addCurveBtn = document.getElementById("addCurveBtn") || null;
+    this.curveSelect = document.getElementById("curveSelect") || null;
+    this.addOffsetCbxBtn = document.getElementById("offsetCbx") || null;
 
-    this.offsetSlider1 = document.getElementById("offsetSlider1");
-    this.offsetValue1 = document.getElementById("offsetValue1");
-    this.toggleOffset1Cbx = document.getElementById("toggleOffset1Cbx");
+    this.offsetSlider1 = document.getElementById("offsetSlider1") || null;
+    this.offsetValue1 = document.getElementById("offsetValue1") || null;
+    this.toggleOffset1Cbx = document.getElementById("toggleOffset1Cbx") || null;
 
-    this.offsetSlider2 = document.getElementById("offsetSlider2");
-    this.offsetValue2 = document.getElementById("offsetValue2");
-    this.offsetSlider3 = document.getElementById("offsetSlider3");
-    this.offsetValue3 = document.getElementById("offsetValue3");
+    this.offsetSlider2 = document.getElementById("offsetSlider2") || null;
+    this.offsetValue2 = document.getElementById("offsetValue2") || null;
+    this.toggleOffset2Cbx = document.getElementById("toggleOffset2Cbx") || null;
 
-    this.export = document.getElementById("exportBtn");
-    this.toggleBackgroundCbx = document.getElementById("toggleBackgroundCbx");
-    this.save = document.getElementById("saveBtn");
-    this.importInput = document.getElementById("importFile");
+    this.offsetSlider3 = document.getElementById("offsetSlider3") || null;
+    this.offsetValue3 = document.getElementById("offsetValue3") || null;
+    this.toggleOffset3Cbx = document.getElementById("toggleOffset3Cbx") || null;
+
+    this.export = document.getElementById("exportBtn") || null;
+    this.toggleBackgroundCbx =
+      document.getElementById("toggleBackgroundCbx") || null;
+    this.save = document.getElementById("saveBtn") || null;
+    this.importInput = document.getElementById("importFile") || null;
   }
 
   // ---------------------------
@@ -34,64 +38,81 @@ export default class ToolbarView {
   // ---------------------------
 
   bindToggleBackground(handler) {
-    this.toggleBackgroundCbx.addEventListener("click", handler);
+    if (this.toggleBackgroundCbx)
+      this.toggleBackgroundCbx.addEventListener("click", handler);
   }
 
   bindSlider1(handler) {
-    this.offsetSlider1.addEventListener("input", handler);
+    if (this.offsetSlider1)
+      this.offsetSlider1.addEventListener("input", handler);
   }
+
   bindSlider2(handler) {
-    this.offsetSlider2.addEventListener("input", handler);
+    if (this.offsetSlider2)
+      this.offsetSlider2.addEventListener("input", handler);
   }
+
   bindSlider3(handler) {
-    this.offsetSlider3.addEventListener("input", handler);
+    if (this.offsetSlider3)
+      this.offsetSlider3.addEventListener("input", handler);
   }
 
   bindToggleOffset1Cbx(handler) {
-    this.toggleOffset1Cbx.addEventListener("click", handler);
+    if (this.toggleOffset1Cbx)
+      this.toggleOffset1Cbx.addEventListener("click", handler);
   }
 
-  updateOffset1Cbx(Offset1Visible) {
-    console.log("update", Offset1Visible);
-    this.toggleOffset1Cbx.checked = Offset1Visible;
+  bindToggleOffset2Cbx(handler) {
+    if (this.toggleOffset2Cbx)
+      this.toggleOffset2Cbx.addEventListener("click", handler);
+  }
+
+  bindToggleOffset3Cbx(handler) {
+    if (this.toggleOffset3Cbx)
+      this.toggleOffset3Cbx.addEventListener("click", handler);
   }
 
   bindOffset(handler) {
-    this.addOffsetCbxBtn.addEventListener("click", handler);
+    if (this.addOffsetCbxBtn)
+      this.addOffsetCbxBtn.addEventListener("click", handler);
   }
 
   bindToggleHandles(handler) {
-    this.toggleHandlesCbx.addEventListener("click", handler);
+    if (this.toggleHandlesCbx)
+      this.toggleHandlesCbx.addEventListener("click", handler);
   }
 
   bindAddCurve(handler) {
-    this.addCurveBtn.addEventListener("click", handler);
+    if (this.addCurveBtn) this.addCurveBtn.addEventListener("click", handler);
   }
 
   bindCurveSelect(handler) {
-    this.curveSelect.addEventListener("change", (e) => {
-      handler(parseInt(e.target.value));
-    });
+    if (this.curveSelect) {
+      this.curveSelect.addEventListener("change", (e) => {
+        handler(parseInt(e.target.value));
+      });
+    }
   }
 
   bindDeletePoint(handler) {
-    this.deletePointBtn.addEventListener("click", handler);
+    if (this.deletePointBtn)
+      this.deletePointBtn.addEventListener("click", handler);
   }
 
   bindDeleteCurve(handler) {
-    this.deleteBtn.addEventListener("click", handler);
+    if (this.deleteBtn) this.deleteBtn.addEventListener("click", handler);
   }
 
   bindExport(handler) {
-    this.export.addEventListener("click", handler);
+    if (this.export) this.export.addEventListener("click", handler);
   }
 
   bindSave(handler) {
-    this.save.addEventListener("click", handler);
+    if (this.save) this.save.addEventListener("click", handler);
   }
 
   bindImport(handler) {
-    this.importInput.addEventListener("change", handler);
+    if (this.importInput) this.importInput.addEventListener("change", handler);
   }
 
   // ---------------------------
@@ -99,15 +120,16 @@ export default class ToolbarView {
   // ---------------------------
 
   updateBackgroundCbx(backgroundVisible) {
-    this.toggleBackgroundCbx.checked = backgroundVisible;
+    if (this.toggleBackgroundCbx)
+      this.toggleBackgroundCbx.checked = backgroundVisible;
   }
 
   updateHandlesViewCbx(handlesVisible) {
-    this.toggleHandlesCbx.checked = handlesVisible;
+    if (this.toggleHandlesCbx) this.toggleHandlesCbx.checked = handlesVisible;
   }
 
   updateCurveList(curveNames) {
-    // Vide la liste avant de la remplir
+    if (!this.curveSelect) return;
     this.curveSelect.innerHTML = "";
     curveNames.forEach((curve, index) => {
       const option = document.createElement("option");
@@ -120,18 +142,22 @@ export default class ToolbarView {
   updateOffsetValue(index, value) {
     const slider = this[`offsetSlider${index}`];
     const display = this[`offsetValue${index}`];
-
-    if (!slider || !display) return; // Sécurité
-
+    if (!slider || !display) return;
     slider.value = value;
     display.textContent = value;
   }
 
-  updateOffsetViewCbx(visible) {
-    this.addOffsetCbxBtn.checked = visible;
+  updateOffsetViewCbx(index, visible) {
+    const cbx = this[`toggleOffset${index}Cbx`];
+    if (!cbx) return;
+    cbx.checked = visible;
+  }
+
+  updateOffsetViewCbxGlobal(visible) {
+    if (this.addOffsetCbxBtn) this.addOffsetCbxBtn.checked = visible;
   }
 
   setSelectedCurve(index) {
-    this.curveSelect.value = index;
+    if (this.curveSelect) this.curveSelect.value = index;
   }
 }
