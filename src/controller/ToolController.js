@@ -30,9 +30,9 @@ export default class ToolController {
     if (!curve) return;
 
     // Mettre à jour les sliders
-    this.toolbarView.updateOffsetValue(1, curve.offsetsData[2].offset);
+    this.toolbarView.updateOffsetValue(3, curve.offsetsData[2].offset);
     this.toolbarView.updateOffsetValue(2, curve.offsetsData[1].offset);
-    this.toolbarView.updateOffsetValue(3, curve.offsetsData[0].offset);
+    this.toolbarView.updateOffsetValue(1, curve.offsetsData[0].offset);
 
     // Mettre à jour les checkboxes de visibilité
     const offsetsVisible = this.drawController.offsetsVisibleByCurve[
@@ -129,12 +129,25 @@ export default class ToolController {
       reader.onload = (e) => {
         try {
           this.model.importCurve(e.target.result);
+
+          const lastIndex = this.model.curves.length - 1;
+          this.model.currentCurveIndex = lastIndex; // sélectionner la dernière courbe
+
+          //this.handlesVisible = true;
           this.model.computeOffset();
 
+          // --- Forcer l'affichage des points de contrôle ---
+          this.drawController.handlesVisible = true;
+          this.toolbarView.updateHandlesViewCbx(true);
+
           this._updateSlidersForCurrentCurve();
-          this._render();
+          this._render(); //???passer le lastIndex ??
+
+          // --- Mettre à jour la liste et le select ---
           this.toolbarView.updateCurveList(this.model.curves);
-          this.model.currentCurveIndex = 0;
+          this.toolbarView.setSelectedCurve(lastIndex);
+
+          // this.model.currentCurveIndex = 0;
         } catch (err) {
           console.error("Erreur JSON :", err);
         }
@@ -154,7 +167,7 @@ export default class ToolController {
     if (!curve) return;
 
     // Mapping offsets : slider 1 → offsetsData[2], slider 2 → offsetsData[1], slider 3 → offsetsData[0]
-    const mapping = [2, 1, 0];
+    const mapping = [0, 1, 2];
     curve.offsetsData[mapping[offsetNumber - 1]].offset = value;
 
     this.model.computeOffset();
