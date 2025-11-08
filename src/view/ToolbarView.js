@@ -30,7 +30,8 @@ export default class ToolbarView {
     this.toggleBackgroundCbx =
       document.getElementById("toggleBackgroundCbx") || null;
     this.save = document.getElementById("saveBtn") || null;
-    this.importInput = document.getElementById("importFile") || null;
+    this.importBtn = document.getElementById("importBtn") || null;
+    this.importFile = document.getElementById("importFile") || null;
   }
 
   // ---------------------------
@@ -111,8 +112,13 @@ export default class ToolbarView {
     if (this.save) this.save.addEventListener("click", handler);
   }
 
+  bindImportButton(handler) {
+    this.importBtn.addEventListener("click", handler);
+  }
+
   bindImport(handler) {
-    if (this.importInput) this.importInput.addEventListener("change", handler);
+    console.log("bindImport", handler);
+    if (this.importFile) this.importFile.addEventListener("change", handler);
   }
 
   // ---------------------------

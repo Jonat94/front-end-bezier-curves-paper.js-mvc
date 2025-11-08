@@ -115,7 +115,13 @@ export default class ToolController {
     );
     this.toolbarView.bindSave(() => this.model.exportCurve());
 
+    this.toolbarView.bindImportButton(() => {
+      console.log("Import button clicked");
+      this.toolbarView.importFile.click(); // Ouvre le file picker invisible
+    });
+
     this.toolbarView.bindImport((event) => {
+      console.log("lllllll");
       const file = event.target.files[0];
       if (!file) return;
 
@@ -123,6 +129,8 @@ export default class ToolController {
       reader.onload = (e) => {
         try {
           this.model.importCurve(e.target.result);
+          this.model.computeOffset();
+
           this._updateSlidersForCurrentCurve();
           this._render();
           this.toolbarView.updateCurveList(this.model.curves);
