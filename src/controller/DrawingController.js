@@ -9,7 +9,7 @@ export default class DrawingController {
     this.selectedItem = null;
     this.dragOffset = null;
     this.handlesVisible = true;
-    this.backgroundVisible = true;
+    this.backgroundVisible = false;
     this.offsetVisible = true;
 
     this.isDraggingCurve = false;

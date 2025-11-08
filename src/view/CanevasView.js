@@ -17,6 +17,8 @@ export default class CanvasView {
     raster.sendToBack(); // toujours derrière les formes
     this.backgroundLayer.addChild(raster);
 
+    this.backgroundLayer.visible = false;
+
     // Toujours dessiner sur le calque du dessus
     this.foregroundLayer.activate();
   }
@@ -170,9 +172,35 @@ export default class CanvasView {
   /**
    * Export du canvas en image PNG
    */
-  exportAsImage(filename = "graphe.png") {
+  // exportAsImage(filename = "graphe.png") {
+  //   if (!this.canvas) return;
+  //   const dataURL = this.canvas.toDataURL("image/png");
+  //   const link = document.createElement("a");
+  //   link.href = dataURL;
+  //   link.download = filename;
+  //   link.click();
+  // }
+
+  exportAsImage(filename = "graphe.png", withBackground = true) {
     if (!this.canvas) return;
-    const dataURL = this.canvas.toDataURL("image/png");
+
+    // Créer un canvas temporaire pour l’export
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = this.canvas.width;
+    tempCanvas.height = this.canvas.height;
+    const ctx = tempCanvas.getContext("2d");
+
+    if (withBackground) {
+      // Fond blanc si demandé
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    }
+
+    // Copier le contenu du canvas original
+    ctx.drawImage(this.canvas, 0, 0);
+
+    // Export
+    const dataURL = tempCanvas.toDataURL("image/png");
     const link = document.createElement("a");
     link.href = dataURL;
     link.download = filename;
