@@ -16,6 +16,8 @@ export default class ToolbarView {
 
     this.offsetSlider1 = document.getElementById("offsetSlider1");
     this.offsetValue1 = document.getElementById("offsetValue1");
+    this.toggleOffset1Cbx = document.getElementById("toggleOffset1Cbx");
+
     this.offsetSlider2 = document.getElementById("offsetSlider2");
     this.offsetValue2 = document.getElementById("offsetValue2");
     this.offsetSlider3 = document.getElementById("offsetSlider3");
@@ -43,6 +45,15 @@ export default class ToolbarView {
   }
   bindSlider3(handler) {
     this.offsetSlider3.addEventListener("input", handler);
+  }
+
+  bindToggleOffset1Cbx(handler) {
+    this.toggleOffset1Cbx.addEventListener("click", handler);
+  }
+
+  updateOffset1Cbx(Offset1Visible) {
+    console.log("update", Offset1Visible);
+    this.toggleOffset1Cbx.checked = Offset1Visible;
   }
 
   bindOffset(handler) {

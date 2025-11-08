@@ -21,6 +21,8 @@ export default class CanvasView {
 
     // Toujours dessiner sur le calque du dessus
     this.foregroundLayer.activate();
+
+    this.offsetsVisible = [true, true, false];
   }
 
   /**
@@ -50,7 +52,7 @@ export default class CanvasView {
 
       // Dessiner les offsets
       if (showOffsets && curve.offsetsData.length) {
-        curve.offsetsData.forEach((offsetData) => {
+        curve.offsetsData.forEach((offsetData, offsetIndex) => {
           if (offsetData.points.length > 1) {
             this.drawOffset(offsetData);
             this.fillBetweenCurves(curve, offsetData, fillColor);
@@ -109,6 +111,7 @@ export default class CanvasView {
    * Dessine un offset
    */
   drawOffset(offsetData) {
+    console.log("kkkkkkkk", offsetData);
     const path = new paper.Path({ strokeColor: "green", strokeWidth: 2 });
     offsetData.points.forEach((pt) => path.add(new paper.Point(pt.x, pt.y)));
     path.sendToBack();
@@ -138,6 +141,11 @@ export default class CanvasView {
    */
   setBackground(visibility) {
     this.backgroundLayer.visible = !!visibility;
+  }
+
+  setOffset1Visible(index, offset1Visible) {
+    this.offsetsVisible[index] = offset1Visible;
+    console.log("offsetsVisible", this.offsetsVisible);
   }
 
   /**

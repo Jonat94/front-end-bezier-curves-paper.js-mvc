@@ -65,6 +65,12 @@ export default class ToolController {
       );
     });
 
+    this.toolbarView.bindToggleOffset1Cbx(() => {
+      console.log("toggle");
+      this.drawController.offset1Visible = !this.drawController.offset1Visible;
+      this.canvasView.setOffset1Visible(2, this.drawController.offset1Visible);
+    });
+
     this.toolbarView.bindSlider2((e) => {
       const value = parseFloat(e.target.value);
       this.toolbarView.offsetValue2.textContent = value;
