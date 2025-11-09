@@ -106,6 +106,9 @@ export default class ToolController {
     this.toolbarView.updateCurveList(this.model.curves);
     this.toolbarView.updateSelectedCurve(lastIndex);
     this._updateSlidersAndCheckboxes();
+    this.drawController.handlesVisible = true;
+    this.toolbarView.updateHandlesToggle(true);
+
     this._render();
 
     if (nameInput) nameInput.value = "";
@@ -196,7 +199,9 @@ export default class ToolController {
     this.toolbarView.bindToggleBackground(() => {
       this.drawController.backgroundVisible =
         !this.drawController.backgroundVisible;
-      this.canvasView.setBackground(this.drawController.backgroundVisible);
+      this.canvasView.setBackgroundVisibility(
+        this.drawController.backgroundVisible
+      );
     });
 
     this.toolbarView.bindDeletePoint(() => {
