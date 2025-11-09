@@ -1,35 +1,43 @@
 "use strict";
 import paper from "../paperSetup.js";
 
+/**
+ * Classe représentant la vue canvas avec Paper.js
+ * Gestion des calques, dessin de courbes, offsets et export.
+ */
 export default class CanvasView {
+  /**
+   * Initialise le canvas et configure les calques de dessin
+   * @param {HTMLCanvasElement} canvasElement - Canvas HTML
+   */
   constructor(canvasElement) {
     paper.setup(canvasElement);
     this.canvas = canvasElement;
 
-    // Calques
+    // Calques de dessin
     this.backgroundLayer = new paper.Layer();
     this.foregroundLayer = new paper.Layer();
 
-    // Ajout du fond
-    const raster = new paper.Raster("/images/paper.jpg");
-    raster.position = paper.view.center;
-    raster.scale(0.4);
-    raster.sendToBack();
-    this.backgroundLayer.addChild(raster);
+    // Ajout du fond rasterisé
+    const backgroundRaster = new paper.Raster("/images/paper.jpg");
+    backgroundRaster.position = paper.view.center;
+    backgroundRaster.scale(0.4);
+    backgroundRaster.sendToBack();
+    this.backgroundLayer.addChild(backgroundRaster);
     this.backgroundLayer.visible = false;
 
     this.foregroundLayer.activate();
   }
 
   // ---------------------------
-  // Nettoie la couche principale
+  // Nettoie la couche de dessin principale
   // ---------------------------
-  clear() {
+  clearForeground() {
     this.foregroundLayer.removeChildren();
   }
 
   // ---------------------------
-  // Rendu de toutes les courbes et offsets
+  // Rendu des courbes et de leurs offsets
   // ---------------------------
   renderCurves(
     curves,
@@ -38,30 +46,27 @@ export default class CanvasView {
     selectedItem = null,
     selectedCurveIndex = null,
     fillColor = "rgba(0,150,255,0.2)",
-    offsetsVisibleByCurve = {}
+    offsetsVisibilityMap = {}
   ) {
-    this.clear();
+    this.clearForeground();
 
-    for (let c = 0; c < curves.length; c++) {
-      const curve = curves[c];
-      const displayHandles = showHandles && c === selectedCurveIndex;
+    curves.forEach((curve, curveIndex) => {
+      const displayHandles = showHandles && curveIndex === selectedCurveIndex;
 
       this.drawCurve(curve, displayHandles, selectedItem);
 
       if (showOffsets && curve.offsetsData.length) {
         const offsetsVisible =
-          offsetsVisibleByCurve[c] ||
+          offsetsVisibilityMap[curveIndex] ||
           Array(curve.offsetsData.length).fill(false);
 
-        for (let i = 0; i < curve.offsetsData.length; i++) {
-          const offsetData = curve.offsetsData[i];
-          if (!offsetsVisible[i] || offsetData.points.length < 2) continue;
-
-          this.drawOffset(offsetData);
-          this.fillBetweenCurves(curve, offsetData, fillColor);
-        }
+        curve.offsetsData.forEach((offset, offsetIndex) => {
+          if (!offsetsVisible[offsetIndex] || offset.points.length < 2) return;
+          this.drawOffset(offset);
+          this.fillBetweenCurveAndOffset(curve, offset, fillColor);
+        });
       }
-    }
+    });
 
     paper.view.update();
   }
@@ -69,75 +74,76 @@ export default class CanvasView {
   // ---------------------------
   // Dessine une courbe et ses handles
   // ---------------------------
-  drawCurve(curve, visibility = true, selectedItem) {
+  drawCurve(curve, showHandles = true, selectedItem = null) {
     const path = new paper.Path({
       strokeColor: "#000",
       strokeWidth: curve.strokeWidth || 2,
     });
 
-    for (let i = 0; i < curve.handles.length; i++) {
-      const p = curve.handles[i];
-      path.add(p.segment);
+    curve.handles.forEach((handle) => {
+      path.add(handle.segment);
 
-      if (!visibility) continue;
+      if (!showHandles) return;
 
-      // Cercle central
-      this.makeCircle(
-        p.segment.point,
-        selectedItem &&
-          selectedItem.contains &&
-          selectedItem.contains(p.segment.point)
-          ? "#2cff61ff"
-          : "#ff0000",
-        p.id,
-        "circle",
-        p.inPointId,
-        p.outPointId
-      );
+      this._drawHandleCircles(handle, selectedItem);
+    });
 
-      // Poignées Bézier
-      this.makeCircle(
-        p.segment.point.add(p.segment.handleIn),
-        "#1e25fbff",
-        p.inPointId,
-        "bezier_in"
-      );
-      this.makeCircle(
-        p.segment.point.add(p.segment.handleOut),
-        "#1e25fbff",
-        p.outPointId,
-        "bezier_out"
-      );
-    }
-
-    this.updateHandleLines(curve, visibility);
+    this._drawHandleLines(curve, showHandles);
   }
 
   // ---------------------------
-  // Dessine un offset
+  // Dessine les cercles représentant les handles et points
   // ---------------------------
-  drawOffset(offsetData) {
+  _drawHandleCircles(handle, selectedItem) {
+    const mainColor =
+      selectedItem?.data?.id === handle.id ? "#2cff61ff" : "#ff0000";
+
+    // Cercle central (point)
+    this._makeCircle(
+      handle.segment.point,
+      mainColor,
+      handle.id,
+      "circle",
+      handle.inPointId,
+      handle.outPointId
+    );
+
+    // Handles Bézier
+    this._makeCircle(
+      handle.segment.point.add(handle.segment.handleIn),
+      "#1e25fbff",
+      handle.inPointId,
+      "bezier_in"
+    );
+    this._makeCircle(
+      handle.segment.point.add(handle.segment.handleOut),
+      "#1e25fbff",
+      handle.outPointId,
+      "bezier_out"
+    );
+  }
+
+  // ---------------------------
+  // Dessine un offset de courbe
+  // ---------------------------
+  drawOffset(offset) {
     const path = new paper.Path({ strokeColor: "green", strokeWidth: 2 });
-    for (let i = 0; i < offsetData.points.length; i++) {
-      const pt = offsetData.points[i];
-      path.add(new paper.Point(pt.x, pt.y));
-    }
+    offset.points.forEach((pt) => path.add(new paper.Point(pt.x, pt.y)));
     path.sendToBack();
   }
 
   // ---------------------------
-  // Remplissage entre courbe et offset
+  // Remplissage entre courbe principale et offset
   // ---------------------------
-  fillBetweenCurves(curve, offsetData, color) {
+  fillBetweenCurveAndOffset(curve, offset, color) {
     const fillPath = new paper.Path({ fillColor: color });
 
-    // Courbe principale
-    for (let i = 0; i < curve.handles.length; i++)
-      fillPath.add(curve.handles[i].segment);
+    // Ajouter points de la courbe principale
+    curve.handles.forEach((handle) => fillPath.add(handle.segment));
 
-    // Offset inverse
-    for (let i = offsetData.points.length - 1; i >= 0; i--) {
-      const pt = offsetData.points[i];
+    // Ajouter points de l'offset en sens inverse
+    for (let i = offset.points.length - 1; i >= 0; i--) {
+      const pt = offset.points[i];
       fillPath.add(new paper.Point(pt.x, pt.y));
     }
 
@@ -146,51 +152,50 @@ export default class CanvasView {
   }
 
   // ---------------------------
-  // Affiche ou masque le fond
+  // Affiche ou masque le calque de fond
   // ---------------------------
-  setBackground(visible) {
+  setBackgroundVisibility(visible) {
     this.backgroundLayer.visible = !!visible;
   }
 
   // ---------------------------
-  // Crée un cercle pour un handle ou point
+  // Crée un cercle représentant un point ou handle et l'ajoute au calque actif
   // ---------------------------
-  makeCircle(point, color, id, type, inPtId, outPtId) {
+  _makeCircle(point, color, id, type, inPtId = null, outPtId = null) {
     const circle = new paper.Path.Circle(point, 4);
     circle.fillColor = color;
     circle.data = { type, id, inPointId: inPtId, outPointId: outPtId };
+    this.foregroundLayer.addChild(circle); // <-- ajout au calque pour hitTest
     return circle;
   }
 
   // ---------------------------
-  // Affiche les lignes des handles
+  // Dessine les lignes reliant points et handles Bézier
   // ---------------------------
-  updateHandleLines(curve, visibility = true) {
-    if (!visibility) return;
+  _drawHandleLines(curve, showHandles = true) {
+    if (!showHandles) return;
 
-    for (let i = 0; i < curve.handles.length; i++) {
-      const h = curve.handles[i];
-      const pt = h.segment.point;
-      const handles = [h.segment.handleIn, h.segment.handleOut];
-
-      for (let j = 0; j < handles.length; j++) {
-        const handle = handles[j];
-        const line = new paper.Path.Line({
-          from: pt,
-          to: pt.add(handle),
-          strokeColor: "gray",
-          strokeWidth: 1,
-          dashArray: [4, 4],
-        });
-        line.sendToBack();
-      }
-    }
+    curve.handles.forEach((handle) => {
+      const origin = handle.segment.point;
+      [handle.segment.handleIn, handle.segment.handleOut].forEach(
+        (handleVec) => {
+          const line = new paper.Path.Line({
+            from: origin,
+            to: origin.add(handleVec),
+            strokeColor: "gray",
+            strokeWidth: 1,
+            dashArray: [4, 4],
+          });
+          line.sendToBack();
+        }
+      );
+    });
   }
 
   // ---------------------------
-  // Export du canvas en image PNG
+  // Export du canvas en PNG
   // ---------------------------
-  exportAsImage(filename = "graphe.png", withBackground = true) {
+  exportAsImage(filename = "canvas.png", includeBackground = true) {
     if (!this.canvas) return;
 
     const tempCanvas = document.createElement("canvas");
@@ -198,7 +203,7 @@ export default class CanvasView {
     tempCanvas.height = this.canvas.height;
     const ctx = tempCanvas.getContext("2d");
 
-    if (withBackground) {
+    if (includeBackground) {
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
     }

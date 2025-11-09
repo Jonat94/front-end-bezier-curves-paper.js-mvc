@@ -95,9 +95,11 @@ export default class ToolController {
    */
   _addNewCurve() {
     const nameInput = document.getElementById("curveName");
-    let curveName =
-      nameInput?.value?.trim() || `Courbe ${this.model.curveIdCounter + 1}`;
-
+    let curveName = nameInput?.value?.trim();
+    if (curveName === "") {
+      curveName = undefined; // laisse le modèle générer le nom
+    }
+    console.log("Adding new curve with name:", curveName);
     this.model.createCurve(curveName);
 
     const lastIndex = this.model.currentCurveIndex;
