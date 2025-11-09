@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Éditeur Bézier</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+
+        button {
+            margin: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    Sélectionner une courbe
+    <select id="curveSelect"></select>
+    <input id="curveName"></input>
+    <button id="addCurveBtn">Ajouter une nouvelle courbe</button>
+    <button id="deleteBtn">Effacer la courbe sélectionnée</button>
+    <br>
+    <!-- <input type="checkbox" id="toggleHandlesCbx">Afficher les points -->
+    <button id="deletePointBtn">Supprimer le point sélectionné</button>
+    <br>
+
+    <!-- <input type="checkBox" id="offsetCbx">Afficher la courbes parallele -->
+    <input type="checkbox" id="toggleBackgroundCbx">Afficher le fond
+    <button id="exportBtn">Exporter en png</button>
+    <button id="saveBtn">Sauvegarder</button>
+    <input type="file" id="importFile" accept=".json" style="display:none;" />
+    <button id="importBtn">Importer</button>
+    <button id="addOffsetBtn">ajouter Offset</button><br>
+    <div id="offsetControlsContainer">
+        <input type="checkbox" id="toggleOffset1Cbx">
+        <label for="offsetSlider1">Offset 1 :</label>
+        <input type="range" id="offsetSlider1" min="0" max="200" value="50" step="1">
+        <span id="offsetValue1">10</span>
+        <input type="checkbox" id="toggleOffset2Cbx">
+        <label for="offsetSlider2">Offset 2 :</label>
+        <input type="range" id="offsetSlider2" min="0" max="200" value="50" step="1">
+        <span id="offsetValue2">10</span>
+        <input type="checkbox" id="toggleOffset3Cbx">
+        <label for="offsetSlider3">Offset 3 :</label>
+        <input type="range" id="offsetSlider3" min="0" max="200" value="50" step="1">
+        <span id="offsetValue3">10</span>
+    </div>
+    <br>
+    <canvas id="canvas" width="1000" height="500"></canvas>
+    <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>

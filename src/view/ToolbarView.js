@@ -23,13 +23,13 @@ export default class ToolbarView {
       importFile: document.getElementById("importFile"),
       addOffsetBtn: document.getElementById("addOffsetBtn"),
     };
-
+    this.offsetElements = [];
     // Gestion dynamique des sliders et checkboxes pour les offsets
-    this.offsetElements = [1, 2, 3].map((i) => ({
-      slider: document.getElementById(`offsetSlider${i}`),
-      valueDisplay: document.getElementById(`offsetValue${i}`),
-      checkbox: document.getElementById(`toggleOffset${i}Cbx`),
-    }));
+    // this.offsetElements = [1, 2, 3].map((i) => ({
+    //   slider: document.getElementById(`offsetSlider${i}`),
+    //   valueDisplay: document.getElementById(`offsetValue${i}`),
+    //   checkbox: document.getElementById(`toggleOffset${i}Cbx`),
+    // }));
   }
 
   // ---------------------------
@@ -107,6 +107,43 @@ export default class ToolbarView {
   }
 
   // ---------------------------
+  // 🧠 Event Delegation pour les offsets dynamiques
+  // ---------------------------
+
+  /**
+   * Lie un seul écouteur au conteneur pour gérer sliders et checkboxes d'offset
+   * Les nouveaux éléments ajoutés seront automatiquement pris en compte
+   */
+  bindDynamicOffsetControls(handlerSlider, handlerCheckbox) {
+    const container = document.getElementById("offsetControlsContainer");
+    if (!container) return;
+
+    // Slider
+    container.addEventListener("input", (e) => {
+      if (e.target.matches("input[type='range']")) {
+        const index = parseInt(e.target.id.replace("offsetSlider", ""), 10);
+        const value = parseFloat(e.target.value);
+        handlerSlider(index, value);
+      }
+    });
+
+    // Checkbox
+    container.addEventListener("click", (e) => {
+      if (
+        e.target.matches("input[type='checkbox']") &&
+        e.target.id.startsWith("toggleOffset")
+      ) {
+        const index = parseInt(
+          e.target.id.replace("toggleOffset", "").replace("Cbx", ""),
+          10
+        );
+        const checked = e.target.checked;
+        handlerCheckbox(index, checked);
+      }
+    });
+  }
+
+  // ---------------------------
   // --- Méthodes de mise à jour ---
   // ---------------------------
 
@@ -152,5 +189,45 @@ export default class ToolbarView {
   updateOffsetGlobalCheckbox(isVisible) {
     if (this.elements.addOffsetCheckbox)
       this.elements.addOffsetCheckbox.checked = isVisible;
+  }
+  addOffsetControls(index) {
+    // Conteneur des contrôles d’offset (à définir dans ton HTML)
+    const container = document.getElementById("offsetControlsContainer");
+    if (!container) {
+      console.warn("⚠️ Conteneur des contrôles d'offset introuvable.");
+      return;
+    }
+
+    // Empêche la duplication d’un offset déjà existant
+    if (document.getElementById(`offsetSlider${index}`)) {
+      console.warn(`⚠️ Les contrôles pour l’offset ${index} existent déjà.`);
+      return;
+    }
+
+    // Création d’un wrapper pour l’ensemble des contrôles
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("offset-control");
+    wrapper.innerHTML = `
+    <label>
+      <input type="checkbox" id="toggleOffset${index}Cbx" checked />
+      Offset ${index}
+    </label>
+    <input type="range" id="offsetSlider${index}" min="0" max="200" value="0" step="1" />
+    <span id="offsetValue${index}">0</span>
+  `;
+
+    // Ajoute les éléments au conteneur
+    container.appendChild(wrapper);
+
+    // Stocke les références dans la structure interne
+    const newOffset = {
+      slider: document.getElementById(`offsetSlider${index}`),
+      valueDisplay: document.getElementById(`offsetValue${index}`),
+      checkbox: document.getElementById(`toggleOffset${index}Cbx`),
+    };
+
+    this.offsetElements[index - 1] = newOffset;
+
+    console.info(`✅ Contrôles pour l’offset ${index} ajoutés.`);
   }
 }

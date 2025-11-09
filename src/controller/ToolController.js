@@ -62,14 +62,16 @@ export default class ToolController {
    * @param {number} value - Nouvelle valeur de l'offset
    */
   _onOffsetSliderChange(offsetNumber, value) {
-    this.toolbarView.updateOffsetValue(offsetNumber, value);
-
     const curve = this.model.curves[this.model.currentCurveIndex];
     if (!curve) return;
 
-    const sliderToOffsetMap = [0, 1, 2];
-    curve.offsetsData[sliderToOffsetMap[offsetNumber - 1]].offset = value;
+    // Met à jour le modèle
+    curve.offsetsData[offsetNumber - 1].offset = value;
 
+    // Met à jour l'UI du slider
+    this.toolbarView.updateOffsetValue(offsetNumber, value);
+
+    // Recalcul et rendu
     this.model.computeAllOffsets();
     this._render();
   }
@@ -164,32 +166,38 @@ export default class ToolController {
    * Lie tous les événements UI (sliders, checkboxes, boutons principaux, import/export).
    */
   _bindUIEvents() {
-    this._bindOffsetSliders();
-    this._bindOffsetCheckboxes();
+    //this._bindOffsetSliders();
+    //this._bindOffsetCheckboxes();
     this._bindCurveManagementButtons();
     this._bindMiscButtons();
     this._bindImportEvents();
+
+    // Event delegation pour sliders et checkboxes d'offset dynamiques
+    this.toolbarView.bindDynamicOffsetControls(
+      (index, value) => this._onOffsetSliderChange(index, value),
+      (index) => this._onOffsetToggle(index)
+    );
   }
 
   /**
    * Lie les sliders aux fonctions de changement d'offset.
    */
-  _bindOffsetSliders() {
-    for (let i = 1; i <= 3; i++) {
-      this.toolbarView.bindOffsetSlider(i, (e) =>
-        this._onOffsetSliderChange(i, parseFloat(e.target.value))
-      );
-    }
-  }
+  // _bindOffsetSliders() {
+  //   for (let i = 1; i <= 3; i++) {
+  //     this.toolbarView.bindOffsetSlider(i, (e) =>
+  //       this._onOffsetSliderChange(i, parseFloat(e.target.value))
+  //     );
+  //   }
+  // }
 
   /**
    * Lie les checkboxes aux fonctions de toggle de visibilité des offsets.
    */
-  _bindOffsetCheckboxes() {
-    for (let i = 1; i <= 3; i++) {
-      this.toolbarView.bindOffsetCheckbox(i, () => this._onOffsetToggle(i));
-    }
-  }
+  // _bindOffsetCheckboxes() {
+  //   for (let i = 1; i <= 3; i++) {
+  //     this.toolbarView.bindOffsetCheckbox(i, () => this._onOffsetToggle(i));
+  //   }
+  // }
 
   /**
    * Lie les boutons pour ajouter, supprimer et sélectionner des courbes.
@@ -238,6 +246,9 @@ export default class ToolController {
 
     this.toolbarView.bindAddOffsetBtn(() => {
       this.model.addOffsetToCurrentCurve();
+      this.toolbarView.addOffsetControls(
+        this.model.curves[this.model.currentCurveIndex].offsetsData.length
+      );
 
       //this._updateSlidersAndCheckboxes();
       this._render();
