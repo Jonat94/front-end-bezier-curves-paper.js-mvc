@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Éditeur Bézier</title>
+    <style>
+        /* ====== BODY & GLOBAL ====== */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 12px 20px;
+            font-size: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+        }
+
+        /* ====== ULTRA-PRO TOOLBAR ====== */
+        .toolbar {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 8px 12px;
+            width: 100%;
+            max-width: 1000px;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .toolbar h2 {
+            font-size: 0.95rem;
+            margin: 0;
+            color: #333;
+            flex: 1 1 100%;
+            /* titre sur toute la ligne */
+        }
+
+        /* GROUPES COMPACTS */
+        .toolbar .group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+
+        /* Champs et sliders */
+        select,
+        input[type="text"],
+        input[type="range"] {
+            padding: 3px 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+        }
+
+        label {
+            font-size: 0.85rem;
+            margin-right: 4px;
+        }
+
+        button {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            border: none;
+            background-color: #0d6efd;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0b5ed7;
+        }
+
+        button:focus,
+        input:focus,
+        select:focus {
+            outline: 2px solid #0b5ed7;
+            outline-offset: 2px;
+        }
+
+        /* Sliders */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ====== CANVAS ====== */
+        #canvas {
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            background-color: #ffffff;
+            width: 100%;
+            /* aligné avec toolbar */
+            max-width: 1000px;
+            height: 500px;
+            display: block;
+            box-sizing: border-box;
+        }
+
+        /* ====== FOOTER ====== */
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 800px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .toolbar .group {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+
+            .slider-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>Éditeur Bézier</header>
+
+    <main>
+        <div class="toolbar">
+            <h2>Gestion des courbes</h2>
+            <div class="group">
+                <label for="curveSelect">Sélectionner une courbe :</label>
+                <select id="curveSelect"></select>
+
+                <label for="curveName">Nom :</label>
+                <input type="text" id="curveName" placeholder="Nom de la courbe">
+
+                <button id="addCurveBtn">Ajouter</button>
+                <button id="deleteBtn">Supprimer</button>
+            </div>
+
+            <div class="group">
+                <button id="deletePointBtn">Supprimer point sélectionné</button>
+                <input type="checkbox" id="toggleHandlesCbx">
+                <label for="toggleHandlesCbx">Afficher points de contrôle</label>
+
+                <input type="checkbox" id="toggleBackgroundCbx">
+                <label for="toggleBackgroundCbx">Afficher fond</label>
+            </div>
+
+            <h2>Offsets</h2>
+            <div class="group">
+                <div class="slider-container">
+                    <input type="checkbox" id="toggleOffset1Cbx">
+                    <label for="offsetSlider1">Offset 1 :</label>
+                    <input type="range" id="offsetSlider1" min="0" max="200" value="50" step="1">
+                    <span id="offsetValue1">50</span>
+                </div>
+                <div class="slider-container">
+                    <input type="checkbox" id="toggleOffset2Cbx">
+                    <label for="offsetSlider2">Offset 2 :</label>
+                    <input type="range" id="offsetSlider2" min="0" max="200" value="50" step="1">
+                    <span id="offsetValue2">50</span>
+                </div>
+                <div class="slider-container">
+                    <input type="checkbox" id="toggleOffset3Cbx">
+                    <label for="offsetSlider3">Offset 3 :</label>
+                    <input type="range" id="offsetSlider3" min="0" max="200" value="50" step="1">
+                    <span id="offsetValue3">50</span>
+                </div>
+            </div>
+
+            <h2>Import / Export</h2>
+            <div class="group">
+                <button id="exportBtn">Exporter PNG</button>
+                <button id="saveBtn">Sauvegarder JSON</button>
+                <button id="importBtn">Importer JSON</button>
+                <input type="file" id="importFile" accept=".json" style="display:none;">
+            </div>
+        </div>
+
+        <canvas id="canvas" width="1000" height="500"></canvas>
+
+        <div class="footer">
+            &copy; 2025 Éditeur Bézier
+        </div>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>

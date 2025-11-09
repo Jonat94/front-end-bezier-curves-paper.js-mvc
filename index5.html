@@ -21,17 +21,14 @@
             flex-direction: column;
             min-height: 100vh;
             font-size: 14px;
-            /* texte un peu plus petit */
         }
 
         header {
             background-color: #34495e;
             color: #fff;
             padding: 0.8rem 1.5rem;
-            /* moins de padding */
             text-align: center;
             font-size: 1.3rem;
-            /* légèrement plus petit */
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
@@ -40,7 +37,6 @@
             display: flex;
             flex: 1;
             gap: 0.8rem;
-            /* réduire l'espace entre sidebar et canvas */
             padding: 0.8rem;
         }
 
@@ -49,7 +45,6 @@
         /* ------------------------ */
         aside {
             width: 300px;
-            /* légèrement plus petit */
             display: flex;
             flex-direction: column;
             gap: 0.8rem;
@@ -58,20 +53,16 @@
         .card {
             background-color: #fff;
             border-radius: 10px;
-            /* coins un peu moins arrondis */
             padding: 0.8rem;
-            /* moins de padding */
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
             gap: 0.6rem;
-            /* réduire l'espacement entre éléments */
         }
 
         .card h2 {
             margin: 0;
             font-size: 1rem;
-            /* plus petit */
             color: #2c3e50;
             border-bottom: 1px solid #ecf0f1;
             padding-bottom: 0.2rem;
@@ -80,13 +71,13 @@
         select,
         input[type="range"],
         button,
-        input[type="file"] {
+        input[type="file"],
+        input[type="text"] {
             width: 100%;
             padding: 0.3rem;
             border-radius: 6px;
             border: 1px solid #bdc3c7;
             font-size: 0.85rem;
-            /* plus petit */
         }
 
         button {
@@ -105,34 +96,27 @@
             display: flex;
             align-items: center;
             gap: 0.4rem;
-            /* réduire gap */
             font-weight: 500;
             cursor: pointer;
             font-size: 0.85rem;
-            /* plus petit */
         }
 
         input[type="checkbox"] {
             transform: scale(1.1);
-            /* légèrement plus petit */
         }
 
         /* ------------------------ */
         /* --- Canvas --- */
         /* ------------------------ */
-        /* Conteneur du canvas */
         #canvasContainer {
             flex: 1;
             display: flex;
             justify-content: flex-start;
-            /* alignement horizontal à gauche */
             align-items: flex-start;
-            /* alignement vertical en haut */
             background-color: #e6ecf0;
             border-radius: 10px;
             padding: 0.8rem;
             overflow: auto;
-            /* si le canvas dépasse la taille du conteneur */
         }
 
         /* Canvas */
@@ -158,14 +142,12 @@
         .slider-group label {
             flex: 1;
             margin: 0;
-            font-size: 0.85rem;
         }
 
         .slider-group span {
-            width: 35px;
+            width: 40px;
             text-align: center;
             font-weight: bold;
-            font-size: 0.85rem;
         }
     </style>
 </head>
@@ -180,67 +162,84 @@
             <!-- Courbes -->
             <div class="card">
                 <h2>Courbes</h2>
+                <input type="text" id="curveName" placeholder="Nom de la courbe">
                 <select id="curveSelect"></select>
-                <button id="addCurveBtn">Ajouter une courbe</button>
-                <button id="deleteBtn">Supprimer la courbe</button>
+                <button id="addCurveBtn" title="Ajouter une nouvelle courbe">Ajouter une courbe</button>
+                <button id="deleteBtn" title="Supprimer la courbe sélectionnée">Supprimer la courbe</button>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <h2>Actions</h2>
+                <button id="deletePointBtn" title="Supprimer le point sélectionné">Supprimer le point</button>
+                <button id="saveBtn" title="Sauvegarder les courbes">Sauvegarder</button>
+                <button id="exportBtn" title="Exporter le canvas en PNG">Exporter en PNG</button>
+                <button id="importBtn" title="Importer un fichier JSON">Importer</button>
+                <input type="file" id="importFile" accept=".json" style="display:none;">
             </div>
 
             <!-- Offsets -->
             <div class="card">
                 <h2>Offsets</h2>
                 <div class="slider-group">
-                    <input type="checkbox" id="toggleOffset1Cbx">
-                    <label for="offsetSlider1">Offset&nbsp;1</label>
-                    <input type="range" id="offsetSlider1" min="-100" max="100" step="0.1">
-                    <span id="offsetValue1">0</span>
+                    <label for="offsetSlider1">Offset 1</label>
+                    <input type="range" id="offsetSlider1" min="0" max="100" step="0.1" value="50">
+                    <span id="offsetValue1">50</span>
                 </div>
                 <div class="slider-group">
-                    <input type="checkbox" id="toggleOffset2Cbx">
-                    <label for="offsetSlider2">Offset&nbsp;2</label>
-                    <input type="range" id="offsetSlider2" min="-100" max="100" step="0.1">
-                    <span id="offsetValue2">0</span>
+                    <label for="offsetSlider2">Offset 2</label>
+                    <input type="range" id="offsetSlider2" min="0" max="100" step="0.1" value="50">
+                    <span id="offsetValue2">50</span>
                 </div>
                 <div class="slider-group">
-                    <input type="checkbox" id="toggleOffset3Cbx">
-                    <label for="offsetSlider3">Offset&nbsp;3</label>
-                    <input type="range" id="offsetSlider3" min="-100" max="100" step="0.1">
-                    <span id="offsetValue3">0</span>
+                    <label for="offsetSlider3">Offset 3</label>
+                    <input type="range" id="offsetSlider3" min="0" max="100" step="0.1" value="50">
+                    <span id="offsetValue3">50</span>
                 </div>
-                <!-- <label>
-                    <input type="checkbox" id="offsetCbx">
-                    Afficher offsets
-                </label> -->
+                <label>
+                    <input type="checkbox" id="offsetCbx"> Afficher les offsets
+                </label>
             </div>
 
             <!-- Options -->
             <div class="card">
                 <h2>Options</h2>
                 <label>
-                    <input type="checkbox" id="toggleHandlesCbx">
-                    Afficher poignées
+                    <input type="checkbox" id="toggleHandlesCbx"> Afficher les poignées
                 </label>
                 <label>
-                    <input type="checkbox" id="toggleBackgroundCbx">
-                    Afficher fond
+                    <input type="checkbox" id="toggleBackgroundCbx"> Afficher le fond
                 </label>
-            </div>
-
-            <!-- Actions -->
-            <div class="card">
-                <h2>Actions</h2>
-                <button id="deletePointBtn">Supprimer point sélectionné</button>
-                <button id="saveBtn">Sauvegarder courbe</button>
-                <button id="exportBtn">Exporter en PNG</button>
-                <input type="file" id="importFile" accept=".json">
             </div>
         </aside>
 
         <!-- Canvas -->
         <div id="canvasContainer">
-            <canvas id="canvas" width="800" height="600"></canvas>
+            <canvas id="canvas" width="950" height="700"></canvas>
         </div>
+
         <script type="module" src="./src/main.js"></script>
     </main>
+
+    <script>
+        // Synchroniser sliders et spans
+        const sliders = [
+            { slider: 'offsetSlider1', span: 'offsetValue1' },
+            { slider: 'offsetSlider2', span: 'offsetValue2' },
+            { slider: 'offsetSlider3', span: 'offsetValue3' }
+        ];
+
+        sliders.forEach(({ slider, span }) => {
+            const s = document.getElementById(slider);
+            const sp = document.getElementById(span);
+            s.addEventListener('input', () => sp.textContent = s.value);
+        });
+
+        // Gestion du bouton importer
+        const importBtn = document.getElementById('importBtn');
+        const importFile = document.getElementById('importFile');
+        importBtn.addEventListener('click', () => importFile.click());
+    </script>
 
 </body>
 

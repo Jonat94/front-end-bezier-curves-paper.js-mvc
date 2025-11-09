@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Éditeur Bézier</title>
+    <style>
+        /* ====== BODY & GLOBAL ====== */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ====== SIDEBAR ====== */
+        .sidebar {
+            width: 280px;
+            background-color: #ffffff;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 1.1rem;
+            margin: 20px 0 10px 0;
+            color: #333;
+        }
+
+        .group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .group-horizontal {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-size: 0.85rem;
+        }
+
+        /* Champs de saisie et select */
+        input[type="text"],
+        select {
+            padding: 5px 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 0.85rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* ====== BOUTONS COMPACTS ====== */
+        button {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            /* compact */
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            /* texte plus petit */
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0b5ed7;
+        }
+
+        button:focus {
+            outline: 2px solid #0b5ed7;
+            outline-offset: 2px;
+        }
+
+        /* Sliders */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        input[type="range"] {
+            flex: 1;
+        }
+
+        /* Footer */
+        .sidebar .footer {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        /* ====== CANVAS ====== */
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: auto;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            background-color: #ffffff;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+            }
+
+            .canvas-container {
+                width: 100%;
+                padding: 10px;
+            }
+
+            canvas {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar gauche -->
+    <div class="sidebar">
+        <h2>Gestion des courbes</h2>
+        <div class="group">
+            <div class="group-horizontal">
+                <label for="curveSelect">Courbe :</label>
+                <select id="curveSelect"></select>
+            </div>
+            <div class="group-horizontal">
+                <label for="curveName">Nom :</label>
+                <input type="text" id="curveName" placeholder="Nom de la courbe">
+            </div>
+            <div class="group-horizontal">
+                <button id="addCurveBtn">Ajouter</button>
+                <button id="deleteBtn">Supprimer</button>
+            </div>
+            <div class="group-horizontal">
+                <button id="deletePointBtn">Supprimer point sélectionné</button>
+            </div>
+            <div class="group-horizontal">
+                <input type="checkbox" id="toggleHandlesCbx">
+                <label for="toggleHandlesCbx">Afficher points de contrôle</label>
+            </div>
+            <div class="group-horizontal">
+                <input type="checkbox" id="toggleBackgroundCbx">
+                <label for="toggleBackgroundCbx">Afficher fond</label>
+            </div>
+        </div>
+
+        <h2>Offsets</h2>
+        <div class="group">
+            <div class="slider-container">
+                <input type="checkbox" id="toggleOffset1Cbx">
+                <label for="offsetSlider1">Offset 1 :</label>
+                <input type="range" id="offsetSlider1" min="0" max="200" value="50" step="1">
+                <span id="offsetValue1">50</span>
+            </div>
+            <div class="slider-container">
+                <input type="checkbox" id="toggleOffset2Cbx">
+                <label for="offsetSlider2">Offset 2 :</label>
+                <input type="range" id="offsetSlider2" min="0" max="200" value="50" step="1">
+                <span id="offsetValue2">50</span>
+            </div>
+            <div class="slider-container">
+                <input type="checkbox" id="toggleOffset3Cbx">
+                <label for="offsetSlider3">Offset&nbsp;3:</label>
+                <input type="range" id="offsetSlider3" min="0" max="200" value="50" step="1">
+                <span id="offsetValue3">50</span>
+            </div>
+        </div>
+
+        <h2>Import / Export</h2>
+        <div class="group">
+            <button id="exportBtn">Exporter PNG</button>
+            <button id="saveBtn">Sauvegarder JSON</button>
+            <button id="importBtn">Importer JSON</button>
+            <input type="file" id="importFile" accept=".json" style="display:none;">
+        </div>
+
+        <div class="footer">
+            &copy; 2025 Éditeur Bézier
+        </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-container">
+        <canvas id="canvas" width="1000" height="500"></canvas>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>

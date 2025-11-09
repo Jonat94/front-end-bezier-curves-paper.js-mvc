@@ -8,7 +8,7 @@ export default class ToolController {
     this.drawController = drawController;
 
     // Créer une première courbe
-    this.model.createNewCurve();
+    //this.model.createNewCurve();
 
     // Initialiser l'objet de visibilité des offsets par courbe
     this.drawController.offsetsVisibleByCurve = {};
