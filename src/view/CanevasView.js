@@ -10,7 +10,7 @@ export default class CanvasView {
     this.backgroundLayer = new paper.Layer();
     this.foregroundLayer = new paper.Layer();
 
-    // Ajouter un fond (image)
+    // Ajout du fond
     const raster = new paper.Raster("/images/paper.jpg");
     raster.position = paper.view.center;
     raster.scale(0.4);
@@ -21,24 +21,16 @@ export default class CanvasView {
     this.foregroundLayer.activate();
   }
 
-  // -----------------------------
-  // ---- Méthodes de rendu ----
-  // -----------------------------
-
+  // ---------------------------
+  // Nettoie la couche principale
+  // ---------------------------
   clear() {
     this.foregroundLayer.removeChildren();
   }
 
-  /**
-   * Dessine toutes les courbes et leurs offsets
-   * @param {Array} curves - tableau des courbes
-   * @param {boolean} showHandles - afficher les handles
-   * @param {boolean} showOffsets - afficher les offsets
-   * @param {object|null} selectedItem - item sélectionné
-   * @param {number|null} selectedCurveIndex - index de la courbe sélectionnée
-   * @param {string} fillColor - couleur du remplissage entre courbe et offset
-   * @param {object} offsetsVisibleByCurve - {curveIndex: [true, false, true]}
-   */
+  // ---------------------------
+  // Rendu de toutes les courbes et offsets
+  // ---------------------------
   renderCurves(
     curves,
     showHandles = true,
@@ -50,44 +42,53 @@ export default class CanvasView {
   ) {
     this.clear();
 
-    curves.forEach((curve, curveIndex) => {
-      const displayHandles = showHandles && curveIndex === selectedCurveIndex;
+    for (let c = 0; c < curves.length; c++) {
+      const curve = curves[c];
+      const displayHandles = showHandles && c === selectedCurveIndex;
+
       this.drawCurve(curve, displayHandles, selectedItem);
 
       if (showOffsets && curve.offsetsData.length) {
-        const offsetsVisible = offsetsVisibleByCurve[curveIndex] || [
-          true,
-          true,
-          true,
-        ];
+        const offsetsVisible =
+          offsetsVisibleByCurve[c] ||
+          Array(curve.offsetsData.length).fill(false);
 
-        curve.offsetsData.forEach((offsetData, offsetIndex) => {
-          if (!offsetsVisible[offsetIndex] || offsetData.points.length < 2)
-            return;
+        for (let i = 0; i < curve.offsetsData.length; i++) {
+          const offsetData = curve.offsetsData[i];
+          if (!offsetsVisible[i] || offsetData.points.length < 2) continue;
+
           this.drawOffset(offsetData);
           this.fillBetweenCurves(curve, offsetData, fillColor);
-        });
+        }
       }
-    });
+    }
 
     paper.view.update();
   }
 
+  // ---------------------------
+  // Dessine une courbe et ses handles
+  // ---------------------------
   drawCurve(curve, visibility = true, selectedItem) {
     const path = new paper.Path({
       strokeColor: "#000",
       strokeWidth: curve.strokeWidth || 2,
     });
 
-    curve.handles.forEach((p) => {
+    for (let i = 0; i < curve.handles.length; i++) {
+      const p = curve.handles[i];
       path.add(p.segt);
 
-      if (!visibility) return;
+      if (!visibility) continue;
 
       // Cercle central
       this.makeCircle(
         p.segt.point,
-        selectedItem?.contains(p.segt.point) ? "#2cff61ff" : "#ff0000",
+        selectedItem &&
+          selectedItem.contains &&
+          selectedItem.contains(p.segt.point)
+          ? "#2cff61ff"
+          : "#ff0000",
         p.id,
         "circle",
         p.inPointId,
@@ -107,22 +108,32 @@ export default class CanvasView {
         p.outPointId,
         "bezier_out"
       );
-    });
+    }
 
     this.updateHandleLines(curve, visibility);
   }
 
+  // ---------------------------
+  // Dessine un offset
+  // ---------------------------
   drawOffset(offsetData) {
     const path = new paper.Path({ strokeColor: "green", strokeWidth: 2 });
-    offsetData.points.forEach((pt) => path.add(new paper.Point(pt.x, pt.y)));
+    for (let i = 0; i < offsetData.points.length; i++) {
+      const pt = offsetData.points[i];
+      path.add(new paper.Point(pt.x, pt.y));
+    }
     path.sendToBack();
   }
 
+  // ---------------------------
+  // Remplissage entre courbe et offset
+  // ---------------------------
   fillBetweenCurves(curve, offsetData, color) {
     const fillPath = new paper.Path({ fillColor: color });
 
     // Courbe principale
-    curve.handles.forEach((h) => fillPath.add(h.segt));
+    for (let i = 0; i < curve.handles.length; i++)
+      fillPath.add(curve.handles[i].segt);
 
     // Offset inverse
     for (let i = offsetData.points.length - 1; i >= 0; i--) {
@@ -134,10 +145,16 @@ export default class CanvasView {
     fillPath.sendToBack();
   }
 
+  // ---------------------------
+  // Affiche ou masque le fond
+  // ---------------------------
   setBackground(visible) {
     this.backgroundLayer.visible = !!visible;
   }
 
+  // ---------------------------
+  // Crée un cercle pour un handle ou point
+  // ---------------------------
   makeCircle(point, color, id, type, inPtId, outPtId) {
     const circle = new paper.Path.Circle(point, 4);
     circle.fillColor = color;
@@ -145,11 +162,19 @@ export default class CanvasView {
     return circle;
   }
 
+  // ---------------------------
+  // Affiche les lignes des handles
+  // ---------------------------
   updateHandleLines(curve, visibility = true) {
     if (!visibility) return;
-    curve.handles.forEach((h) => {
+
+    for (let i = 0; i < curve.handles.length; i++) {
+      const h = curve.handles[i];
       const pt = h.segt.point;
-      [h.segt.handleIn, h.segt.handleOut].forEach((handle) => {
+      const handles = [h.segt.handleIn, h.segt.handleOut];
+
+      for (let j = 0; j < handles.length; j++) {
+        const handle = handles[j];
         const line = new paper.Path.Line({
           from: pt,
           to: pt.add(handle),
@@ -158,12 +183,16 @@ export default class CanvasView {
           dashArray: [4, 4],
         });
         line.sendToBack();
-      });
-    });
+      }
+    }
   }
 
+  // ---------------------------
+  // Export du canvas en image PNG
+  // ---------------------------
   exportAsImage(filename = "graphe.png", withBackground = true) {
     if (!this.canvas) return;
+
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = this.canvas.width;
     tempCanvas.height = this.canvas.height;

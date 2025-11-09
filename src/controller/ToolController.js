@@ -62,11 +62,22 @@ export default class ToolController {
 
     // ------------------ Autres événements ------------------
     this.toolbarView.bindAddCurve(() => {
-      this.model.createNewCurve();
+      const curveNameInput = document.getElementById("curveName");
+      let name = curveNameInput?.value?.trim();
+      if (!name) {
+        // Si aucun nom saisi, on utilise le nom par défaut
+        name = `Courbe ${this.model.curveCounter + 1}`;
+      }
+      this.model.createNewCurve(name);
+
+      // Mettre à jour l'UI
       this.toolbarView.updateCurveList(this.model.curves);
       this.toolbarView.setSelectedCurve(this.model.currentCurveIndex);
       this._updateSlidersForCurrentCurve();
       this._render();
+
+      // Vider le champ de texte
+      if (curveNameInput) curveNameInput.value = "";
     });
 
     this.toolbarView.bindDeleteCurve(() => {
@@ -121,35 +132,47 @@ export default class ToolController {
     });
 
     this.toolbarView.bindImport((event) => {
-      console.log("lllllll");
       const file = event.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
+          // 1️⃣ Importer la courbe
           this.model.importCurve(e.target.result);
 
+          // 2️⃣ Sélectionner la dernière courbe importée
           const lastIndex = this.model.curves.length - 1;
-          this.model.currentCurveIndex = lastIndex; // sélectionner la dernière courbe
+          this.model.currentCurveIndex = lastIndex;
 
-          //this.handlesVisible = true;
-          this.model.computeOffset();
+          // 3️⃣ Initialiser les offsets visibles pour cette courbe
+          if (!this.drawController.offsetsVisibleByCurve[lastIndex]) {
+            this.drawController.offsetsVisibleByCurve[lastIndex] = [
+              true,
+              true,
+              true,
+            ];
+          }
 
-          // --- Forcer l'affichage des points de contrôle ---
+          // 4️⃣ Forcer l’affichage des points de contrôle
           this.drawController.handlesVisible = true;
           this.toolbarView.updateHandlesViewCbx(true);
 
-          this._updateSlidersForCurrentCurve();
-          this._render(); //???passer le lastIndex ??
+          // 5️⃣ Recalculer les offsets
+          this.model.computeOffset();
 
-          // --- Mettre à jour la liste et le select ---
+          // 6️⃣ Mettre à jour sliders et checkboxes
+          this._updateSlidersForCurrentCurve();
+
+          // 7️⃣ Rendu de la courbe importée
+          this._render();
+
+          // 8️⃣ Mettre à jour la liste des courbes et sélectionner la nouvelle
           this.toolbarView.updateCurveList(this.model.curves);
           this.toolbarView.setSelectedCurve(lastIndex);
-
-          // this.model.currentCurveIndex = 0;
         } catch (err) {
-          console.error("Erreur JSON :", err);
+          console.error("Erreur lors de l'import JSON :", err);
+          alert("Le fichier importé est invalide !");
         }
       };
       reader.readAsText(file);

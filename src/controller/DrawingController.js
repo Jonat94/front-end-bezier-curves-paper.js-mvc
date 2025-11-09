@@ -15,17 +15,45 @@ export default class DrawingController {
     this.isDraggingCurve = false;
     this.lastMousePos = null;
 
+    // Tableau de visibilité des offsets par courbe { curveIndex: [true, false, true] }
+    this.offsetsVisibleByCurve = {};
+
     this._setupTool();
   }
 
-  /**
-   * Initialise l'outil Paper.js et ses événements
-   */
+  // ---------------------------
+  // Création d'une nouvelle courbe
+  // ---------------------------
+  addNewCurve(name) {
+    this.model.createNewCurve(name);
+    const curveIndex = this.model.currentCurveIndex;
+
+    // Initialisation des offsets visibles
+    this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
+
+    // Calcul immédiat des offsets
+    this.model.computeOffset();
+
+    // Rendu initial
+    this.view.renderCurves(
+      this.model.curves,
+      this.handlesVisible,
+      this.offsetVisible,
+      null,
+      curveIndex,
+      "rgba(0,150,255,0.2)",
+      this.offsetsVisibleByCurve
+    );
+  }
+
+  // ---------------------------
+  // Setup Paper.js Tool
+  // ---------------------------
   _setupTool() {
     const tool = new paper.Tool();
 
     // ---------------------------
-    //      MOUSE DOWN
+    // MOUSE DOWN
     // ---------------------------
     tool.onMouseDown = (event) => {
       const curve = this.model.curves[this.model.currentCurveIndex];
@@ -37,7 +65,7 @@ export default class DrawingController {
         tolerance: 8,
       });
 
-      // --- Clic sur un point ou poignée ---
+      // --- Sélection d'un point ou poignée ---
       if (
         hit &&
         hit.item &&
@@ -46,18 +74,19 @@ export default class DrawingController {
         this.selectedItem = hit.item;
         this.dragOffset = event.point.subtract(hit.item.position);
 
-        this.model.computeOffset();
         this.view.renderCurves(
           this.model.curves,
           this.handlesVisible,
           this.offsetVisible,
           this.selectedItem,
-          this.model.currentCurveIndex
+          this.model.currentCurveIndex,
+          "rgba(0,150,255,0.2)",
+          this.offsetsVisibleByCurve
         );
         return;
       }
 
-      // --- Clic sur la courbe (au moins 2 points) ---
+      // --- Déplacement d'une courbe entière ---
       if (curve.handles.length >= 2) {
         const path = new paper.Path();
         curve.handles.forEach((h) => path.add(h.segt));
@@ -73,7 +102,7 @@ export default class DrawingController {
         path.remove();
       }
 
-      // --- Sinon → ajout d'un nouveau point ---
+      // --- Ajouter un nouveau point ---
       if (!this.handlesVisible) return;
 
       const idShape = this.model.generateId();
@@ -91,39 +120,61 @@ export default class DrawingController {
         outPointId: idOut,
       });
 
+      const curveIndex = this.model.currentCurveIndex;
+
+      // --- Initialisation de la visibilité des offsets pour cette courbe ---
+      if (!this.offsetsVisibleByCurve[curveIndex]) {
+        this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
+      }
+
+      // Recalcul des offsets
+      this.model.computeOffset();
+
       this.selectedItem = null;
+
+      this.view.renderCurves(
+        this.model.curves,
+        this.handlesVisible,
+        this.offsetVisible,
+        this.selectedItem,
+        curveIndex,
+        "rgba(0,150,255,0.2)",
+        this.offsetsVisibleByCurve
+      );
     };
 
     // ---------------------------
-    //        MOUSE DRAG
+    // MOUSE DRAG
     // ---------------------------
     tool.onMouseDrag = (event) => {
       const curve = this.model.curves[this.model.currentCurveIndex];
       if (!curve) return;
 
-      // ---- Déplacement de la courbe entière ----
+      // Déplacer la courbe entière
       if (this.isDraggingCurve) {
         const dx = event.point.x - this.lastMousePos.x;
         const dy = event.point.y - this.lastMousePos.y;
         this.lastMousePos = event.point;
 
         this.model.moveCurrentCurve(dx, dy);
+
         this.view.renderCurves(
           this.model.curves,
           this.handlesVisible,
           this.offsetVisible,
           this.selectedItem,
-          this.model.currentCurveIndex
+          this.model.currentCurveIndex,
+          "rgba(0,150,255,0.2)",
+          this.offsetsVisibleByCurve
         );
         return;
       }
 
-      // ---- Déplacement d'un point / poignée ----
+      // Déplacer un point ou une poignée
       if (this.selectedItem) {
         this.selectedItem.position = event.point.subtract(this.dragOffset);
 
         let targetHandles;
-
         switch (this.selectedItem.data.type) {
           case "circle":
             targetHandles = curve.handles.filter(
@@ -158,38 +209,42 @@ export default class DrawingController {
         }
 
         this.model.computeOffset();
+
         this.view.renderCurves(
           this.model.curves,
           this.handlesVisible,
           this.offsetVisible,
           this.selectedItem,
-          this.model.currentCurveIndex
+          this.model.currentCurveIndex,
+          "rgba(0,150,255,0.2)",
+          this.offsetsVisibleByCurve
         );
       }
     };
 
     // ---------------------------
-    //        MOUSE UP
+    // MOUSE UP
     // ---------------------------
     tool.onMouseUp = () => {
       this.isDraggingCurve = false;
+
       this.model.computeOffset();
+
       this.view.renderCurves(
         this.model.curves,
         this.handlesVisible,
         this.offsetVisible,
         this.selectedItem,
-        this.model.currentCurveIndex
+        this.model.currentCurveIndex,
+        "rgba(0,150,255,0.2)",
+        this.offsetsVisibleByCurve
       );
     };
   }
 
-  /**
-   * Vérifie si l'item sélectionné appartient à la courbe sélectionnée
-   * @param {object} itemData
-   * @param {object} curve
-   * @returns {boolean}
-   */
+  // ---------------------------
+  // Vérifie si l'item appartient à la courbe sélectionnée
+  // ---------------------------
   isItemOnSelectedCurve(itemData, curve) {
     if (!itemData || !curve || !curve.handles) return false;
 
@@ -198,6 +253,27 @@ export default class DrawingController {
         h.id === itemData.data.id ||
         h.inPointId === itemData.data.id ||
         h.outPointId === itemData.data.id
+    );
+  }
+
+  // ---------------------------
+  // Bascule la visibilité d'un offset spécifique
+  // ---------------------------
+  toggleOffsetVisibility(curveIndex, offsetIndex) {
+    if (!this.offsetsVisibleByCurve[curveIndex]) {
+      this.offsetsVisibleByCurve[curveIndex] = [];
+    }
+    this.offsetsVisibleByCurve[curveIndex][offsetIndex] =
+      !this.offsetsVisibleByCurve[curveIndex][offsetIndex];
+
+    this.view.renderCurves(
+      this.model.curves,
+      this.handlesVisible,
+      this.offsetVisible,
+      this.selectedItem,
+      this.model.currentCurveIndex,
+      "rgba(0,150,255,0.2)",
+      this.offsetsVisibleByCurve
     );
   }
 }
