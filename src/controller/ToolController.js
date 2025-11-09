@@ -75,15 +75,27 @@ export default class ToolController {
    * @param {number} offsetNumber - Numéro de l'offset (1 à 3)
    */
   _onOffsetToggle(offsetNumber) {
-    const curveIndex = this.model.currentCurveIndex;
-    const offsetsVisible = this.drawController.offsetsVisibleByCurve[
-      curveIndex
-    ] || [true, true, true];
+    const curve = this.model.curves[this.model.currentCurveIndex];
+    if (!curve) return;
 
-    offsetsVisible[offsetNumber - 1] = !offsetsVisible[offsetNumber - 1];
-    this.drawController.offsetsVisibleByCurve[curveIndex] = offsetsVisible;
+    // offsetNumber 1 → offsetsData[0], 2 → offsetsData[1], 3 → offsetsData[2] (selon ton mapping)
+    const offset = curve.offsetsData[offsetNumber - 1];
+    if (!offset) return;
+
+    offset.visible = !offset.visible;
 
     this._render();
+  }
+
+  _updateOffsetCheckboxesFromModel() {
+    const curve = this.model.curves[this.model.currentCurveIndex];
+    if (!curve) return;
+
+    curve.offsetsData.forEach((offset, index) => {
+      // index+1 car tes checkboxes vont de 1 à 3
+      const isChecked = offset.visible ? true : false;
+      this.toolbarView.updateOffsetCheckbox(index + 1, isChecked);
+    });
   }
 
   // ---------------------------
@@ -265,6 +277,8 @@ export default class ToolController {
 
       this.model.computeAllOffsets();
       this._updateSlidersAndCheckboxes();
+      this._updateOffsetCheckboxesFromModel();
+
       this._render();
 
       this.toolbarView.updateCurveList(this.model.curves);

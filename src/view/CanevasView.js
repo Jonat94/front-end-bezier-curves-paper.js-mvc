@@ -48,6 +48,8 @@ export default class CanvasView {
     fillColor = "rgba(0,150,255,0.2)",
     offsetsVisibilityMap = {}
   ) {
+    offsetsVisibilityMap = this.generateOffsetsVisibilityMap(curves);
+    console.log("ttttttt", offsetsVisibilityMap);
     this.clearForeground();
 
     curves.forEach((curve, curveIndex) => {
@@ -69,6 +71,32 @@ export default class CanvasView {
     });
 
     paper.view.update();
+  }
+
+  /**
+   * Génère un offsetsVisibilityMap à partir des attributs `visible` des offsets
+   * @param {Array} curves - Tableau des courbes
+   * @returns {Object} offsetsVisibilityMap
+   *
+   * Exemple de structure :
+   * curves = [
+   *   { offsetsData: [ { visible: true }, { visible: false } ] },
+   *   { offsetsData: [ { visible: true } ] }
+   * ]
+   * => { 0: [true, false], 1: [true] }
+   */
+  generateOffsetsVisibilityMap(curves) {
+    const visibilityMap = {};
+
+    curves.forEach((curve, curveIndex) => {
+      if (!curve.offsetsData) return;
+
+      visibilityMap[curveIndex] = curve.offsetsData.map(
+        (offset) => !!offset.visible
+      );
+    });
+
+    return visibilityMap;
   }
 
   // ---------------------------

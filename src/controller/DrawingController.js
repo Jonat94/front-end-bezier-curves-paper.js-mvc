@@ -12,7 +12,7 @@ export default class DrawingController {
     this.handlesVisible = true; // Affichage des poignées
     this.backgroundVisible = false; // Affichage du fond (non utilisé ici)
     this.offsetVisible = true; // Affichage des offsets
-    this.offsetsVisibleByCurve = {}; // Visibilité des offsets par courbe
+    //this.offsetsVisibleByCurve = {}; // Visibilité des offsets par courbe
 
     // État du drag global
     this.isDraggingCurve = false;
@@ -29,7 +29,9 @@ export default class DrawingController {
     const curveIndex = this.model.currentCurveIndex;
 
     // Initialisation des offsets visibles pour la nouvelle courbe
-    this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
+
+    //A remplacer par les attribute d'offset dans le modele
+    //this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
 
     // Calcul immédiat des offsets pour toutes les courbes
     this.model.computeAllOffsets();
@@ -156,9 +158,11 @@ export default class DrawingController {
     });
 
     const curveIndex = this.model.currentCurveIndex;
-    if (!this.offsetsVisibleByCurve[curveIndex]) {
-      this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
-    }
+
+    //inirtialisation inutile a present puisque valeur presente dans le modele
+    // if (!this.offsetsVisibleByCurve[curveIndex]) {
+    //   this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
+    // }
 
     this.model.computeAllOffsets();
     this.selectedItem = null;
@@ -230,8 +234,8 @@ export default class DrawingController {
       this.offsetVisible,
       this.selectedItem,
       curveIndex,
-      "rgba(0,150,255,0.2)",
-      this.offsetsVisibleByCurve
+      "rgba(0,150,255,0.2)"
+      // this.offsetsVisibleByCurve
     );
   }
 
@@ -253,11 +257,14 @@ export default class DrawingController {
   // Bascule la visibilité d'un offset spécifique
   // ---------------------------
   toggleOffsetVisibility(curveIndex, offsetIndex) {
-    if (!this.offsetsVisibleByCurve[curveIndex]) {
-      this.offsetsVisibleByCurve[curveIndex] = [];
-    }
-    this.offsetsVisibleByCurve[curveIndex][offsetIndex] =
-      !this.offsetsVisibleByCurve[curveIndex][offsetIndex];
+    // if (!this.offsetsVisibleByCurve[curveIndex]) {
+    //   this.offsetsVisibleByCurve[curveIndex] = [];
+    // }
+    this.model.curves[curveIndex].offsetsData[offsetIndex].visible =
+      !this.model.curves[curveIndex].offsetsData[offsetIndex].visible;
+
+    // this.offsetsVisibleByCurve[curveIndex][offsetIndex] =
+    //   !this.offsetsVisibleByCurve[curveIndex][offsetIndex];
 
     this._renderCurves();
   }

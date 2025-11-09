@@ -42,6 +42,7 @@ export default class DrawingModel {
       offsetsData: this.defaultOffsets.map((value) => ({
         offset: value,
         points: [],
+        visible: true,
       })),
     };
 
@@ -334,8 +335,9 @@ export default class DrawingModel {
           new paper.Point(h.segment[2][0], h.segment[2][1]),
           new paper.Point(h.segment[3][0], h.segment[3][1])
         ),
+        visible: h.visible,
       }));
-
+      console.log("import rrrrrr", data);
       this.curves.push(data);
       this.currentCurveIndex = this.curves.length - 1;
     } catch (e) {
