@@ -95,7 +95,7 @@ export default class DrawingModel {
 
     const delta = new paper.Point(dx, dy);
     curve.handles.forEach((h) => {
-      h.segt.point = h.segt.point.add(delta);
+      h.segment.point = h.segment.point.add(delta);
     });
 
     this.computeAllOffsets();
@@ -186,7 +186,7 @@ export default class DrawingModel {
   alignOffsetStart(curve, offsetData) {
     if (!offsetData.points?.length || !curve.handles?.length) return;
 
-    const startPoint = curve.handles[0].segt.point;
+    const startPoint = curve.handles[0].segment.point;
     let bestIndex = 0;
     let minDistance = Infinity;
 
@@ -211,7 +211,7 @@ export default class DrawingModel {
   findClosestOffsetEnd(curve, offsetData) {
     if (!offsetData.points?.length || !curve.handles?.length) return 0;
 
-    const endPoint = curve.handles.at(-1).segt.point;
+    const endPoint = curve.handles.at(-1).segment.point;
     let bestIndex = 0;
     let minDist = Infinity;
 
@@ -229,8 +229,8 @@ export default class DrawingModel {
    * Supprime les points trop proches du début ou de la fin de la courbe.
    */
   filterCornerPoints(curve, offsetData) {
-    const start = curve.handles[0].segt.point;
-    const end = curve.handles.at(-1).segt.point;
+    const start = curve.handles[0].segment.point;
+    const end = curve.handles.at(-1).segment.point;
 
     offsetData.points = offsetData.points.filter((pt) => {
       const dStart = pt.getDistance(start);
@@ -266,7 +266,7 @@ export default class DrawingModel {
   sampleAllCurves() {
     return this.curves.map((curve) => {
       const path = new paper.Path({ visible: false });
-      curve.handles.forEach((h) => path.add(h.segt));
+      curve.handles.forEach((h) => path.add(h.segment));
 
       const sampledPoints = [];
       for (let s = 0; s <= path.length; s += this.offsetSampleStep) {
@@ -330,10 +330,10 @@ export default class DrawingModel {
         id: h.id,
         inPointId: h.inPointId,
         outPointId: h.outPointId,
-        segt: new paper.Segment(
-          new paper.Point(h.segt[1][0], h.segt[1][1]),
-          new paper.Point(h.segt[2][0], h.segt[2][1]),
-          new paper.Point(h.segt[3][0], h.segt[3][1])
+        segment: new paper.Segment(
+          new paper.Point(h.segment[1][0], h.segment[1][1]),
+          new paper.Point(h.segment[2][0], h.segment[2][1]),
+          new paper.Point(h.segment[3][0], h.segment[3][1])
         ),
       }));
 

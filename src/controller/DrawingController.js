@@ -6,17 +6,17 @@ export default class DrawingController {
     this.model = model;
     this.view = view;
 
-    this.selectedItem = null;
-    this.dragOffset = null;
-    this.handlesVisible = true;
-    this.backgroundVisible = false;
-    this.offsetVisible = true;
+    // État de l'interface
+    this.selectedItem = null; // Item actuellement sélectionné (point ou poignée)
+    this.dragOffset = null; // Décalage entre la souris et le point sélectionné
+    this.handlesVisible = true; // Affichage des poignées
+    this.backgroundVisible = false; // Affichage du fond (non utilisé ici)
+    this.offsetVisible = true; // Affichage des offsets
+    this.offsetsVisibleByCurve = {}; // Visibilité des offsets par courbe
 
+    // État du drag global
     this.isDraggingCurve = false;
     this.lastMousePos = null;
-
-    // Tableau de visibilité des offsets par courbe { curveIndex: [true, false, true] }
-    this.offsetsVisibleByCurve = {};
 
     this._setupTool();
   }
@@ -28,18 +28,207 @@ export default class DrawingController {
     this.model.createNewCurve(name);
     const curveIndex = this.model.currentCurveIndex;
 
-    // Initialisation des offsets visibles
+    // Initialisation des offsets visibles pour la nouvelle courbe
     this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
 
-    // Calcul immédiat des offsets
+    // Calcul immédiat des offsets pour toutes les courbes
     this.model.computeAllOffsets();
 
     // Rendu initial
+    this._renderCurves(curveIndex);
+  }
+
+  // ---------------------------
+  // Initialisation de l'outil Paper.js
+  // ---------------------------
+  _setupTool() {
+    const tool = new paper.Tool();
+
+    tool.onMouseDown = (event) => this._handleMouseDown(event);
+    tool.onMouseDrag = (event) => this._handleMouseDrag(event);
+    tool.onMouseUp = () => this._handleMouseUp();
+  }
+
+  // ---------------------------
+  // Gère le clic souris
+  // ---------------------------
+  _handleMouseDown(event) {
+    const curve = this.model.curves[this.model.currentCurveIndex];
+    if (!curve) return;
+
+    const hitResult = paper.project.hitTest(event.point, {
+      fill: true,
+      stroke: true,
+      tolerance: 8,
+    });
+
+    // --- Sélection d'un point ou d'une poignée ---
+    if (this._selectHitItem(hitResult, event)) return;
+
+    // --- Déplacement de la courbe entière ---
+    if (this._checkStartCurveDrag(curve, event)) return;
+
+    // --- Ajouter un nouveau point sur la courbe ---
+    if (this.handlesVisible) {
+      this._addPointToCurve(curve, event.point);
+    }
+  }
+
+  // ---------------------------
+  // Gère le drag souris
+  // ---------------------------
+  _handleMouseDrag(event) {
+    const curve = this.model.curves[this.model.currentCurveIndex];
+    if (!curve) return;
+
+    if (this.isDraggingCurve) {
+      this._dragEntireCurve(event);
+    } else if (this.selectedItem) {
+      this._dragSelectedItem(event, curve);
+    }
+  }
+
+  // ---------------------------
+  // Gère le relâchement souris
+  // ---------------------------
+  _handleMouseUp() {
+    this.isDraggingCurve = false;
+    this.model.computeAllOffsets();
+    this._renderCurves();
+  }
+
+  // ---------------------------
+  // Sélectionne un point ou une poignée si cliqué
+  // ---------------------------
+  _selectHitItem(hitResult, event) {
+    if (
+      hitResult &&
+      hitResult.item &&
+      ["circle", "bezier_in", "bezier_out"].includes(hitResult.item.data.type)
+    ) {
+      this.selectedItem = hitResult.item;
+      this.dragOffset = event.point.subtract(hitResult.item.position);
+      this._renderCurves();
+      return true;
+    }
+    return false;
+  }
+
+  // ---------------------------
+  // Vérifie si une courbe entière doit être déplacée
+  // ---------------------------
+  _checkStartCurveDrag(curve, event) {
+    if (curve.handles.length < 2) return false;
+
+    const tempPath = new paper.Path();
+    curve.handles.forEach((h) => tempPath.add(h.segment));
+
+    const nearestPoint = tempPath.getNearestPoint(event.point);
+    if (nearestPoint && nearestPoint.getDistance(event.point) < 10) {
+      this.isDraggingCurve = true;
+      this.lastMousePos = event.point;
+      this.selectedItem = null;
+      tempPath.remove();
+      return true;
+    }
+
+    tempPath.remove();
+    return false;
+  }
+
+  // ---------------------------
+  // Ajoute un nouveau point à la courbe active
+  // ---------------------------
+  _addPointToCurve(curve, point) {
+    const shapeId = this.model.generateId();
+    const inId = this.model.generateId();
+    const outId = this.model.generateId();
+
+    curve.handles.push({
+      id: shapeId,
+      segment: new paper.Segment(
+        new paper.Point(point.x, point.y),
+        new paper.Point(-50, 0),
+        new paper.Point(50, 0)
+      ),
+      inPointId: inId,
+      outPointId: outId,
+    });
+
+    const curveIndex = this.model.currentCurveIndex;
+    if (!this.offsetsVisibleByCurve[curveIndex]) {
+      this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
+    }
+
+    this.model.computeAllOffsets();
+    this.selectedItem = null;
+    this._renderCurves(curveIndex);
+  }
+
+  // ---------------------------
+  // Déplace toute la courbe
+  // ---------------------------
+  _dragEntireCurve(event) {
+    const dx = event.point.x - this.lastMousePos.x;
+    const dy = event.point.y - this.lastMousePos.y;
+    this.lastMousePos = event.point;
+
+    this.model.moveActiveCurve(dx, dy);
+    this._renderCurves();
+  }
+
+  // ---------------------------
+  // Déplace un point ou une poignée sélectionnée
+  // ---------------------------
+  _dragSelectedItem(event, curve) {
+    this.selectedItem.position = event.point.subtract(this.dragOffset);
+
+    let targetHandle;
+    switch (this.selectedItem.data.type) {
+      case "circle":
+        targetHandle = curve.handles.find(
+          (h) => h.id === this.selectedItem.data.id
+        );
+        if (targetHandle)
+          targetHandle.segment.point = targetHandle.segment.point.add(
+            event.delta
+          );
+        break;
+
+      case "bezier_in":
+        targetHandle = curve.handles.find(
+          (h) => h.inPointId === this.selectedItem.data.id
+        );
+        if (targetHandle)
+          targetHandle.segment.handleIn = targetHandle.segment.handleIn.add(
+            event.delta
+          );
+        break;
+
+      case "bezier_out":
+        targetHandle = curve.handles.find(
+          (h) => h.outPointId === this.selectedItem.data.id
+        );
+        if (targetHandle)
+          targetHandle.segment.handleOut = targetHandle.segment.handleOut.add(
+            event.delta
+          );
+        break;
+    }
+
+    this.model.computeAllOffsets();
+    this._renderCurves();
+  }
+
+  // ---------------------------
+  // Rend toutes les courbes
+  // ---------------------------
+  _renderCurves(curveIndex = this.model.currentCurveIndex) {
     this.view.renderCurves(
       this.model.curves,
       this.handlesVisible,
       this.offsetVisible,
-      null,
+      this.selectedItem,
       curveIndex,
       "rgba(0,150,255,0.2)",
       this.offsetsVisibleByCurve
@@ -47,203 +236,7 @@ export default class DrawingController {
   }
 
   // ---------------------------
-  // Setup Paper.js Tool
-  // ---------------------------
-  _setupTool() {
-    const tool = new paper.Tool();
-
-    // ---------------------------
-    // MOUSE DOWN
-    // ---------------------------
-    tool.onMouseDown = (event) => {
-      const curve = this.model.curves[this.model.currentCurveIndex];
-      if (!curve) return;
-
-      const hit = paper.project.hitTest(event.point, {
-        fill: true,
-        stroke: true,
-        tolerance: 8,
-      });
-
-      // --- Sélection d'un point ou poignée ---
-      if (
-        hit &&
-        hit.item &&
-        ["circle", "bezier_in", "bezier_out"].includes(hit.item.data.type)
-      ) {
-        this.selectedItem = hit.item;
-        this.dragOffset = event.point.subtract(hit.item.position);
-
-        this.view.renderCurves(
-          this.model.curves,
-          this.handlesVisible,
-          this.offsetVisible,
-          this.selectedItem,
-          this.model.currentCurveIndex,
-          "rgba(0,150,255,0.2)",
-          this.offsetsVisibleByCurve
-        );
-        return;
-      }
-
-      // --- Déplacement d'une courbe entière ---
-      if (curve.handles.length >= 2) {
-        const path = new paper.Path();
-        curve.handles.forEach((h) => path.add(h.segt));
-
-        const nearest = path.getNearestPoint(event.point);
-        if (nearest && nearest.getDistance(event.point) < 10) {
-          this.isDraggingCurve = true;
-          this.lastMousePos = event.point;
-          this.selectedItem = null;
-          path.remove();
-          return;
-        }
-        path.remove();
-      }
-
-      // --- Ajouter un nouveau point ---
-      if (!this.handlesVisible) return;
-
-      const idShape = this.model.generateId();
-      const idIn = this.model.generateId();
-      const idOut = this.model.generateId();
-
-      curve.handles.push({
-        id: idShape,
-        segt: new paper.Segment(
-          new paper.Point(event.point.x, event.point.y),
-          new paper.Point(-50, 0),
-          new paper.Point(50, 0)
-        ),
-        inPointId: idIn,
-        outPointId: idOut,
-      });
-
-      const curveIndex = this.model.currentCurveIndex;
-
-      // --- Initialisation de la visibilité des offsets pour cette courbe ---
-      if (!this.offsetsVisibleByCurve[curveIndex]) {
-        this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
-      }
-
-      // Recalcul des offsets
-      this.model.computeAllOffsets();
-
-      this.selectedItem = null;
-
-      this.view.renderCurves(
-        this.model.curves,
-        this.handlesVisible,
-        this.offsetVisible,
-        this.selectedItem,
-        curveIndex,
-        "rgba(0,150,255,0.2)",
-        this.offsetsVisibleByCurve
-      );
-    };
-
-    // ---------------------------
-    // MOUSE DRAG
-    // ---------------------------
-    tool.onMouseDrag = (event) => {
-      const curve = this.model.curves[this.model.currentCurveIndex];
-      if (!curve) return;
-
-      // Déplacer la courbe entière
-      if (this.isDraggingCurve) {
-        const dx = event.point.x - this.lastMousePos.x;
-        const dy = event.point.y - this.lastMousePos.y;
-        this.lastMousePos = event.point;
-
-        this.model.moveActiveCurve(dx, dy);
-
-        this.view.renderCurves(
-          this.model.curves,
-          this.handlesVisible,
-          this.offsetVisible,
-          this.selectedItem,
-          this.model.currentCurveIndex,
-          "rgba(0,150,255,0.2)",
-          this.offsetsVisibleByCurve
-        );
-        return;
-      }
-
-      // Déplacer un point ou une poignée
-      if (this.selectedItem) {
-        this.selectedItem.position = event.point.subtract(this.dragOffset);
-
-        let targetHandles;
-        switch (this.selectedItem.data.type) {
-          case "circle":
-            targetHandles = curve.handles.filter(
-              (h) => h.id === this.selectedItem.data.id
-            );
-            if (targetHandles[0]) {
-              targetHandles[0].segt.point = targetHandles[0].segt.point.add(
-                event.delta
-              );
-            }
-            break;
-
-          case "bezier_in":
-            targetHandles = curve.handles.filter(
-              (h) => h.inPointId === this.selectedItem.data.id
-            );
-            if (targetHandles[0]) {
-              targetHandles[0].segt.handleIn =
-                targetHandles[0].segt.handleIn.add(event.delta);
-            }
-            break;
-
-          case "bezier_out":
-            targetHandles = curve.handles.filter(
-              (h) => h.outPointId === this.selectedItem.data.id
-            );
-            if (targetHandles[0]) {
-              targetHandles[0].segt.handleOut =
-                targetHandles[0].segt.handleOut.add(event.delta);
-            }
-            break;
-        }
-
-        this.model.computeAllOffsets();
-
-        this.view.renderCurves(
-          this.model.curves,
-          this.handlesVisible,
-          this.offsetVisible,
-          this.selectedItem,
-          this.model.currentCurveIndex,
-          "rgba(0,150,255,0.2)",
-          this.offsetsVisibleByCurve
-        );
-      }
-    };
-
-    // ---------------------------
-    // MOUSE UP
-    // ---------------------------
-    tool.onMouseUp = () => {
-      this.isDraggingCurve = false;
-
-      this.model.computeAllOffsets();
-
-      this.view.renderCurves(
-        this.model.curves,
-        this.handlesVisible,
-        this.offsetVisible,
-        this.selectedItem,
-        this.model.currentCurveIndex,
-        "rgba(0,150,255,0.2)",
-        this.offsetsVisibleByCurve
-      );
-    };
-  }
-
-  // ---------------------------
-  // Vérifie si l'item appartient à la courbe sélectionnée
+  // Vérifie si un item appartient à la courbe sélectionnée
   // ---------------------------
   isItemOnSelectedCurve(itemData, curve) {
     if (!itemData || !curve || !curve.handles) return false;
@@ -266,14 +259,6 @@ export default class DrawingController {
     this.offsetsVisibleByCurve[curveIndex][offsetIndex] =
       !this.offsetsVisibleByCurve[curveIndex][offsetIndex];
 
-    this.view.renderCurves(
-      this.model.curves,
-      this.handlesVisible,
-      this.offsetVisible,
-      this.selectedItem,
-      this.model.currentCurveIndex,
-      "rgba(0,150,255,0.2)",
-      this.offsetsVisibleByCurve
-    );
+    this._renderCurves();
   }
 }

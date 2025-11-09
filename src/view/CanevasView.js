@@ -77,16 +77,16 @@ export default class CanvasView {
 
     for (let i = 0; i < curve.handles.length; i++) {
       const p = curve.handles[i];
-      path.add(p.segt);
+      path.add(p.segment);
 
       if (!visibility) continue;
 
       // Cercle central
       this.makeCircle(
-        p.segt.point,
+        p.segment.point,
         selectedItem &&
           selectedItem.contains &&
-          selectedItem.contains(p.segt.point)
+          selectedItem.contains(p.segment.point)
           ? "#2cff61ff"
           : "#ff0000",
         p.id,
@@ -97,13 +97,13 @@ export default class CanvasView {
 
       // Poignées Bézier
       this.makeCircle(
-        p.segt.point.add(p.segt.handleIn),
+        p.segment.point.add(p.segment.handleIn),
         "#1e25fbff",
         p.inPointId,
         "bezier_in"
       );
       this.makeCircle(
-        p.segt.point.add(p.segt.handleOut),
+        p.segment.point.add(p.segment.handleOut),
         "#1e25fbff",
         p.outPointId,
         "bezier_out"
@@ -133,7 +133,7 @@ export default class CanvasView {
 
     // Courbe principale
     for (let i = 0; i < curve.handles.length; i++)
-      fillPath.add(curve.handles[i].segt);
+      fillPath.add(curve.handles[i].segment);
 
     // Offset inverse
     for (let i = offsetData.points.length - 1; i >= 0; i--) {
@@ -170,8 +170,8 @@ export default class CanvasView {
 
     for (let i = 0; i < curve.handles.length; i++) {
       const h = curve.handles[i];
-      const pt = h.segt.point;
-      const handles = [h.segt.handleIn, h.segt.handleOut];
+      const pt = h.segment.point;
+      const handles = [h.segment.handleIn, h.segment.handleOut];
 
       for (let j = 0; j < handles.length; j++) {
         const handle = handles[j];
