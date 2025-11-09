@@ -48,7 +48,7 @@ export default class ToolController {
     ] || [true, true, true];
 
     offsetsVisible.forEach((visible, index) => {
-      this.toolbarView.updateOffsetViewCbx(index + 1, visible);
+      this.toolbarView.updateOffsetCheckbox(index + 1, visible);
     });
   }
 
@@ -102,7 +102,7 @@ export default class ToolController {
 
     const lastIndex = this.model.currentCurveIndex;
     this.toolbarView.updateCurveList(this.model.curves);
-    this.toolbarView.setSelectedCurve(lastIndex);
+    this.toolbarView.updateSelectedCurve(lastIndex);
     this._updateSlidersAndCheckboxes();
     this._render();
 
@@ -116,15 +116,15 @@ export default class ToolController {
   _deleteCurrentCurve() {
     this.model.deleteCurrentCurve();
     this.toolbarView.updateCurveList(this.model.curves);
-
     if (this.model.curves.length > 0) {
       if (this.model.currentCurveIndex >= this.model.curves.length) {
         this.model.currentCurveIndex = this.model.curves.length - 1;
       }
-      this.toolbarView.setSelectedCurve(this.model.currentCurveIndex);
+      console.log(this.toolbarView);
+      console.log(typeof this.toolbarView.setSelectedCurve);
+      this.toolbarView.updateSelectedCurve(this.model.currentCurveIndex);
       this._updateSlidersAndCheckboxes();
     }
-
     this._render();
   }
 
@@ -158,10 +158,7 @@ export default class ToolController {
    */
   _bindOffsetSliders() {
     for (let i = 1; i <= 3; i++) {
-      const bindSliderFn = this.toolbarView[`bindSlider${i}`].bind(
-        this.toolbarView
-      );
-      bindSliderFn((e) =>
+      this.toolbarView.bindOffsetSlider(i, (e) =>
         this._onOffsetSliderChange(i, parseFloat(e.target.value))
       );
     }
@@ -172,10 +169,7 @@ export default class ToolController {
    */
   _bindOffsetCheckboxes() {
     for (let i = 1; i <= 3; i++) {
-      const bindToggleFn = this.toolbarView[`bindToggleOffset${i}Cbx`].bind(
-        this.toolbarView
-      );
-      bindToggleFn(() => this._onOffsetToggle(i));
+      this.toolbarView.bindOffsetCheckbox(i, () => this._onOffsetToggle(i));
     }
   }
 
@@ -192,7 +186,7 @@ export default class ToolController {
    * Lie les autres boutons (handles, background, suppression de point, export, save, import trigger).
    */
   _bindMiscButtons() {
-    this.toolbarView.bindToggleHandles(() => {
+    this.toolbarView.bindHandlesToggle(() => {
       this.drawController.handlesVisible = !this.drawController.handlesVisible;
       this._render();
     });
@@ -220,7 +214,7 @@ export default class ToolController {
 
     this.toolbarView.bindImportButton(() => {
       console.log("Import button clicked");
-      this.toolbarView.importFile.click();
+      this.toolbarView.elements.importFile?.click();
     });
   }
 
@@ -228,7 +222,7 @@ export default class ToolController {
    * Lie l'importation de fichier JSON pour charger une courbe.
    */
   _bindImportEvents() {
-    this.toolbarView.bindImport((event) => {
+    this.toolbarView.bindImportFile((event) => {
       const file = event.target.files[0];
       if (!file) return;
 
@@ -258,14 +252,16 @@ export default class ToolController {
       }
 
       this.drawController.handlesVisible = true;
-      this.toolbarView.updateHandlesViewCbx(true);
+      ///////////////////
+      //Tod do check bug
+      //this.toolbarView.updateOffsetCheckbox(index, visible);
 
       this.model.computeAllOffsets();
       this._updateSlidersAndCheckboxes();
       this._render();
 
       this.toolbarView.updateCurveList(this.model.curves);
-      this.toolbarView.setSelectedCurve(lastIndex);
+      this.toolbarView.updateSelectedCurve(lastIndex);
     } catch (err) {
       console.error("Erreur lors de l'import JSON :", err);
       alert("Le fichier importé est invalide !");

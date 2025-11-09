@@ -35,7 +35,6 @@ export default class DrawingModel {
    * @param {string} name Nom de la courbe (généré automatiquement si absent)
    */
   createCurve(name = `Courbe ${++this.curveIdCounter}`) {
-    console.log(`Courbe ${++this.curveIdCounter}`);
     const newCurve = {
       name,
       handles: [],

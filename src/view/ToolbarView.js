@@ -6,164 +6,147 @@
  */
 export default class ToolbarView {
   constructor() {
-    // ⚡ Vérification existence des éléments DOM
-    this.toggleHandlesCbx = document.getElementById("toggleHandlesCbx") || null;
-    this.deletePointBtn = document.getElementById("deletePointBtn") || null;
-    this.deleteBtn = document.getElementById("deleteBtn") || null;
-    this.addCurveBtn = document.getElementById("addCurveBtn") || null;
-    this.curveSelect = document.getElementById("curveSelect") || null;
-    this.addOffsetCbxBtn = document.getElementById("offsetCbx") || null;
+    // ---------------------------
+    // ⚡ Récupération des éléments DOM
+    // ---------------------------
+    this.elements = {
+      toggleHandles: document.getElementById("toggleHandlesCbx"),
+      deletePointBtn: document.getElementById("deletePointBtn"),
+      deleteCurveBtn: document.getElementById("deleteBtn"),
+      addCurveBtn: document.getElementById("addCurveBtn"),
+      curveSelect: document.getElementById("curveSelect"),
+      addOffsetCheckbox: document.getElementById("offsetCbx"),
+      exportBtn: document.getElementById("exportBtn"),
+      toggleBackground: document.getElementById("toggleBackgroundCbx"),
+      saveBtn: document.getElementById("saveBtn"),
+      importBtn: document.getElementById("importBtn"),
+      importFile: document.getElementById("importFile"),
+    };
 
-    this.offsetSlider1 = document.getElementById("offsetSlider1") || null;
-    this.offsetValue1 = document.getElementById("offsetValue1") || null;
-    this.toggleOffset1Cbx = document.getElementById("toggleOffset1Cbx") || null;
-
-    this.offsetSlider2 = document.getElementById("offsetSlider2") || null;
-    this.offsetValue2 = document.getElementById("offsetValue2") || null;
-    this.toggleOffset2Cbx = document.getElementById("toggleOffset2Cbx") || null;
-
-    this.offsetSlider3 = document.getElementById("offsetSlider3") || null;
-    this.offsetValue3 = document.getElementById("offsetValue3") || null;
-    this.toggleOffset3Cbx = document.getElementById("toggleOffset3Cbx") || null;
-
-    this.export = document.getElementById("exportBtn") || null;
-    this.toggleBackgroundCbx =
-      document.getElementById("toggleBackgroundCbx") || null;
-    this.save = document.getElementById("saveBtn") || null;
-    this.importBtn = document.getElementById("importBtn") || null;
-    this.importFile = document.getElementById("importFile") || null;
+    // Gestion dynamique des sliders et checkboxes pour les offsets
+    this.offsetElements = [1, 2, 3].map((i) => ({
+      slider: document.getElementById(`offsetSlider${i}`),
+      valueDisplay: document.getElementById(`offsetValue${i}`),
+      checkbox: document.getElementById(`toggleOffset${i}Cbx`),
+    }));
   }
 
   // ---------------------------
   // --- Méthodes de binding ---
   // ---------------------------
 
+  /**
+   * Ajoute un écouteur pour un élément si celui-ci existe
+   */
+  _bindEvent(element, event, handler) {
+    if (element) element.addEventListener(event, handler);
+  }
+
   bindToggleBackground(handler) {
-    if (this.toggleBackgroundCbx)
-      this.toggleBackgroundCbx.addEventListener("click", handler);
+    this._bindEvent(this.elements.toggleBackground, "click", handler);
   }
 
-  bindSlider1(handler) {
-    if (this.offsetSlider1)
-      this.offsetSlider1.addEventListener("input", handler);
-  }
-
-  bindSlider2(handler) {
-    if (this.offsetSlider2)
-      this.offsetSlider2.addEventListener("input", handler);
-  }
-
-  bindSlider3(handler) {
-    if (this.offsetSlider3)
-      this.offsetSlider3.addEventListener("input", handler);
-  }
-
-  bindToggleOffset1Cbx(handler) {
-    if (this.toggleOffset1Cbx)
-      this.toggleOffset1Cbx.addEventListener("click", handler);
-  }
-
-  bindToggleOffset2Cbx(handler) {
-    if (this.toggleOffset2Cbx)
-      this.toggleOffset2Cbx.addEventListener("click", handler);
-  }
-
-  bindToggleOffset3Cbx(handler) {
-    if (this.toggleOffset3Cbx)
-      this.toggleOffset3Cbx.addEventListener("click", handler);
-  }
-
-  bindOffset(handler) {
-    if (this.addOffsetCbxBtn)
-      this.addOffsetCbxBtn.addEventListener("click", handler);
-  }
-
-  bindToggleHandles(handler) {
-    if (this.toggleHandlesCbx)
-      this.toggleHandlesCbx.addEventListener("click", handler);
+  bindHandlesToggle(handler) {
+    this._bindEvent(this.elements.toggleHandles, "click", handler);
   }
 
   bindAddCurve(handler) {
-    if (this.addCurveBtn) this.addCurveBtn.addEventListener("click", handler);
+    this._bindEvent(this.elements.addCurveBtn, "click", handler);
   }
 
   bindCurveSelect(handler) {
-    if (this.curveSelect) {
-      this.curveSelect.addEventListener("change", (e) => {
-        handler(parseInt(e.target.value));
-      });
-    }
+    if (!this.elements.curveSelect) return;
+    this.elements.curveSelect.addEventListener("change", (e) => {
+      handler(parseInt(e.target.value, 10));
+    });
   }
 
   bindDeletePoint(handler) {
-    if (this.deletePointBtn)
-      this.deletePointBtn.addEventListener("click", handler);
+    this._bindEvent(this.elements.deletePointBtn, "click", handler);
   }
 
   bindDeleteCurve(handler) {
-    if (this.deleteBtn) this.deleteBtn.addEventListener("click", handler);
+    this._bindEvent(this.elements.deleteCurveBtn, "click", handler);
   }
 
   bindExport(handler) {
-    if (this.export) this.export.addEventListener("click", handler);
+    this._bindEvent(this.elements.exportBtn, "click", handler);
   }
 
   bindSave(handler) {
-    if (this.save) this.save.addEventListener("click", handler);
+    this._bindEvent(this.elements.saveBtn, "click", handler);
   }
 
   bindImportButton(handler) {
-    this.importBtn.addEventListener("click", handler);
+    this._bindEvent(this.elements.importBtn, "click", handler);
   }
 
-  bindImport(handler) {
-    console.log("bindImport", handler);
-    if (this.importFile) this.importFile.addEventListener("change", handler);
+  bindImportFile(handler) {
+    this._bindEvent(this.elements.importFile, "change", handler);
+  }
+
+  bindOffsetAdd(handler) {
+    this._bindEvent(this.elements.addOffsetCheckbox, "click", handler);
+  }
+
+  /**
+   * Bind sliders et checkboxes d'offset dynamiquement selon l'index
+   */
+  bindOffsetSlider(index, handler) {
+    const offset = this.offsetElements[index - 1];
+    if (offset?.slider) offset.slider.addEventListener("input", handler);
+  }
+
+  bindOffsetCheckbox(index, handler) {
+    const offset = this.offsetElements[index - 1];
+    if (offset?.checkbox) offset.checkbox.addEventListener("click", handler);
   }
 
   // ---------------------------
   // --- Méthodes de mise à jour ---
   // ---------------------------
 
-  updateBackgroundCbx(backgroundVisible) {
-    if (this.toggleBackgroundCbx)
-      this.toggleBackgroundCbx.checked = backgroundVisible;
+  updateBackgroundToggle(isVisible) {
+    if (this.elements.toggleBackground)
+      this.elements.toggleBackground.checked = isVisible;
   }
 
-  updateHandlesViewCbx(handlesVisible) {
-    if (this.toggleHandlesCbx) this.toggleHandlesCbx.checked = handlesVisible;
+  updateHandlesToggle(isVisible) {
+    if (this.elements.toggleHandles)
+      this.elements.toggleHandles.checked = isVisible;
   }
 
   updateCurveList(curveNames) {
-    if (!this.curveSelect) return;
-    this.curveSelect.innerHTML = "";
+    const select = this.elements.curveSelect;
+    if (!select) return;
+
+    select.innerHTML = "";
     curveNames.forEach((curve, index) => {
       const option = document.createElement("option");
       option.value = index;
       option.textContent = curve.name;
-      this.curveSelect.appendChild(option);
+      select.appendChild(option);
     });
   }
 
+  updateSelectedCurve(index) {
+    if (this.elements.curveSelect) this.elements.curveSelect.value = index;
+  }
+
   updateOffsetValue(index, value) {
-    const slider = this[`offsetSlider${index}`];
-    const display = this[`offsetValue${index}`];
-    if (!slider || !display) return;
-    slider.value = value;
-    display.textContent = value;
+    const offset = this.offsetElements[index - 1];
+    if (!offset) return;
+    if (offset.slider) offset.slider.value = value;
+    if (offset.valueDisplay) offset.valueDisplay.textContent = value;
   }
 
-  updateOffsetViewCbx(index, visible) {
-    const cbx = this[`toggleOffset${index}Cbx`];
-    if (!cbx) return;
-    cbx.checked = visible;
+  updateOffsetCheckbox(index, isVisible) {
+    const offset = this.offsetElements[index - 1];
+    if (offset?.checkbox) offset.checkbox.checked = isVisible;
   }
 
-  updateOffsetViewCbxGlobal(visible) {
-    if (this.addOffsetCbxBtn) this.addOffsetCbxBtn.checked = visible;
-  }
-
-  setSelectedCurve(index) {
-    if (this.curveSelect) this.curveSelect.value = index;
+  updateOffsetGlobalCheckbox(isVisible) {
+    if (this.elements.addOffsetCheckbox)
+      this.elements.addOffsetCheckbox.checked = isVisible;
   }
 }
