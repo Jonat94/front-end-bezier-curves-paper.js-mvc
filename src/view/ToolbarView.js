@@ -21,6 +21,7 @@ export default class ToolbarView {
       saveBtn: document.getElementById("saveBtn"),
       importBtn: document.getElementById("importBtn"),
       importFile: document.getElementById("importFile"),
+      addOffsetBtn: document.getElementById("addOffsetBtn"),
     };
 
     // Gestion dynamique des sliders et checkboxes pour les offsets
@@ -81,6 +82,9 @@ export default class ToolbarView {
     this._bindEvent(this.elements.importBtn, "click", handler);
   }
 
+  bindAddOffsetBtn(handler) {
+    this._bindEvent(this.elements.addOffsetBtn, "click", handler);
+  }
   bindImportFile(handler) {
     this._bindEvent(this.elements.importFile, "change", handler);
   }

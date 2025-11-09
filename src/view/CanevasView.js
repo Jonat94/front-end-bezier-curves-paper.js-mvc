@@ -49,7 +49,6 @@ export default class CanvasView {
     offsetsVisibilityMap = {}
   ) {
     offsetsVisibilityMap = this.generateOffsetsVisibilityMap(curves);
-    console.log("ttttttt", offsetsVisibilityMap);
     this.clearForeground();
 
     curves.forEach((curve, curveIndex) => {

@@ -39,17 +39,21 @@ export default class ToolController {
     const currentCurve = this.model.curves[this.model.currentCurveIndex];
     if (!currentCurve) return;
 
-    this.toolbarView.updateOffsetValue(3, currentCurve.offsetsData[2].offset);
-    this.toolbarView.updateOffsetValue(2, currentCurve.offsetsData[1].offset);
-    this.toolbarView.updateOffsetValue(1, currentCurve.offsetsData[0].offset);
-
-    const offsetsVisible = this.drawController.offsetsVisibleByCurve[
-      this.model.currentCurveIndex
-    ] || [true, true, true];
-
-    offsetsVisible.forEach((visible, index) => {
-      this.toolbarView.updateOffsetCheckbox(index + 1, visible);
+    currentCurve.offsetsData.forEach((offsetData, index) => {
+      this.toolbarView.updateOffsetValue(
+        index + 1,
+        currentCurve.offsetsData[index].offset
+      );
+      // this.toolbarView.updateOffsetValue(2, currentCurve.offsetsData[1].offset);
+      // this.toolbarView.updateOffsetValue(1, currentCurve.offsetsData[0].offset);
     });
+    // const offsetsVisible = this.drawController.offsetsVisibleByCurve[
+    //   this.model.currentCurveIndex
+    // ] || [true, true, true];
+
+    // offsetsVisible.forEach((visible, index) => {
+    //   this.toolbarView.updateOffsetCheckbox(index + 1, visible);
+    // });
   }
 
   /**
@@ -111,7 +115,6 @@ export default class ToolController {
     if (curveName === "") {
       curveName = undefined; // laisse le modèle générer le nom
     }
-    console.log("Adding new curve with name:", curveName);
     this.model.createCurve(curveName);
 
     const lastIndex = this.model.currentCurveIndex;
@@ -137,8 +140,6 @@ export default class ToolController {
       if (this.model.currentCurveIndex >= this.model.curves.length) {
         this.model.currentCurveIndex = this.model.curves.length - 1;
       }
-      console.log(this.toolbarView);
-      console.log(typeof this.toolbarView.setSelectedCurve);
       this.toolbarView.updateSelectedCurve(this.model.currentCurveIndex);
       this._updateSlidersAndCheckboxes();
     }
@@ -232,8 +233,14 @@ export default class ToolController {
     this.toolbarView.bindSave(() => this.model.exportCurrentCurve());
 
     this.toolbarView.bindImportButton(() => {
-      console.log("Import button clicked");
       this.toolbarView.elements.importFile?.click();
+    });
+
+    this.toolbarView.bindAddOffsetBtn(() => {
+      this.model.addOffsetToCurrentCurve();
+
+      //this._updateSlidersAndCheckboxes();
+      this._render();
     });
   }
 

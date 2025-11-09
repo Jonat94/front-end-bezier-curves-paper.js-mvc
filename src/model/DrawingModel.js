@@ -23,7 +23,8 @@ export default class DrawingModel {
     this.clipperScale = 500;
 
     // Valeurs d’offset par défaut pour chaque nouvelle courbe
-    this.defaultOffsets = [12, 30, 60];
+    this.defaultOffsets = [];
+    this.createCurve();
   }
 
   // ─────────────────────────────────────────────
@@ -98,6 +99,24 @@ export default class DrawingModel {
       h.segment.point = h.segment.point.add(delta);
     });
 
+    this.computeAllOffsets();
+  }
+
+  /**
+   * Ajoute un offset à la courbe active.
+   */
+
+  addOffsetToCurrentCurve() {
+    const curve = this.getCurrentCurve();
+    if (!curve) return;
+    if (curve.offsetsData.length > 0) {
+      let offsetValue =
+        curve.offsetsData[curve.offsetsData.length - 1].offset + 20;
+      let obj = { offset: offsetValue, points: [], visible: true };
+      curve.offsetsData.push(obj);
+    } else {
+      curve.offsetsData.push({ offset: 20, points: [], visible: true });
+    }
     this.computeAllOffsets();
   }
 
@@ -337,7 +356,6 @@ export default class DrawingModel {
         ),
         visible: h.visible,
       }));
-      console.log("import rrrrrr", data);
       this.curves.push(data);
       this.currentCurveIndex = this.curves.length - 1;
     } catch (e) {
