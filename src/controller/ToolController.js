@@ -66,9 +66,9 @@ export default class ToolController {
       let name = curveNameInput?.value?.trim();
       if (!name) {
         // Si aucun nom saisi, on utilise le nom par défaut
-        name = `Courbe ${this.model.curveCounter + 1}`;
+        name = `Courbe ${this.model.curveIdCounter + 1}`;
       }
-      this.model.createNewCurve(name);
+      this.model.createCurve(name);
 
       // Mettre à jour l'UI
       this.toolbarView.updateCurveList(this.model.curves);
@@ -115,7 +115,7 @@ export default class ToolController {
     this.toolbarView.bindDeletePoint(() => {
       if (this.drawController.selectedItem) {
         const id = this.drawController.selectedItem.data.id;
-        this.model.deletePoint(id);
+        this.model.deleteHandleById(id);
         this.drawController.selectedItem = null;
         this._render();
       }
@@ -124,7 +124,7 @@ export default class ToolController {
     this.toolbarView.bindExport(() =>
       this.canvasView.exportAsImage("mon_dessin.png")
     );
-    this.toolbarView.bindSave(() => this.model.exportCurve());
+    this.toolbarView.bindSave(() => this.model.exportCurrentCurve());
 
     this.toolbarView.bindImportButton(() => {
       console.log("Import button clicked");
@@ -159,7 +159,7 @@ export default class ToolController {
           this.toolbarView.updateHandlesViewCbx(true);
 
           // 5️⃣ Recalculer les offsets
-          this.model.computeOffset();
+          this.model.computeAllOffsets();
 
           // 6️⃣ Mettre à jour sliders et checkboxes
           this._updateSlidersForCurrentCurve();
@@ -193,7 +193,7 @@ export default class ToolController {
     const mapping = [0, 1, 2];
     curve.offsetsData[mapping[offsetNumber - 1]].offset = value;
 
-    this.model.computeOffset();
+    this.model.computeAllOffsets();
     this._render();
   }
 

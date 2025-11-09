@@ -32,7 +32,7 @@ export default class DrawingController {
     this.offsetsVisibleByCurve[curveIndex] = [true, true, true];
 
     // Calcul immédiat des offsets
-    this.model.computeOffset();
+    this.model.computeAllOffsets();
 
     // Rendu initial
     this.view.renderCurves(
@@ -128,7 +128,7 @@ export default class DrawingController {
       }
 
       // Recalcul des offsets
-      this.model.computeOffset();
+      this.model.computeAllOffsets();
 
       this.selectedItem = null;
 
@@ -156,7 +156,7 @@ export default class DrawingController {
         const dy = event.point.y - this.lastMousePos.y;
         this.lastMousePos = event.point;
 
-        this.model.moveCurrentCurve(dx, dy);
+        this.model.moveActiveCurve(dx, dy);
 
         this.view.renderCurves(
           this.model.curves,
@@ -208,7 +208,7 @@ export default class DrawingController {
             break;
         }
 
-        this.model.computeOffset();
+        this.model.computeAllOffsets();
 
         this.view.renderCurves(
           this.model.curves,
@@ -228,7 +228,7 @@ export default class DrawingController {
     tool.onMouseUp = () => {
       this.isDraggingCurve = false;
 
-      this.model.computeOffset();
+      this.model.computeAllOffsets();
 
       this.view.renderCurves(
         this.model.curves,
