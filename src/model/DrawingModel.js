@@ -219,7 +219,9 @@ export default class DrawingModel {
     const blob = new Blob([jsonData], { type: "application/json" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `drawing${this.currentCurveIndex}.json`;
+    link.download = `drawing-${this.curves[this.currentCurveIndex].name}-${
+      this.currentCurveIndex
+    }.json`;
     link.click();
   }
 
