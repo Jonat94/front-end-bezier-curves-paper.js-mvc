@@ -130,9 +130,20 @@ export default class ToolController {
     this.model.createCurve(curveName);
 
     const lastIndex = this.model.currentCurveIndex;
+
+    this.toolbarView.clearOffsetsControls();
+
     this.toolbarView.updateCurveList(this.model.curves);
     this.toolbarView.updateSelectedCurve(lastIndex);
-    this._updateSlidersAndCheckboxes();
+
+    const currentCurve = this.model.curves[lastIndex];
+    currentCurve.offsetsData.forEach((offsetData, i) => {
+      this.toolbarView.addOffsetControls(i + 1);
+      this.toolbarView.updateOffsetValue(i + 1, offsetData.offset);
+      this.toolbarView.updateOffsetCheckbox(i + 1, offsetData.visible);
+    });
+
+    //this._updateSlidersAndCheckboxes();
     this.drawController.handlesVisible = true;
     this.toolbarView.updateHandlesToggle(true);
     //this.toolbarView.renderOffsetsControls(this.model.curves[lastIndex]);
@@ -147,7 +158,9 @@ export default class ToolController {
    * Ajuste l'index courant si nécessaire et met à jour l'UI.
    */
   _deleteCurrentCurve() {
+    console.log("aaaaaaaa");
     this.model.deleteCurrentCurve();
+    this.toolbarView.clearOffsetsControls();
     this.toolbarView.updateCurveList(this.model.curves);
     if (this.model.curves.length > 0) {
       if (this.model.currentCurveIndex >= this.model.curves.length) {
@@ -167,6 +180,8 @@ export default class ToolController {
     this.model.currentCurveIndex = index;
     this._updateSlidersAndCheckboxes();
     //this.toolbarView.renderOffsetsControls();
+    console.log("zzzzzzzzz to do render offsets controls");
+    this.toolbarView.renderOffsetsControls(this.model.curves[index]);
     this._render();
   }
 
@@ -308,10 +323,13 @@ export default class ToolController {
       this._updateSlidersAndCheckboxes();
       this._updateOffsetCheckboxesFromModel();
 
+      console.log("mise à jour des checkboxes d'offsets après import");
+
       this._render();
 
       this.toolbarView.updateCurveList(this.model.curves);
       this.toolbarView.updateSelectedCurve(lastIndex);
+      this.toolbarView.renderOffsetsControls(this.model.curves[lastIndex]);
     } catch (err) {
       console.error("Erreur lors de l'import JSON :", err);
       alert("Le fichier importé est invalide !");

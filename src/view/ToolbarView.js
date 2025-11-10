@@ -148,7 +148,6 @@ export default class ToolbarView {
         e.target.id.startsWith("removeOffsetBtn")
       ) {
         const index = parseInt(e.target.id.replace("removeOffsetBtn", ""), 10);
-        // console.log("aaaaa", index);
         handlerRemove(index);
       }
     });
@@ -203,18 +202,15 @@ export default class ToolbarView {
   }
 
   addOffsetControls(curv) {
-    console.log("eeeeee", this.offsetElements.length + 1);
     let index = this.offsetElements.length + 1;
     // Conteneur des contrôles d’offset (à définir dans ton HTML)
     const container = document.getElementById("offsetControlsContainer");
     if (!container) {
-      console.warn("⚠️ Conteneur des contrôles d'offset introuvable.");
       return;
     }
 
     // Empêche la duplication d’un offset déjà existant
     if (document.getElementById(`offsetSlider${index}`)) {
-      console.warn(`⚠️ Les contrôles pour l’offset ${index} existent déjà.`);
       return;
     }
 
@@ -245,8 +241,6 @@ export default class ToolbarView {
     };
 
     this.offsetElements[index - 1] = newOffset;
-    console.log("rrrrrrrrr", this.offsetElements);
-    console.info(`✅ Contrôles pour l’offset ${index} ajoutés.`);
   }
 
   removeOffsetControls(index) {
@@ -281,25 +275,23 @@ export default class ToolbarView {
       Offset ${i + 1}
     `;
     });
-
-    console.log("✅ offsetElements après suppression :", this.offsetElements);
   }
 
   renderOffsetsControls(curve) {
-    // console.log("render offsets controls", this.offsetElements);
-    // const container = document.getElementById("offsetControlsContainer");
-    // if (!container) return;
-    // if (container) container.innerHTML = "";
-    // // rendu des élements d'offset
-    // curve.offsetsData.forEach((offsetData, i) => {
-    //   // Si le contrôle existe déjà, on le recrée pour être sûr
-    //   this.addOffsetControls(i + 1);
-    // });
+    this.clearOffsetsControls();
+
+    // Pour chaque offset de la courbe, on recrée un bloc de contrôle d'offsets
+    curve.offsetsData.forEach((offsetData, i) => {
+      this.addOffsetControls(i + 1);
+      // Met à jour la valeur du slider selon le modèle
+      this.updateOffsetValue(i + 1, offsetData.offset);
+      this.updateOffsetCheckbox(i + 1, offsetData.visible);
+    });
   }
 
   clearOffsetsControls() {
-    // this.offsetElements = [];
-    // const container = document.getElementById("offsetControlsContainer");
-    // if (container) container.innerHTML = "";
+    this.offsetElements = [];
+    const container = document.getElementById("offsetControlsContainer");
+    if (container) container.innerHTML = "";
   }
 }
