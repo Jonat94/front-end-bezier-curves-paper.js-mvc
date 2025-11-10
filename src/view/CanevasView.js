@@ -123,7 +123,7 @@ export default class CanvasView {
   // ---------------------------
   _drawHandleCircles(handle, selectedItem) {
     const mainColor =
-      selectedItem?.data?.id === handle.id ? "#2cff61ff" : "#ff0000";
+      selectedItem?.data?.id === handle.id ? "#1aac7eff" : "#c64343";
 
     // Cercle central (point)
     this._makeCircle(
@@ -138,13 +138,13 @@ export default class CanvasView {
     // Handles Bézier
     this._makeCircle(
       handle.segment.point.add(handle.segment.handleIn),
-      "#1e25fbff",
+      "#3498db",
       handle.inPointId,
       "bezier_in"
     );
     this._makeCircle(
       handle.segment.point.add(handle.segment.handleOut),
-      "#1e25fbff",
+      "#3498db",
       handle.outPointId,
       "bezier_out"
     );
@@ -154,7 +154,7 @@ export default class CanvasView {
   // Dessine un offset de courbe
   // ---------------------------
   drawOffset(offset) {
-    const path = new paper.Path({ strokeColor: "green", strokeWidth: 2 });
+    const path = new paper.Path({ strokeColor: "#1aac7eff", strokeWidth: 2 });
     offset.points.forEach((pt) => path.add(new paper.Point(pt.x, pt.y)));
     path.sendToBack();
   }

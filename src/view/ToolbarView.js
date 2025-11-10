@@ -216,15 +216,13 @@ export default class ToolbarView {
 
     // Création d’un wrapper pour l’ensemble des contrôles
     const wrapper = document.createElement("div");
-    wrapper.classList.add("offset-control");
+    wrapper.classList.add("slider-group");
     wrapper.innerHTML = `
-    <label>
-      <input type="checkbox" id="toggleOffset${index}Cbx" checked />
-      Offset ${index}
-    </label>
-    <input type="range" id="offsetSlider${index}" min="0" max="200" value="0" step="1" />
-    <span id="offsetValue${index}">0</span>
-    <button id="removeOffsetBtn${index}">Supprimer</button>
+ <button id="removeOffsetBtn${index}" class="remove-button" title="Supprimer l'offset ${index}">X</button>
+                    <input type="checkbox" id="toggleOffset${index}Cbx">
+                    <label for="offsetSlider1">Offset&nbsp;${index}</label>
+                    <input type="range" id="offsetSlider${index}" min="00" max="200" step="1">
+                    <span id="offsetValue${index}">0</span>
   `;
 
     // Ajoute les éléments au conteneur
@@ -249,7 +247,7 @@ export default class ToolbarView {
     if (!offset) return;
 
     // Supprimer le wrapper (div.parentElement du slider)
-    const wrapper = offset.slider?.closest(".offset-control");
+    const wrapper = offset.slider?.closest(".slider-group");
     if (wrapper) wrapper.remove();
 
     // Supprimer l'élément du tableau et décaler les suivants
@@ -265,20 +263,19 @@ export default class ToolbarView {
       el.checkbox.id = `toggleOffset${i + 1}Cbx`;
       el.remove.id = `removeOffsetBtn${i + 1}`;
 
-      // Met aussi à jour les labels visibles, si tu veux afficher "Offset X"
-      const label = el.slider
-        ?.closest(".offset-control")
-        ?.querySelector("label");
-      if (label)
-        label.innerHTML = `
-      <input type="checkbox" id="toggleOffset${i + 1}Cbx" checked />
-      Offset ${i + 1}
-    `;
+      // Met aussi à jour les labels visibles, pour afficher "Offset X"
+      const label = el.slider?.closest(".slider-group")?.querySelector("label");
+      if (label) label.innerHTML = `Offset&nbsp;${i + 1}`;
     });
   }
 
   renderOffsetsControls(curve) {
     this.clearOffsetsControls();
+
+    const container = document.getElementById("offsetControlsContainer");
+    if (!container) {
+      return;
+    }
 
     // Pour chaque offset de la courbe, on recrée un bloc de contrôle d'offsets
     curve.offsetsData.forEach((offsetData, i) => {
@@ -292,6 +289,6 @@ export default class ToolbarView {
   clearOffsetsControls() {
     this.offsetElements = [];
     const container = document.getElementById("offsetControlsContainer");
-    if (container) container.innerHTML = "";
+    if (container) container.innerHTML = "<h2>Offsets</h2>";
   }
 }

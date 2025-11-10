@@ -2,8 +2,6 @@
 <html lang="fr">
 
 <head>
-    <script type="module" src="/@vite/client"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Éditeur de Courbes</title>
@@ -25,10 +23,8 @@
             font-size: 14px;
         }
 
-        label-handles-checkbox {}
-
         header {
-            background-color: #5a7ea2;
+            background-color: #34495e;
             color: #fff;
             padding: 0.8rem 1.5rem;
             text-align: center;
@@ -77,9 +73,8 @@
 
         .horizontal {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             justify-content: space-evenly;
-            gap: 0.6em;
         }
 
         .curvebtn {
@@ -119,16 +114,6 @@
             background-color: #2980b9;
         }
 
-        .remove-button {
-            background-color: #c64343;
-        }
-
-        .remove-button:hover {
-            background-color: #a73a3a;
-        }
-
-
-
         label {
             display: flex;
             align-items: center;
@@ -136,19 +121,6 @@
             font-weight: 500;
             cursor: pointer;
             font-size: 0.85rem;
-            justify-content: center;
-        }
-
-        label-handles-checkbox {}
-
-        .handle-background {
-            width: 90px;
-        }
-
-        .label-handles-checkbox {
-            background-color: #eef1f2;
-            border-radius: 10px;
-            padding: 10px;
         }
 
         input[type="checkbox"] {
@@ -234,42 +206,44 @@
                 <h2>Courbes</h2>
                 <select id="curveSelect"></select>
                 <input type="text" id="curveName">
-
-                <button id="addCurveBtn">Ajouter une courbe</button>
-                <button id="saveBtn">Enregistrer la courbe</button>
-                <button id="importBtn">Ouvrir une courbe</button>
-
-                <button id="deleteBtn" class="remove-button">Supprimer la courbe</button>
-
+                <div class="horizontal">
+                    <button id="addCurveBtn" class="curvebtn">Ajouter une courbe</button>
+                    <button id="deleteBtn" class="curvebtn">Supprimer la courbe</button>
+                </div>
             </div>
 
-            <!-- Actions -->
             <div class="card">
-                <h2>Actions</h2>
-                <button id="addOffsetBtn">Ajouter un offset</button>
-                <button id="deletePointBtn" class="remove-button">Supprimer le point sélectionné</button>
-                <label class="label-handles-checkbox">
-                    <input type="checkbox" id="toggleHandlesCbx">
-                    <span class="handle-background">Modifier la courbe</span>
-                    <input type="checkbox" id="toggleBackgroundCbx">
-                    <span class="handle-background">Afficher le fond</span>
-                </label>
-                <label>
-
-                </label>
+                <h2>Import / Export</h2>
+                <button id="importBtn">Ouvrir courbe</button>
+                <button id="saveBtn">Enregistrer courbe</button>
+                <button id="exportBtn">Exporter en PNG</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
             </div>
-
 
             <!-- Offsets -->
-            <div class="card" id="offsetControlsContainer">
+            <div class="card" offsetControlsContainer>
                 <h2>Offsets</h2>
-                <!-- <div class="slider-group">
-                    <button id="removeOffsetBtn--" class="remove-button" title="Supprimer l'offset">X</button>
-                    <input type="checkbox" id="toggleOffset1Cbx--">
-                    <label for="offsetSlider1--">Offset&nbsp;1</label>
-                    <input type="range" id="offsetSlider--" min="00" max="200" step="1">
-                    <span id="offsetValue1--">0</span>
-                </div> -->
+                <div class="slider-group">
+                    <button id="removeOffsetBtn">X</button>
+                    <input type="checkbox" id="toggleOffset1Cbx">
+                    <label for="offsetSlider1">Offset&nbsp;1</label>
+                    <input type="range" id="offsetSlider1" min="00" max="200" step="1">
+                    <span id="offsetValue1">0</span>
+                </div>
+                <div class="slider-group">
+                    <button id="removeOffsetBtn">X</button>
+                    <input type="checkbox" id="toggleOffset2Cbx">
+                    <label for="offsetSlider2">Offset&nbsp;2</label>
+                    <input type="range" id="offsetSlider2" min="00" max="200" step="1">
+                    <span id="offsetValue2">0</span>
+                </div>
+                <div class="slider-group">
+                    <button id="removeOffsetBtn">X</button>
+                    <input type="checkbox" id="toggleOffset3Cbx">
+                    <label for="offsetSlider3">Offset&nbsp;3</label>
+                    <input type="range" id="offsetSlider3" min="00" max="200" step="1">
+                    <span id="offsetValue3">0</span>
+                </div>
                 <!-- <label>
                     <input type="checkbox" id="offsetCbx">
                     Afficher offsets
@@ -282,13 +256,18 @@
 
             </div> -->
 
-
-
+            <!-- Actions -->
             <div class="card">
-                <h2>Import / Export</h2>
-
-                <button id="exportBtn">Exporter en PNG</button>
-                <input type="file" id="importFile" accept=".json" style="display: none;">
+                <h2>Actions</h2>
+                <button id="deletePointBtn">Supprimer le point sélectionné</button>
+                <label>
+                    <input type="checkbox" id="toggleHandlesCbx">
+                    Afficher les poignées
+                </label>
+                <label>
+                    <input type="checkbox" id="toggleBackgroundCbx">
+                    Afficher le fond
+                </label>
             </div>
 
         </aside>
@@ -297,7 +276,7 @@
         <div id="canvasContainer">
             <canvas id="canvas"></canvas>
         </div>
-        <script type="module" src="./src/main.js?t=1762782379435"></script>
+        <script type="module" src="./src/main.js"></script>
     </main>
 
 </body>
