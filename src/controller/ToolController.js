@@ -93,6 +93,16 @@ export default class ToolController {
     this._render();
   }
 
+  _onRemoveOffset(index) {
+    console.log("suppressionoffset", index);
+    const curve = this.model.curves[this.model.currentCurveIndex];
+    if (!curve) return;
+    curve.offsetsData.splice(index - 1, 1);
+    // A confirmer this.toolbarView.offsetElements.splice(index - 1, 1);
+    this.toolbarView.removeOffsetControls(index);
+    this._render();
+  }
+
   _updateOffsetCheckboxesFromModel() {
     const curve = this.model.curves[this.model.currentCurveIndex];
     if (!curve) return;
@@ -125,6 +135,7 @@ export default class ToolController {
     this._updateSlidersAndCheckboxes();
     this.drawController.handlesVisible = true;
     this.toolbarView.updateHandlesToggle(true);
+    //this.toolbarView.renderOffsetsControls(this.model.curves[lastIndex]);
 
     this._render();
 
@@ -155,6 +166,7 @@ export default class ToolController {
   _selectCurve(index) {
     this.model.currentCurveIndex = index;
     this._updateSlidersAndCheckboxes();
+    //this.toolbarView.renderOffsetsControls();
     this._render();
   }
 
@@ -175,7 +187,8 @@ export default class ToolController {
     // Event delegation pour sliders et checkboxes d'offset dynamiques
     this.toolbarView.bindDynamicOffsetControls(
       (index, value) => this._onOffsetSliderChange(index, value),
-      (index) => this._onOffsetToggle(index)
+      (index) => this._onOffsetToggle(index),
+      (index) => this._onRemoveOffset(index)
     );
   }
 
@@ -246,11 +259,9 @@ export default class ToolController {
 
     this.toolbarView.bindAddOffsetBtn(() => {
       this.model.addOffsetToCurrentCurve();
-      this.toolbarView.addOffsetControls(
-        this.model.curves[this.model.currentCurveIndex].offsetsData.length
-      );
+      this.toolbarView.addOffsetControls();
 
-      //this._updateSlidersAndCheckboxes();
+      this._updateSlidersAndCheckboxes();
       this._render();
     });
   }

@@ -114,7 +114,7 @@ export default class ToolbarView {
    * Lie un seul écouteur au conteneur pour gérer sliders et checkboxes d'offset
    * Les nouveaux éléments ajoutés seront automatiquement pris en compte
    */
-  bindDynamicOffsetControls(handlerSlider, handlerCheckbox) {
+  bindDynamicOffsetControls(handlerSlider, handlerCheckbox, handlerRemove) {
     const container = document.getElementById("offsetControlsContainer");
     if (!container) return;
 
@@ -139,6 +139,17 @@ export default class ToolbarView {
         );
         const checked = e.target.checked;
         handlerCheckbox(index, checked);
+      }
+    });
+
+    container.addEventListener("click", (e) => {
+      if (
+        e.target.matches("button") &&
+        e.target.id.startsWith("removeOffsetBtn")
+      ) {
+        const index = parseInt(e.target.id.replace("removeOffsetBtn", ""), 10);
+        // console.log("aaaaa", index);
+        handlerRemove(index);
       }
     });
   }
@@ -190,7 +201,10 @@ export default class ToolbarView {
     if (this.elements.addOffsetCheckbox)
       this.elements.addOffsetCheckbox.checked = isVisible;
   }
-  addOffsetControls(index) {
+
+  addOffsetControls(curv) {
+    console.log("eeeeee", this.offsetElements.length + 1);
+    let index = this.offsetElements.length + 1;
     // Conteneur des contrôles d’offset (à définir dans ton HTML)
     const container = document.getElementById("offsetControlsContainer");
     if (!container) {
@@ -214,6 +228,7 @@ export default class ToolbarView {
     </label>
     <input type="range" id="offsetSlider${index}" min="0" max="200" value="0" step="1" />
     <span id="offsetValue${index}">0</span>
+    <button id="removeOffsetBtn${index}">Supprimer</button>
   `;
 
     // Ajoute les éléments au conteneur
@@ -221,13 +236,70 @@ export default class ToolbarView {
 
     // Stocke les références dans la structure interne
     const newOffset = {
+      curveIndex: 1,
+      offsetIndex: 1, /// à revoir
       slider: document.getElementById(`offsetSlider${index}`),
       valueDisplay: document.getElementById(`offsetValue${index}`),
       checkbox: document.getElementById(`toggleOffset${index}Cbx`),
+      remove: document.getElementById(`removeOffsetBtn${index}`),
     };
 
     this.offsetElements[index - 1] = newOffset;
-
+    console.log("rrrrrrrrr", this.offsetElements);
     console.info(`✅ Contrôles pour l’offset ${index} ajoutés.`);
+  }
+
+  removeOffsetControls(index) {
+    // Récupérer les références de l'offset à supprimer
+    const offset = this.offsetElements[index - 1];
+    if (!offset) return;
+
+    // Supprimer le wrapper (div.parentElement du slider)
+    const wrapper = offset.slider?.closest(".offset-control");
+    if (wrapper) wrapper.remove();
+
+    // Supprimer l'élément du tableau et décaler les suivants
+    this.offsetElements.splice(index - 1, 1);
+
+    // Réindexer les IDs dans le DOM pour garder la cohérence
+    this.offsetElements.forEach((el, i) => {
+      if (!el) return;
+
+      // Met à jour les IDs DOM
+      el.slider.id = `offsetSlider${i + 1}`;
+      el.valueDisplay.id = `offsetValue${i + 1}`;
+      el.checkbox.id = `toggleOffset${i + 1}Cbx`;
+      el.remove.id = `removeOffsetBtn${i + 1}`;
+
+      // Met aussi à jour les labels visibles, si tu veux afficher "Offset X"
+      const label = el.slider
+        ?.closest(".offset-control")
+        ?.querySelector("label");
+      if (label)
+        label.innerHTML = `
+      <input type="checkbox" id="toggleOffset${i + 1}Cbx" checked />
+      Offset ${i + 1}
+    `;
+    });
+
+    console.log("✅ offsetElements après suppression :", this.offsetElements);
+  }
+
+  renderOffsetsControls(curve) {
+    // console.log("render offsets controls", this.offsetElements);
+    // const container = document.getElementById("offsetControlsContainer");
+    // if (!container) return;
+    // if (container) container.innerHTML = "";
+    // // rendu des élements d'offset
+    // curve.offsetsData.forEach((offsetData, i) => {
+    //   // Si le contrôle existe déjà, on le recrée pour être sûr
+    //   this.addOffsetControls(i + 1);
+    // });
+  }
+
+  clearOffsetsControls() {
+    // this.offsetElements = [];
+    // const container = document.getElementById("offsetControlsContainer");
+    // if (container) container.innerHTML = "";
   }
 }
