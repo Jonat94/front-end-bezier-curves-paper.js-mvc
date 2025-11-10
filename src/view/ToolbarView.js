@@ -24,12 +24,6 @@ export default class ToolbarView {
       addOffsetBtn: document.getElementById("addOffsetBtn"),
     };
     this.offsetElements = [];
-    // Gestion dynamique des sliders et checkboxes pour les offsets
-    // this.offsetElements = [1, 2, 3].map((i) => ({
-    //   slider: document.getElementById(`offsetSlider${i}`),
-    //   valueDisplay: document.getElementById(`offsetValue${i}`),
-    //   checkbox: document.getElementById(`toggleOffset${i}Cbx`),
-    // }));
   }
 
   // ---------------------------
@@ -196,11 +190,6 @@ export default class ToolbarView {
     if (offset?.checkbox) offset.checkbox.checked = isVisible;
   }
 
-  updateOffsetGlobalCheckbox(isVisible) {
-    if (this.elements.addOffsetCheckbox)
-      this.elements.addOffsetCheckbox.checked = isVisible;
-  }
-
   addOffsetControls(curv) {
     let index = this.offsetElements.length + 1;
     // Conteneur des contrôles d’offset (à définir dans ton HTML)
@@ -220,7 +209,7 @@ export default class ToolbarView {
     wrapper.innerHTML = `
  <button id="removeOffsetBtn${index}" class="remove-button" title="Supprimer l'offset ${index}">X</button>
                     <input type="checkbox" id="toggleOffset${index}Cbx">
-                    <label for="offsetSlider1">Offset&nbsp;${index}</label>
+                    <label for="offsetSlider">Offset&nbsp;${index}</label>
                     <input type="range" id="offsetSlider${index}" min="00" max="200" step="1">
                     <span id="offsetValue${index}">0</span>
   `;
@@ -230,8 +219,6 @@ export default class ToolbarView {
 
     // Stocke les références dans la structure interne
     const newOffset = {
-      curveIndex: 1,
-      offsetIndex: 1, /// à revoir
       slider: document.getElementById(`offsetSlider${index}`),
       valueDisplay: document.getElementById(`offsetValue${index}`),
       checkbox: document.getElementById(`toggleOffset${index}Cbx`),

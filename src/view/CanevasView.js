@@ -42,13 +42,12 @@ export default class CanvasView {
   renderCurves(
     curves,
     showHandles = true,
-    showOffsets = true,
+    //showOffsets = true,
     selectedItem = null,
     selectedCurveIndex = null,
-    fillColor = "rgba(0,150,255,0.2)",
-    offsetsVisibilityMap = {}
+    fillColor = "rgba(0,150,255,0.2)"
   ) {
-    offsetsVisibilityMap = this.generateOffsetsVisibilityMap(curves);
+    let offsetsVisibilityMap = this.generateOffsetsVisibilityMap(curves);
     this.clearForeground();
 
     curves.forEach((curve, curveIndex) => {
@@ -56,7 +55,7 @@ export default class CanvasView {
 
       this.drawCurve(curve, displayHandles, selectedItem);
 
-      if (showOffsets && curve.offsetsData.length) {
+      if (curve.offsetsData.length) {
         const offsetsVisible =
           offsetsVisibilityMap[curveIndex] ||
           Array(curve.offsetsData.length).fill(false);

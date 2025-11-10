@@ -15,7 +15,6 @@ export default class ToolController {
     this.drawController = drawController;
 
     // Initialiser la visibilité des offsets pour chaque courbe
-    this.drawController.offsetsVisibleByCurve = {};
 
     // Mettre à jour les sliders pour la courbe courante
     this._updateSlidersAndCheckboxes();
@@ -47,19 +46,9 @@ export default class ToolController {
         index + 1,
         currentCurve.offsetsData[index].offset
       );
-      // console.log("Updating checkbox", index + 1, offsetData.visible);
-      this.toolbarView.updateOffsetCheckbox(index + 1, offsetData.visible);
-      // this.toolbarView.updateOffsetValue(3, currentCurve.offsetsData[2].offset);
-      // this.toolbarView.updateOffsetValue(2, currentCurve.offsetsData[1].offset);
-      // this.toolbarView.updateOffsetValue(1, currentCurve.offsetsData[0].offset);
-    });
-    // const offsetsVisible = this.drawController.offsetsVisibleByCurve[
-    //   this.model.currentCurveIndex
-    // ] || [true, true, true];
 
-    // offsetsVisible.forEach((visible, index) => {
-    //   this.toolbarView.updateOffsetCheckbox(index + 1, visible);
-    // });
+      this.toolbarView.updateOffsetCheckbox(index + 1, offsetData.visible);
+    });
   }
 
   /**
@@ -139,18 +128,8 @@ export default class ToolController {
 
     this.toolbarView.updateCurveList(this.model.curves);
     this.toolbarView.updateSelectedCurve(lastIndex);
-
-    // const currentCurve = this.model.curves[lastIndex];
-    // currentCurve.offsetsData.forEach((offsetData, i) => {
-    //   this.toolbarView.addOffsetControls(i + 1);
-    //   this.toolbarView.updateOffsetValue(i + 1, offsetData.offset);
-    //   this.toolbarView.updateOffsetCheckbox(i + 1, offsetData.visible);
-    // });
-
-    //this._updateSlidersAndCheckboxes();
     this.drawController.handlesVisible = true;
     this.toolbarView.updateHandlesToggle(true);
-    //this.toolbarView.renderOffsetsControls(this.model.curves[lastIndex]);
 
     this._render();
 
@@ -207,26 +186,6 @@ export default class ToolController {
       (index) => this._onRemoveOffset(index)
     );
   }
-
-  /**
-   * Lie les sliders aux fonctions de changement d'offset.
-   */
-  // _bindOffsetSliders() {
-  //   for (let i = 1; i <= 3; i++) {
-  //     this.toolbarView.bindOffsetSlider(i, (e) =>
-  //       this._onOffsetSliderChange(i, parseFloat(e.target.value))
-  //     );
-  //   }
-  // }
-
-  /**
-   * Lie les checkboxes aux fonctions de toggle de visibilité des offsets.
-   */
-  // _bindOffsetCheckboxes() {
-  //   for (let i = 1; i <= 3; i++) {
-  //     this.toolbarView.bindOffsetCheckbox(i, () => this._onOffsetToggle(i));
-  //   }
-  // }
 
   /**
    * Lie les boutons pour ajouter, supprimer et sélectionner des courbes.
@@ -307,19 +266,8 @@ export default class ToolController {
       const lastIndex = this.model.curves.length - 1;
       this.model.currentCurveIndex = lastIndex;
 
-      if (!this.drawController.offsetsVisibleByCurve[lastIndex]) {
-        this.drawController.offsetsVisibleByCurve[lastIndex] = [
-          true,
-          true,
-          true,
-        ];
-      }
-
       this.drawController.handlesVisible = false;
       this.toolbarView.updateHandlesToggle(false);
-      ///////////////////
-      //Tod do check bug
-      //this.toolbarView.updateOffsetCheckbox(index, visible);
 
       this.model.computeAllOffsets();
       this._updateSlidersAndCheckboxes();
@@ -347,11 +295,9 @@ export default class ToolController {
     this.canvasView.renderCurves(
       this.model.curves,
       this.drawController.handlesVisible,
-      true, // showOffsets
       this.drawController.selectedItem,
       this.model.currentCurveIndex,
-      "rgba(0,150,255,0.2)",
-      this.drawController.offsetsVisibleByCurve
+      "rgba(0,150,255,0.2)"
     );
   }
 }

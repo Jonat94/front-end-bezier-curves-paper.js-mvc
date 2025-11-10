@@ -329,7 +329,25 @@ export default class DrawingModel {
     const curve = this.getCurrentCurve();
     if (!curve) return;
 
-    const jsonData = JSON.stringify(curve);
+    const serial = {
+      name: curve.name,
+      strokeWidth: curve.strokeWidth,
+      handles: curve.handles.map((h) => ({
+        id: h.id,
+        visible: !!h.visible,
+        point: [h.segment.point.x, h.segment.point.y],
+        handleIn: [h.segment.handleIn.x, h.segment.handleIn.y],
+        handleOut: [h.segment.handleOut.x, h.segment.handleOut.y],
+        inPointId: h.inPointId,
+        outPointId: h.outPointId,
+      })),
+      offsetsData: curve.offsetsData.map((o) => ({
+        offset: o.offset,
+        visible: !!o.visible,
+      })),
+    };
+
+    const jsonData = JSON.stringify(serial);
     const blob = new Blob([jsonData], { type: "application/json" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -343,23 +361,32 @@ export default class DrawingModel {
   importCurve(jsonData) {
     try {
       const data = JSON.parse(jsonData);
+      const rebuilt = {
+        name: data.name,
+        strokeWidth: data.strokeWidth || this.defaultStrokeWidth,
+        handles: data.handles.map((h) => ({
+          id: h.id || this.generateId(),
+          inPointId: h.inPointId || this.generateId("in"),
+          outPointId: h.outPointId || this.generateId("out"),
+          segment: new paper.Segment(
+            new paper.Point(h.point[0], h.point[1]),
+            new paper.Point(h.handleIn[0], h.handleIn[1]),
+            new paper.Point(h.handleOut[0], h.handleOut[1])
+          ),
+          visible: h.visible ?? true,
+        })),
+        offsetsData: (data.offsetsData || []).map((o) => ({
+          offset: o.offset,
+          points: [],
+          visible: !!o.visible,
+        })),
+      };
 
-      // Reconstruit les segments Paper.js à partir des coordonnées sérialisées
-      data.handles = data.handles.map((h) => ({
-        id: h.id,
-        inPointId: h.inPointId,
-        outPointId: h.outPointId,
-        segment: new paper.Segment(
-          new paper.Point(h.segment[1][0], h.segment[1][1]),
-          new paper.Point(h.segment[2][0], h.segment[2][1]),
-          new paper.Point(h.segment[3][0], h.segment[3][1])
-        ),
-        visible: h.visible,
-      }));
-      this.curves.push(data);
+      this.curves.push(rebuilt);
       this.currentCurveIndex = this.curves.length - 1;
     } catch (e) {
-      console.error("Erreur lors de l’import de la courbe :", e);
+      console.error("Erreur import:", e);
+      throw e;
     }
   }
 }
