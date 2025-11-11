@@ -1,13 +1,15 @@
-"use strict";
+"use stric";
 import * as ClipperLib from "clipper-lib";
 import paper from "../utils/paperSetup.js";
+import CurveProcessor from "../services/CurveProcessor.js";
 
 /**
  * Classe gérant les courbes dessinées et leurs offsets.
  * Utilise Paper.js pour la géométrie et ClipperLib pour les calculs d’offsets précis.
  */
-export default class DrawingModel {
+export default class CurveModel {
   constructor() {
+    this.processor = new CurveProcessor();
     // Paramètres globaux de dessin et d’échantillonnage
     this.defaultStrokeWidth = 4;
     this.offsetSampleStep = 5;
@@ -23,8 +25,20 @@ export default class DrawingModel {
     this.clipperScale = 500;
 
     // Valeurs d’offset par défaut pour chaque nouvelle courbe
-    this.defaultOffsets = [];
+    //this.defaultOffsets = [];
     this.createCurve();
+    this.curves[0].handles[0] = {
+      segment: { x: 100, y: 100 },
+      handleIn: { x: 50, y: -10 },
+      handleOut: { x: 50, y: -50 },
+    };
+    this.curves[0].handles[1] = {
+      segment: { x: 300, y: 300 },
+      handleIn: { x: -50, y: 0 },
+      handleOut: { x: 0, y: 50 },
+    };
+
+    console.log(this.computeAllOffsets());
   }
 
   // ─────────────────────────────────────────────
@@ -40,13 +54,8 @@ export default class DrawingModel {
       name,
       handles: [],
       strokeWidth: this.defaultStrokeWidth,
-      offsetsData: this.defaultOffsets.map((value) => ({
-        offset: value,
-        points: [],
-        visible: true,
-      })),
+      offsetsData: [],
     };
-
     this.curves.push(newCurve);
     this.currentCurveIndex = this.curves.length - 1;
   }
@@ -94,9 +103,9 @@ export default class DrawingModel {
     const curve = this.getCurrentCurve();
     if (!curve) return;
 
-    const delta = new paper.Point(dx, dy);
     curve.handles.forEach((h) => {
-      h.segment.point = h.segment.point.add(delta);
+      h.x += dx;
+      h.y += dy;
     });
 
     this.computeAllOffsets();
@@ -129,8 +138,16 @@ export default class DrawingModel {
    */
   computeAllOffsets() {
     if (!this.curves.length) return;
+    let offsetsArray = this.processor.computeAllOffsets(
+      this.curves,
+      this.offsetSampleStep
+    );
+    console.log("aaaaaaaaaa", offsetsArray);
+    this.curves[0].offsetsData = offsetsArray;
+    console.log("aaaarrraaaa", this.curves[0]);
 
-    const allSampledPoints = this.sampleAllCurves();
+    /*
+    const allSampledPoints = this.sampleAllCurves(); //faire appel à process curve
 
     this.curves.forEach((curve, i) => {
       const points = allSampledPoints[i];
@@ -138,96 +155,100 @@ export default class DrawingModel {
         this.computeSingleOffset(curve, points, offsetData);
       });
     });
+    */
   }
 
   /**
    * Calcule un offset à partir des points d’une courbe donnée.
    * Utilise ClipperLib pour générer les points de la courbe offset.
    */
-  computeSingleOffset(curve, basePoints, offsetData) {
-    if (!basePoints || basePoints.length < 2) {
-      offsetData.points = [];
-      return;
-    }
+  // computeSingleOffset(curve, basePoints, offsetData) {
+  //   //faire appel à process curve
+  //   if (!basePoints || basePoints.length < 2) {
+  //     offsetData.points = [];
+  //     return;
+  //   }
 
-    // Mise à l’échelle pour ClipperLib (entiers requis)
-    const scaledPoints = basePoints.map((pt) => ({
-      X: Math.round(pt.x * this.clipperScale),
-      Y: Math.round(pt.y * this.clipperScale),
-    }));
+  //   // Mise à l’échelle pour ClipperLib (entiers requis)
+  //   const scaledPoints = basePoints.map((pt) => ({
+  //     X: Math.round(pt.x * this.clipperScale),
+  //     Y: Math.round(pt.y * this.clipperScale),
+  //   }));
 
-    // Crée et exécute l’offset Clipper
-    const clipperOffset = new ClipperLib.ClipperOffset();
-    clipperOffset.AddPath(
-      scaledPoints,
-      ClipperLib.JoinType.jtRound,
-      ClipperLib.EndType.etOpenRound
-    );
+  //   // Crée et exécute l’offset Clipper
+  //   const clipperOffset = new ClipperLib.ClipperOffset();
+  //   clipperOffset.AddPath(
+  //     scaledPoints,
+  //     ClipperLib.JoinType.jtRound,
+  //     ClipperLib.EndType.etOpenRound
+  //   );
 
-    const results = new ClipperLib.Paths();
-    clipperOffset.Execute(results, offsetData.offset * this.clipperScale);
+  //   const results = new ClipperLib.Paths();
+  //   clipperOffset.Execute(results, offsetData.offset * this.clipperScale);
 
-    if (!results.length) {
-      offsetData.points = [];
-      return;
-    }
+  //   if (!results.length) {
+  //     offsetData.points = [];
+  //     return;
+  //   }
 
-    // Choisit le chemin avec le plus de points (cas multi-tracés)
-    const mainPath = results.reduce((a, b) => (b.length > a.length ? b : a));
+  //   // Choisit le chemin avec le plus de points (cas multi-tracés)
+  //   const mainPath = results.reduce((a, b) => (b.length > a.length ? b : a)); //faire appel à process curve
 
-    // Convertit les points Clipper en points Paper.js
-    const offsetPoints = mainPath.map(
-      (pt) =>
-        new paper.Point(pt.X / this.clipperScale, pt.Y / this.clipperScale)
-    );
+  //   // Convertit les points Clipper en points Paper.js
+  //   const offsetPoints = mainPath.map(
+  //     (pt) =>
+  //       new paper.Point(pt.X / this.clipperScale, pt.Y / this.clipperScale)
+  //   );
 
-    // Filtrage des points trop rapprochés pour alléger la courbe
-    offsetData.points = this.removeClosePoints(
-      offsetPoints,
-      this.minOffsetPointSpacing
-    );
+  //   // Filtrage des points trop rapprochés pour alléger la courbe
+  //   offsetData.points = this.removeClosePoints(
+  //     offsetPoints,
+  //     this.minOffsetPointSpacing
+  //   );
 
-    // Ajustements géométriques
-    this.alignOffsetStart(curve, offsetData);
-    offsetData.points.reverse();
+  //   // Ajustements géométriques
+  //   this.alignOffsetStart(curve, offsetData);
+  //   offsetData.points.reverse();
 
-    // Coupe les points après la fin de la courbe d’origine
-    const endIndex = this.findClosestOffsetEnd(curve, offsetData);
-    offsetData.points = offsetData.points.slice(0, endIndex + 1);
+  //   // Coupe les points après la fin de la courbe d’origine
+  //   const endIndex = this.findClosestOffsetEnd(curve, offsetData);
+  //   offsetData.points = offsetData.points.slice(0, endIndex + 1);
 
-    // Supprime les points trop proches des extrémités
-    this.filterCornerPoints(curve, offsetData);
-  }
+  //   // Supprime les points trop proches des extrémités
+  //   this.filterCornerPoints(curve, offsetData);
+  // }
 
   /**
    * Aligne le début de l’offset sur le premier point de la courbe d’origine.
    */
-  alignOffsetStart(curve, offsetData) {
-    if (!offsetData.points?.length || !curve.handles?.length) return;
+  // alignOffsetStart(curve, offsetData) {
+  //   //faire appel à process curve
+  //   if (!offsetData.points?.length || !curve.handles?.length) return;
 
-    const startPoint = curve.handles[0].segment.point;
-    let bestIndex = 0;
-    let minDistance = Infinity;
+  //   const startPoint = curve.handles[0].segment.point;
+  //   let bestIndex = 0;
+  //   let minDistance = Infinity;
 
-    offsetData.points.forEach((pt, i) => {
-      const dist = pt.getDistance(startPoint);
-      if (dist < minDistance) {
-        minDistance = dist;
-        bestIndex = i;
-      }
-    });
+  //   offsetData.points.forEach((pt, i) => {
+  //     const dist = pt.getDistance(startPoint);
+  //     if (dist < minDistance) {
+  //       minDistance = dist;
+  //       bestIndex = i;
+  //     }
+  //   });
 
-    // Réordonne le tableau de points pour commencer à l’index le plus proche
-    offsetData.points = [
-      ...offsetData.points.slice(bestIndex),
-      ...offsetData.points.slice(0, bestIndex),
-    ];
-  }
+  //   // Réordonne le tableau de points pour commencer à l’index le plus proche
+  //   offsetData.points = [
+  //     ...offsetData.points.slice(bestIndex),
+  //     ...offsetData.points.slice(0, bestIndex),
+  //   ];
+  // }
 
   /**
    * Trouve le point d’offset le plus proche de la fin de la courbe.
    */
   findClosestOffsetEnd(curve, offsetData) {
+    //faire appel à process curve
     if (!offsetData.points?.length || !curve.handles?.length) return 0;
 
     const endPoint = curve.handles.at(-1).segment.point;
@@ -248,6 +269,7 @@ export default class DrawingModel {
    * Supprime les points trop proches du début ou de la fin de la courbe.
    */
   filterCornerPoints(curve, offsetData) {
+    //faire appel à process curve
     const start = curve.handles[0].segment.point;
     const end = curve.handles.at(-1).segment.point;
 
@@ -262,6 +284,7 @@ export default class DrawingModel {
    * Supprime les points trop rapprochés les uns des autres.
    */
   removeClosePoints(points, minDistance) {
+    //faire appel à process curve
     const result = [];
     let lastPt = null;
 
@@ -283,6 +306,7 @@ export default class DrawingModel {
    * Retourne un tableau de tableaux de points.
    */
   sampleAllCurves() {
+    //faire appel à process curve
     return this.curves.map((curve) => {
       const path = new paper.Path({ visible: false });
       curve.handles.forEach((h) => path.add(h.segment));
