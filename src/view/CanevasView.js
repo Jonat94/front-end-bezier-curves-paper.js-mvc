@@ -1,5 +1,5 @@
 "use strict";
-import paper from "../utils/paperSetup.js";
+import paper from "../utils/PaperSetup.js";
 
 /**
  * Classe représentant la vue canvas avec Paper.js

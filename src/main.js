@@ -1,8 +1,7 @@
 "use strict";
-import { initPaper } from "./utils/paperSetup.js";
-import paper from "./utils/paperSetup.js";
+import { initPaper } from "./utils/PaperSetup.js";
+import paper from "./utils/PaperSetup.js";
 import * as ClipperLib from "clipper-lib";
-import DrawingModel from "./model/DrawingModel.js";
 import CanvasView from "./view/CanevasView.js";
 import ToolbarView from "./view/ToolbarView.js";
 import DrawingController from "./controller/DrawingController.js";

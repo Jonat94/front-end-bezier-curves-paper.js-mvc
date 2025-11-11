@@ -1,5 +1,6 @@
 "use strict";
-import paper from "../utils/paperSetup.js";
+import paper from "../utils/PaperSetup.js";
+import Helpers from "../utils/Helpers.js";
 
 export default class DrawingController {
   constructor(model, view) {
@@ -61,7 +62,7 @@ export default class DrawingController {
   // Gère le drag souris
   // ---------------------------
   _handleMouseDrag(event) {
-    const curve = this.model.curves[this.model.currentCurveIndex];
+    const curve = this.model.getCurrentCurve();
     if (!curve) return;
 
     if (this.isDraggingCurve) {
@@ -123,9 +124,9 @@ export default class DrawingController {
   // Ajoute un nouveau point à la courbe active
   // ---------------------------
   _addPointToCurve(curve, point) {
-    const shapeId = this.model.generateId();
-    const inId = this.model.generateId();
-    const outId = this.model.generateId();
+    const shapeId = Helpers.generateId();
+    const inId = Helpers.generateId();
+    const outId = Helpers.generateId();
     curve.handles.push({
       id: shapeId,
       segment: { x: point.x, y: point.y },

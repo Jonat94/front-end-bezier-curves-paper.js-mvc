@@ -38,7 +38,7 @@ export default class ToolController {
    * Les sliders sont mappés sur offsetsData : slider1 → offsetsData[2], slider2 → offsetsData[1], slider3 → offsetsData[0]
    */
   _updateSlidersAndCheckboxes() {
-    const currentCurve = this.model.curves[this.model.currentCurveIndex];
+    const currentCurve = this.model.getCurrentCurve();
     if (!currentCurve) return;
 
     currentCurve.offsetsData.forEach((offsetData, index) => {
@@ -57,7 +57,7 @@ export default class ToolController {
    * @param {number} value - Nouvelle valeur de l'offset
    */
   _onOffsetSliderChange(offsetNumber, value) {
-    const curve = this.model.curves[this.model.currentCurveIndex];
+    const curve = this.model.getCurrentCurve();
     if (!curve) return;
 
     // Met à jour le modèle
@@ -76,7 +76,7 @@ export default class ToolController {
    * @param {number} offsetNumber - Numéro de l'offset (1 à 3)
    */
   _onOffsetToggle(offsetNumber) {
-    const curve = this.model.curves[this.model.currentCurveIndex];
+    const curve = this.model.getCurrentCurve();
     if (!curve) return;
 
     // offsetNumber 1 → offsetsData[0], 2 → offsetsData[1], 3 → offsetsData[2] (selon ton mapping)
@@ -89,7 +89,7 @@ export default class ToolController {
   }
 
   _onRemoveOffset(index) {
-    const curve = this.model.curves[this.model.currentCurveIndex];
+    const curve = this.model.getCurrentCurve();
     if (!curve) return;
     curve.offsetsData.splice(index - 1, 1);
     this.toolbarView.removeOffsetControls(index);
@@ -97,7 +97,7 @@ export default class ToolController {
   }
 
   _updateOffsetCheckboxesFromModel() {
-    const curve = this.model.curves[this.model.currentCurveIndex];
+    const curve = this.model.getCurrentCurve();
     if (!curve) return;
 
     curve.offsetsData.forEach((offset, index) => {

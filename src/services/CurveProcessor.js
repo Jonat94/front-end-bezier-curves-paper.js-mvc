@@ -1,6 +1,6 @@
 "use strict";
 import * as ClipperLib from "clipper-lib";
-import paper from "../utils/paperSetup.js";
+import paper from "../utils/PaperSetup.js";
 
 /**
  * Classe gérant les courbes dessinées et leurs offsets.
@@ -97,17 +97,17 @@ export default class CurveProcessor {
     offsetData.points = offsetData.points.slice(0, endIndex + 1);
 
     // Supprime les points trop proches des extrémités
-    //this.filterCornerPoints(curve, offsetData);
+    this.filterCornerPoints(curve, offsetData);
     //this.serializeOffset(offsetData);
   }
 
-  serializeOffset(offsetData) {
-    this.offsetsData.push({
-      offset: offsetData.offset,
-      visible: offsetData.visible,
-      points: offsetData.points.map((pt) => ({ x: pt.x, y: pt.y })),
-    });
-  }
+  //   serializeOffset(offsetData) {
+  //     this.offsetsData.push({
+  //       offset: offsetData.offset,
+  //       visible: offsetData.visible,
+  //       points: offsetData.points.map((pt) => ({ x: pt.x, y: pt.y })),
+  //     });
+  //   }
 
   /**
    * Aligne le début de l’offset sur le premier point de la courbe d’origine.

@@ -1,6 +1,6 @@
 "use stric";
 import * as ClipperLib from "clipper-lib";
-import paper from "../utils/paperSetup.js";
+import paper from "../utils/PaperSetup.js";
 import CurveProcessor from "../services/CurveProcessor.js";
 
 /**
@@ -133,7 +133,9 @@ export default class CurveModel {
       this.computeOffset(curve);
     });
   }
-
+  /**
+   * Recalcule un seul offsets.
+   */
   computeOffset(curve) {
     curve.offsetsData.forEach((offsetData) =>
       this.processor.computeSingleOffset(curve, offsetData)
@@ -150,14 +152,6 @@ export default class CurveModel {
     )
       return null;
     return this.curves[this.currentCurveIndex];
-  }
-
-  /**
-   * Génère un identifiant unique.
-   */
-  generateId(prefix = "id") {
-    this.handleIdCounter += 1;
-    return `${prefix}-${this.handleIdCounter}`;
   }
 
   // ─────────────────────────────────────────────
