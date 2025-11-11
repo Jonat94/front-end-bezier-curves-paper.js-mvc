@@ -226,7 +226,16 @@ export default class ToolController {
       this.canvasView.exportAsImage("mon_dessin.png")
     );
 
-    this.toolbarView.bindSave(() => this.model.exportCurrentCurve());
+    this.toolbarView.bindSave(() => {
+      let jsonData = this.model.getCurrentCurveJSON();
+      if (!jsonData) return;
+      const blob = new Blob([jsonData], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `drawing-${this.model.getCurrentCurve().name}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    });
 
     this.toolbarView.bindImportButton(() => {
       this.toolbarView.elements.importFile?.click();
@@ -250,7 +259,12 @@ export default class ToolController {
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => this._importCurveFromJSON(e.target.result);
+      reader.onload = (e) => {
+        this._importCurveFromJSON(e.target.result);
+
+        // Réinitialiser l'input pour permettre un nouvel import
+        event.target.value = "";
+      };
       reader.readAsText(file);
     });
   }

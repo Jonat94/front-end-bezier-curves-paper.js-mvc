@@ -167,41 +167,37 @@ export default class CurveModel {
   // ─────────────────────────────────────────────
 
   /**
-   * Exporte la courbe active en fichier JSON.
+   * Exporte la courbe active en format JSON.
    */
-  exportCurrentCurve() {
+  getCurrentCurveJSON() {
     const curve = this.getCurrentCurve();
     if (!curve) return;
-
     const serial = {
       name: curve.name,
       strokeWidth: curve.strokeWidth,
       handles: curve.handles.map((h) => ({
         id: h.id,
-        visible: !!h.visible,
-        point: [h.segment.point.x, h.segment.point.y],
-        handleIn: [h.segment.handleIn.x, h.segment.handleIn.y],
-        handleOut: [h.segment.handleOut.x, h.segment.handleOut.y],
+        segment: { x: h.segment.x, y: h.segment.y },
+        handleIn: { x: h.handleIn.x, y: h.handleIn.y },
+        handleOut: { x: h.handleOut.x, y: h.handleOut.y },
         inPointId: h.inPointId,
         outPointId: h.outPointId,
       })),
       offsetsData: curve.offsetsData.map((o) => ({
         offset: o.offset,
+        point: [],
         visible: !!o.visible,
       })),
     };
 
     const jsonData = JSON.stringify(serial);
-    const blob = new Blob([jsonData], { type: "application/json" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `drawing-${curve.name}-${this.currentCurveIndex}.json`;
-    link.click();
+    return jsonData;
   }
 
   /**
    * Importe une courbe à partir d’un JSON (string).
    */
+
   importCurve(jsonData) {
     try {
       const data = JSON.parse(jsonData);
@@ -210,14 +206,11 @@ export default class CurveModel {
         strokeWidth: data.strokeWidth || this.defaultStrokeWidth,
         handles: data.handles.map((h) => ({
           id: h.id || this.generateId(),
-          inPointId: h.inPointId || this.generateId("in"),
-          outPointId: h.outPointId || this.generateId("out"),
-          segment: new paper.Segment(
-            new paper.Point(h.point[0], h.point[1]),
-            new paper.Point(h.handleIn[0], h.handleIn[1]),
-            new paper.Point(h.handleOut[0], h.handleOut[1])
-          ),
-          visible: h.visible ?? true,
+          inPointId: h.inPointId || this.generateId(),
+          outPointId: h.outPointId || this.generateId(),
+          segment: { x: h.segment.x, y: h.segment.y },
+          handleIn: { x: h.handleIn.x, y: h.handleIn.y },
+          handleOut: { x: h.handleOut.x, y: h.handleIn.y },
         })),
         offsetsData: (data.offsetsData || []).map((o) => ({
           offset: o.offset,

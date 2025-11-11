@@ -1,6 +1,5 @@
 "use strict";
 import paper from "../utils/PaperSetup.js";
-import Helpers from "../utils/Helpers.js";
 
 export default class DrawingController {
   constructor(model, view) {
