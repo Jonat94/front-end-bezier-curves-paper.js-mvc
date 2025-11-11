@@ -1,6 +1,6 @@
 "use strict";
-import * as ClipperLib from "clipper-lib";
-import paper from "../utils/PaperSetup.js";
+import ClipperLib from "clipper-lib";
+import paper from "paper";
 import CurveProcessor from "../services/CurveProcessor.js";
 
 /**
