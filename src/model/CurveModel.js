@@ -27,18 +27,16 @@ export default class CurveModel {
     // Valeurs d’offset par défaut pour chaque nouvelle courbe
     //this.defaultOffsets = [];
     this.createCurve();
-    this.curves[0].handles[0] = {
-      segment: { x: 100, y: 100 },
-      handleIn: { x: 50, y: -10 },
-      handleOut: { x: 50, y: -50 },
-    };
-    this.curves[0].handles[1] = {
-      segment: { x: 300, y: 300 },
-      handleIn: { x: -50, y: 0 },
-      handleOut: { x: 0, y: 50 },
-    };
-
-    console.log(this.computeAllOffsets());
+    // this.curves[0].handles[0] = {
+    //   segment: { x: 100, y: 100 },
+    //   handleIn: { x: 50, y: -10 },
+    //   handleOut: { x: 50, y: -50 },
+    // };
+    // this.curves[0].handles[1] = {
+    //   segment: { x: 300, y: 300 },
+    //   handleIn: { x: -50, y: 0 },
+    //   handleOut: { x: 0, y: 50 },
+    // };
   }
 
   // ─────────────────────────────────────────────
@@ -104,8 +102,12 @@ export default class CurveModel {
     if (!curve) return;
 
     curve.handles.forEach((h) => {
-      h.x += dx;
-      h.y += dy;
+      h.segment.x += dx;
+      h.segment.y += dy;
+      h.handleIn.x += dx;
+      h.handleIn.y += dy;
+      h.handleOut.x += dx;
+      h.handleOut.y += dy;
     });
 
     this.computeAllOffsets();
@@ -137,14 +139,14 @@ export default class CurveModel {
    * Recalcule tous les offsets pour toutes les courbes.
    */
   computeAllOffsets() {
+    console.log("computeAllOffsets");
     if (!this.curves.length) return;
     let offsetsArray = this.processor.computeAllOffsets(
       this.curves,
       this.offsetSampleStep
     );
-    console.log("aaaaaaaaaa", offsetsArray);
+
     this.curves[0].offsetsData = offsetsArray;
-    console.log("aaaarrraaaa", this.curves[0]);
 
     /*
     const allSampledPoints = this.sampleAllCurves(); //faire appel à process curve

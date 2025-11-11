@@ -1,4 +1,4 @@
-"use stric";
+"use strict";
 import * as ClipperLib from "clipper-lib";
 import paper from "../utils/paperSetup.js";
 
@@ -24,9 +24,9 @@ export default class CurveProcessor {
    */
   computeAllOffsets(curves, offsetSampleStep) {
     if (!curves.length) return;
-    console.log("llll", curves);
+    this.offsetsData = [];
     const allSampledPoints = this.sampleAllCurves(curves, offsetSampleStep); //faire appel à process curve
-    console.log("rrrrr", allSampledPoints);
+
     curves.forEach((curve, i) => {
       const points = allSampledPoints[i];
       this.offsetsData.forEach((offsetData) => {
@@ -53,7 +53,6 @@ export default class CurveProcessor {
       Y: Math.round(pt.y * this.clipperScale),
     }));
 
-    console.log("eeeeee", scaledPoints, basePoints);
     // Crée et exécute l’offset Clipper
     const clipperOffset = new ClipperLib.ClipperOffset();
     clipperOffset.AddPath(
@@ -61,10 +60,10 @@ export default class CurveProcessor {
       ClipperLib.JoinType.jtRound,
       ClipperLib.EndType.etOpenRound
     );
-    console.log("zzoozz", clipperOffset);
+
     const results = new ClipperLib.Paths();
     clipperOffset.Execute(results, offsetData.offset * this.clipperScale);
-    console.log("zzzzzz", results);
+
     if (!results.length) {
       offsetData.points = [];
       return;
@@ -78,13 +77,13 @@ export default class CurveProcessor {
       (pt) =>
         new paper.Point(pt.X / this.clipperScale, pt.Y / this.clipperScale)
     );
-    console.log("jjjjjj", offsetPoints);
+
     // Filtrage des points trop rapprochés pour alléger la courbe
     offsetData.points = this.removeClosePoints(
       offsetPoints,
       this.minOffsetPointSpacing
     );
-    console.log("juuujj", offsetData);
+
     // Ajustements géométriques
     this.alignOffsetStart(curve, offsetData);
     offsetData.points.reverse();
@@ -92,15 +91,13 @@ export default class CurveProcessor {
     // Coupe les points après la fin de la courbe d’origine
     const endIndex = this.findClosestOffsetEnd(curve, offsetData);
     offsetData.points = offsetData.points.slice(0, endIndex + 1);
-    console.log("dddd", offsetData);
+
     // Supprime les points trop proches des extrémités
     //this.filterCornerPoints(curve, offsetData);
     this.serializeOffset(offsetData);
-    console.log("ccc", this.offsetsData);
   }
 
   serializeOffset(offsetData) {
-    console.log("ppppp", this.offsetData);
     this.offsetsData.push({
       offset: offsetData.offset,
       visible: offsetData.visible,
@@ -189,14 +186,14 @@ export default class CurveProcessor {
     //faire appel à process curve
     const result = [];
     let lastPt = null;
-    console.log(points);
+
     for (const pt of points) {
       if (!lastPt || pt.getDistance(lastPt) >= minDistance) {
         result.push(pt);
         lastPt = pt;
       }
     }
-    console.log("hhhh", result);
+
     return result;
   }
 
@@ -209,7 +206,6 @@ export default class CurveProcessor {
    * Retourne un tableau de tableaux de points.
    */
   sampleAllCurves(curves, offsetSampleStep) {
-    console.log("ttttttt", curves);
     let allPath = curves.map((curve) => {
       const path = new paper.Path({ visible: true });
 
@@ -228,18 +224,16 @@ export default class CurveProcessor {
       return path;
     });
 
-    console.log("kkkkk", allPath);
-
     const result = allPath.map((path) => {
       const sampledPoints = [];
       for (let s = 0; s <= path.length; s += 1) {
         const p = path.getPointAt(s);
         if (p) sampledPoints.push(p);
-        path.remove();
       }
+      path.remove();
       return sampledPoints;
     });
-    console.log("lmmmmmmmm", result);
+
     return result;
   }
 }

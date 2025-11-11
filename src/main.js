@@ -16,11 +16,10 @@ window.onload = () => {
 
   // const model = new DrawingModel();
   // const canvasView = new CanvasView(canvas);
-  // const toolbarView = new ToolbarView();
+  const toolbarView = new ToolbarView();
   // const drawingController = new DrawingController(model, canvasView);
-
-  // new ToolController(model, toolbarView, canvasView, drawingController);
   const model = new CurveModel();
   const canvasView = new CanvasView(canvas);
   const drawingController = new DrawingController(model, canvasView);
+  new ToolController(model, toolbarView, canvasView, drawingController);
 };

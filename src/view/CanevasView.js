@@ -11,7 +11,7 @@ export default class CanvasView {
    * @param {HTMLCanvasElement} canvasElement - Canvas HTML
    */
   constructor(canvasElement) {
-    paper.setup(canvasElement);
+    //   paper.setup(canvasElement);
     this.canvas = canvasElement;
 
     // Calques de dessin
@@ -107,7 +107,13 @@ export default class CanvasView {
     });
 
     curve.handles.forEach((handle) => {
-      path.add(handle.segment);
+      const segment = new paper.Segment(
+        new paper.Point(handle.segment.x, handle.segment.y),
+        new paper.Point(handle.handleIn.x, handle.handleIn.y),
+        new paper.Point(handle.handleOut.x, handle.handleOut.y)
+      );
+
+      path.add(segment);
 
       if (!showHandles) return;
 
@@ -126,7 +132,7 @@ export default class CanvasView {
 
     // Cercle central (point)
     this._makeCircle(
-      handle.segment.point,
+      new paper.Point(handle.segment.x, handle.segment.y),
       mainColor,
       handle.id,
       "circle",
@@ -136,13 +142,19 @@ export default class CanvasView {
 
     // Handles Bézier
     this._makeCircle(
-      handle.segment.point.add(handle.segment.handleIn),
+      new paper.Point(
+        handle.segment.x + handle.handleIn.x,
+        handle.segment.y + handle.handleIn.y
+      ),
       "#3498db",
       handle.inPointId,
       "bezier_in"
     );
     this._makeCircle(
-      handle.segment.point.add(handle.segment.handleOut),
+      new paper.Point(
+        handle.segment.x + handle.handleOut.x,
+        handle.segment.y + handle.handleOut.y
+      ),
       "#3498db",
       handle.outPointId,
       "bezier_out"
@@ -202,19 +214,17 @@ export default class CanvasView {
     if (!showHandles) return;
 
     curve.handles.forEach((handle) => {
-      const origin = handle.segment.point;
-      [handle.segment.handleIn, handle.segment.handleOut].forEach(
-        (handleVec) => {
-          const line = new paper.Path.Line({
-            from: origin,
-            to: origin.add(handleVec),
-            strokeColor: "gray",
-            strokeWidth: 1,
-            dashArray: [4, 4],
-          });
-          line.sendToBack();
-        }
-      );
+      const origin = new paper.Point(handle.segment.x, handle.segment.y);
+      [handle.handleIn, handle.handleOut].forEach((handleVec) => {
+        const line = new paper.Path.Line({
+          from: origin,
+          to: origin.add(handleVec),
+          strokeColor: "gray",
+          strokeWidth: 1,
+          dashArray: [4, 4],
+        });
+        line.sendToBack();
+      });
     });
   }
 

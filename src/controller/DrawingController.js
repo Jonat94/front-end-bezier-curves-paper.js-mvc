@@ -129,11 +129,9 @@ export default class DrawingController {
 
     curve.handles.push({
       id: shapeId,
-      segment: new paper.Segment(
-        new paper.Point(point.x, point.y),
-        new paper.Point(-50, 0),
-        new paper.Point(50, 0)
-      ),
+      segment: { x: point.x, y: point.y },
+      handleIn: { x: -50, y: 0 },
+      handleOut: { x: 50, y: 0 },
       inPointId: inId,
       outPointId: outId,
     });
@@ -161,7 +159,7 @@ export default class DrawingController {
   // Déplace un point ou une poignée sélectionnée
   // ---------------------------
   _dragSelectedItem(event, curve) {
-    this.selectedItem.position = event.point.subtract(this.dragOffset);
+    //this.selectedItem.position = event.point.subtract(this.dragOffset);
 
     let targetHandle;
     switch (this.selectedItem.data.type) {
@@ -169,30 +167,32 @@ export default class DrawingController {
         targetHandle = curve.handles.find(
           (h) => h.id === this.selectedItem.data.id
         );
-        if (targetHandle)
-          targetHandle.segment.point = targetHandle.segment.point.add(
-            event.delta
-          );
+        console.log("targeth", targetHandle);
+        if (targetHandle) {
+          targetHandle.segment.x += event.delta.x;
+          targetHandle.segment.y += event.delta.y;
+          // targetHandle.handleIn.x += event.delta.x;
+          // targetHandle.handleIn.y += event.delta.y;
+          // targetHandle.handleOut.x += event.delta.x;
+          // targetHandle.handleOut.y += event.delta.y;
+        }
+
         break;
 
       case "bezier_in":
         targetHandle = curve.handles.find(
           (h) => h.inPointId === this.selectedItem.data.id
         );
-        if (targetHandle)
-          targetHandle.segment.handleIn = targetHandle.segment.handleIn.add(
-            event.delta
-          );
+        targetHandle.handleIn.x += event.delta.x;
+        targetHandle.handleIn.y += event.delta.y;
         break;
 
       case "bezier_out":
         targetHandle = curve.handles.find(
           (h) => h.outPointId === this.selectedItem.data.id
         );
-        if (targetHandle)
-          targetHandle.segment.handleOut = targetHandle.segment.handleOut.add(
-            event.delta
-          );
+        targetHandle.handleOut.x += event.delta.x;
+        targetHandle.handleOut.y += event.delta.y;
         break;
     }
 
@@ -204,6 +204,7 @@ export default class DrawingController {
   // Rend toutes les courbes
   // ---------------------------
   _renderCurves(curveIndex = this.model.currentCurveIndex) {
+    console.log("aaaa");
     this.view.renderCurves(
       this.model.curves,
       this.handlesVisible,
