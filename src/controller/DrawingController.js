@@ -124,9 +124,9 @@ export default class DrawingController {
   // Ajoute un nouveau point à la courbe active
   // ---------------------------
   _addPointToCurve(curve, point) {
-    const shapeId = Helpers.generateId();
-    const inId = Helpers.generateId();
-    const outId = Helpers.generateId();
+    const shapeId = this.model.generateId();
+    const inId = this.model.generateId();
+    const outId = this.model.generateId();
     curve.handles.push({
       id: shapeId,
       segment: { x: point.x, y: point.y },

@@ -154,6 +154,14 @@ export default class CurveModel {
     return this.curves[this.currentCurveIndex];
   }
 
+  /**
+   * Génère un identifiant unique.
+   */
+  generateId(prefix = "id") {
+    this.handleIdCounter += 1;
+    return `${prefix}-${this.handleIdCounter}`;
+  }
+
   // ─────────────────────────────────────────────
   // IMPORT / EXPORT
   // ─────────────────────────────────────────────
