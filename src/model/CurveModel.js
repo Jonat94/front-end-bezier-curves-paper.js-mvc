@@ -1,4 +1,4 @@
-"use stric";
+"use strict";
 import * as ClipperLib from "clipper-lib";
 import paper from "../utils/PaperSetup.js";
 import CurveProcessor from "../services/CurveProcessor.js";
@@ -9,7 +9,7 @@ import CurveProcessor from "../services/CurveProcessor.js";
  */
 export default class CurveModel {
   constructor() {
-    this.processor = new CurveProcessor();
+    this.processor = new CurveProcessor(1000, 2, 5);
     // Paramètres globaux de dessin et d’échantillonnage
     this.defaultStrokeWidth = 4;
     this.offsetSampleStep = 5;
@@ -137,8 +137,8 @@ export default class CurveModel {
    * Recalcule un seul offsets.
    */
   computeOffset(curve) {
-    curve.offsetsData.forEach((offsetData) =>
-      this.processor.computeSingleOffset(curve, offsetData)
+    curve.offsetsData.forEach((offset) =>
+      this.processor.computeSingleOffset(curve, offset)
     );
   }
 
@@ -210,7 +210,7 @@ export default class CurveModel {
           outPointId: h.outPointId || this.generateId(),
           segment: { x: h.segment.x, y: h.segment.y },
           handleIn: { x: h.handleIn.x, y: h.handleIn.y },
-          handleOut: { x: h.handleOut.x, y: h.handleIn.y },
+          handleOut: { x: h.handleOut.x, y: h.handleOut.y },
         })),
         offsetsData: (data.offsetsData || []).map((o) => ({
           offset: o.offset,
