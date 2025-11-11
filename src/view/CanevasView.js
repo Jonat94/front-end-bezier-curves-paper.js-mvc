@@ -177,7 +177,15 @@ export default class CanvasView {
     const fillPath = new paper.Path({ fillColor: color });
 
     // Ajouter points de la courbe principale
-    curve.handles.forEach((handle) => fillPath.add(handle.segment));
+    curve.handles.forEach((handle) =>
+      fillPath.add(
+        new paper.Segment(
+          new paper.Point(handle.segment.x, handle.segment.y),
+          new paper.Point(handle.handleIn.x, handle.handleIn.y),
+          new paper.Point(handle.handleOut.x, handle.handleOut.y)
+        )
+      )
+    );
 
     // Ajouter points de l'offset en sens inverse
     for (let i = offset.points.length - 1; i >= 0; i--) {

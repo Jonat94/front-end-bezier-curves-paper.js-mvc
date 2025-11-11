@@ -126,7 +126,6 @@ export default class DrawingController {
     const shapeId = this.model.generateId();
     const inId = this.model.generateId();
     const outId = this.model.generateId();
-
     curve.handles.push({
       id: shapeId,
       segment: { x: point.x, y: point.y },
@@ -137,7 +136,6 @@ export default class DrawingController {
     });
 
     const curveIndex = this.model.currentCurveIndex;
-
     this.model.computeAllOffsets();
     this.selectedItem = null;
     this._renderCurves(curveIndex);
@@ -159,22 +157,15 @@ export default class DrawingController {
   // Déplace un point ou une poignée sélectionnée
   // ---------------------------
   _dragSelectedItem(event, curve) {
-    //this.selectedItem.position = event.point.subtract(this.dragOffset);
-
     let targetHandle;
     switch (this.selectedItem.data.type) {
       case "circle":
         targetHandle = curve.handles.find(
           (h) => h.id === this.selectedItem.data.id
         );
-        console.log("targeth", targetHandle);
         if (targetHandle) {
           targetHandle.segment.x += event.delta.x;
           targetHandle.segment.y += event.delta.y;
-          // targetHandle.handleIn.x += event.delta.x;
-          // targetHandle.handleIn.y += event.delta.y;
-          // targetHandle.handleOut.x += event.delta.x;
-          // targetHandle.handleOut.y += event.delta.y;
         }
 
         break;
@@ -204,15 +195,12 @@ export default class DrawingController {
   // Rend toutes les courbes
   // ---------------------------
   _renderCurves(curveIndex = this.model.currentCurveIndex) {
-    console.log("aaaa");
     this.view.renderCurves(
       this.model.curves,
       this.handlesVisible,
-      //true,
       this.selectedItem,
       curveIndex,
       "rgba(0,150,255,0.2)"
-      // this.offsetsVisibleByCurve
     );
   }
 

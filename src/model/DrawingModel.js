@@ -6,7 +6,7 @@ import paper from "../utils/paperSetup.js";
  * Classe gérant les courbes dessinées et leurs offsets.
  * Utilise Paper.js pour la géométrie et ClipperLib pour les calculs d’offsets précis.
  */
-export default class DrawingModel {
+export default class DrawingModelOld {
   constructor() {
     // Paramètres globaux de dessin et d’échantillonnage
     this.defaultStrokeWidth = 4;
@@ -23,7 +23,7 @@ export default class DrawingModel {
     this.clipperScale = 500;
 
     // Valeurs d’offset par défaut pour chaque nouvelle courbe
-    this.defaultOffsets = [];
+    this.defaultOffsets = [20, 40];
     this.createCurve();
   }
 
@@ -49,6 +49,7 @@ export default class DrawingModel {
 
     this.curves.push(newCurve);
     this.currentCurveIndex = this.curves.length - 1;
+    console.log("lcd", this.curves);
   }
 
   /**
