@@ -1,7 +1,7 @@
 [![forthebadge](https://forthebadge.com/images/badges/cc-0.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/made-with-javascript.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/uses-css.svg)](https://forthebadge.com)
 
 <p align="center">
-  <img src="screenshot.png" width="600" alt="Aperçu de l'application">
+  <img src="screen-shot-bezier.png" width="600" alt="Aperçu de l'application">
 </p>
 
 # 🎨 Bézier Curves Editor – MVC avec Paper.js & ClipperLib
