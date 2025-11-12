@@ -130,9 +130,9 @@ export default class CanvasView {
   _drawHandleCircles(handle, selectedItem, hoveredItem) {
     const mainColor =
       selectedItem?.data?.id === handle.id
-        ? "#1aac7eff"
+        ? "#303030ff"
         : hoveredItem?.data?.id === handle.id
-        ? "#ffcc00" // couleur de surbrillance
+        ? "#303030ff" // couleur de surbrillance
         : "#c64343";
 
     // Cercle central (point)
@@ -142,7 +142,8 @@ export default class CanvasView {
       handle.id,
       "circle",
       handle.inPointId,
-      handle.outPointId
+      handle.outPointId,
+      3
     );
 
     // Handles Bézier
@@ -151,18 +152,24 @@ export default class CanvasView {
         handle.segment.x + handle.handleIn.x,
         handle.segment.y + handle.handleIn.y
       ),
-      "#3498db",
+      "#303030ff",
       handle.inPointId,
-      "bezier_in"
+      "bezier_in",
+      null,
+      null,
+      3
     );
     this._makeCircle(
       new paper.Point(
         handle.segment.x + handle.handleOut.x,
         handle.segment.y + handle.handleOut.y
       ),
-      "#3498db",
+      "#303030ff",
       handle.outPointId,
-      "bezier_out"
+      "bezier_out",
+      null,
+      null,
+      3
     );
   }
 
@@ -212,8 +219,16 @@ export default class CanvasView {
   // ---------------------------
   // Crée un cercle représentant un point ou handle et l'ajoute au calque actif
   // ---------------------------
-  _makeCircle(point, color, id, type, inPtId = null, outPtId = null) {
-    const circle = new paper.Path.Circle(point, 4);
+  _makeCircle(
+    point,
+    color,
+    id,
+    type,
+    inPtId = null,
+    outPtId = null,
+    radius = 4
+  ) {
+    const circle = new paper.Path.Circle(point, radius);
     circle.fillColor = color;
     circle.data = { type, id, inPointId: inPtId, outPointId: outPtId };
     this.foregroundLayer.addChild(circle); // <-- ajout au calque pour hitTest
@@ -229,12 +244,14 @@ export default class CanvasView {
     curve.handles.forEach((handle) => {
       const origin = new paper.Point(handle.segment.x, handle.segment.y);
       [handle.handleIn, handle.handleOut].forEach((handleVec) => {
+        // Convertir l'objet {x, y} en paper.Point
+        const vec = new paper.Point(handleVec.x, handleVec.y);
         const line = new paper.Path.Line({
           from: origin,
           to: origin.add(handleVec),
-          strokeColor: "gray",
+          strokeColor: "303030ff",
           strokeWidth: 1,
-          dashArray: [4, 4],
+          dashArray: [1, 1],
         });
         line.sendToBack();
       });

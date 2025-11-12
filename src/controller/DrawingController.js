@@ -20,6 +20,10 @@ export default class DrawingController {
     this.isDraggingCurve = false;
     this.lastMousePos = null;
 
+    // Gestion du rendu throttlé
+    this.renderScheduled = false;
+    this.renderInterval = 60; // ms
+
     this._setupTool();
   }
 
@@ -91,7 +95,7 @@ export default class DrawingController {
     const hitResult = paper.project.hitTest(event.point, {
       fill: true,
       stroke: true,
-      tolerance: 5,
+      tolerance: 1,
     });
 
     if (
@@ -222,14 +226,20 @@ export default class DrawingController {
   // Rend toutes les courbes
   // ---------------------------
   _renderCurves(curveIndex = this.model.currentCurveIndex) {
-    this.view.renderCurves(
-      this.model.curves,
-      this.handlesVisible,
-      this.selectedItem,
-      curveIndex,
-      "rgba(0,150,255,0.2)",
-      this.hoveredItem
-    );
+    if (this.renderScheduled) return;
+    this.renderScheduled = true;
+
+    setTimeout(() => {
+      this.view.renderCurves(
+        this.model.curves,
+        this.handlesVisible,
+        this.selectedItem,
+        curveIndex,
+        "rgba(0,150,255,0.2)",
+        this.hoveredItem
+      );
+      this.renderScheduled = false;
+    }, 60);
   }
 
   // ---------------------------

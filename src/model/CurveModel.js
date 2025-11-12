@@ -11,7 +11,7 @@ export default class CurveModel {
   constructor() {
     this.processor = new CurveProcessor(1000, 2, 5);
     // Paramètres globaux de dessin et d’échantillonnage
-    this.defaultStrokeWidth = 4;
+    this.defaultStrokeWidth = 3;
     this.offsetSampleStep = 5;
     this.minOffsetPointSpacing = 4;
 
