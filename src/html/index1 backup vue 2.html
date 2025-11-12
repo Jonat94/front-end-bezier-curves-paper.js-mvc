@@ -19,29 +19,36 @@
             margin: 0;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            /* min-height: 100vh; */
             font-size: 14px;
-            /* texte un peu plus petit */
         }
 
         header {
             background-color: #34495e;
             color: #fff;
             padding: 0.8rem 1.5rem;
-            /* moins de padding */
             text-align: center;
             font-size: 1.3rem;
-            /* légèrement plus petit */
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 1240px;
+            margin: auto;
+            height: 65px;
+
         }
 
+        /* ------------------------ */
+        /* --- Main centré --- */
+        /* ------------------------ */
         main {
             display: flex;
             flex: 1;
-            gap: 0.8rem;
-            /* réduire l'espace entre sidebar et canvas */
-            padding: 0.8rem;
+            justify-content: center;
+            /* centre horizontalement le contenu */
+            /* align-items: ; */
+            /* centre verticalement le contenu */
+            gap: 1rem;
+            padding: 1rem;
         }
 
         /* ------------------------ */
@@ -49,7 +56,6 @@
         /* ------------------------ */
         aside {
             width: 300px;
-            /* légèrement plus petit */
             display: flex;
             flex-direction: column;
             gap: 0.8rem;
@@ -58,20 +64,27 @@
         .card {
             background-color: #fff;
             border-radius: 10px;
-            /* coins un peu moins arrondis */
             padding: 0.8rem;
-            /* moins de padding */
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
             gap: 0.6rem;
-            /* réduire l'espacement entre éléments */
+        }
+
+        .horizontal {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+        }
+
+        .curvebtn {
+            width: 115px;
+
         }
 
         .card h2 {
             margin: 0;
             font-size: 1rem;
-            /* plus petit */
             color: #2c3e50;
             border-bottom: 1px solid #ecf0f1;
             padding-bottom: 0.2rem;
@@ -80,13 +93,13 @@
         select,
         input[type="range"],
         button,
-        input[type="file"] {
-            width: 100%;
+        input[type="file"],
+        input[type="text"] {
+            /* width: 100%; */
             padding: 0.3rem;
             border-radius: 6px;
             border: 1px solid #bdc3c7;
             font-size: 0.85rem;
-            /* plus petit */
         }
 
         button {
@@ -105,44 +118,36 @@
             display: flex;
             align-items: center;
             gap: 0.4rem;
-            /* réduire gap */
             font-weight: 500;
             cursor: pointer;
             font-size: 0.85rem;
-            /* plus petit */
         }
 
         input[type="checkbox"] {
             transform: scale(1.1);
-            /* légèrement plus petit */
         }
 
         /* ------------------------ */
-        /* --- Canvas --- */
+        /* --- Canvas centré --- */
         /* ------------------------ */
-        /* Conteneur du canvas */
         #canvasContainer {
-            flex: 1;
             display: flex;
-            justify-content: flex-start;
-            /* alignement horizontal à gauche */
-            align-items: flex-start;
-            /* alignement vertical en haut */
+            justify-content: center;
+            /* centre horizontalement le canvas */
+            /* align-items: center; */
+            /* centre verticalement le canvas */
             background-color: #e6ecf0;
             border-radius: 10px;
             padding: 0.8rem;
-            overflow: auto;
-            /* si le canvas dépasse la taille du conteneur */
         }
 
-        /* Canvas */
         canvas {
             border: 2px solid #34495e;
             border-radius: 10px;
             background-color: #fff;
-            width: 950px;
+            width: 900px;
             /* largeur fixe */
-            height: 700px;
+            height: 650px;
             /* hauteur fixe */
         }
 
@@ -167,6 +172,25 @@
             font-weight: bold;
             font-size: 0.85rem;
         }
+
+        /* ------------------------
+        /* --- Responsive --- */
+        /* ------------------------ */
+        /* @media (max-width: 1000px) {
+            main {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            aside {
+                width: 90%;
+            }
+
+            canvas {
+                width: 900;
+                height: auto;
+            }
+        } */
     </style>
 </head>
 
@@ -181,60 +205,76 @@
             <div class="card">
                 <h2>Courbes</h2>
                 <select id="curveSelect"></select>
-                <button id="addCurveBtn">Ajouter une courbe</button>
-                <button id="deleteBtn">Supprimer la courbe</button>
+                <input type="text" id="curveName">
+                <div class="horizontal">
+                    <button id="addCurveBtn" class="curvebtn">Ajouter une courbe</button>
+                    <button id="deleteBtn" class="curvebtn">Supprimer la courbe</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Import / Export</h2>
+                <button id="importBtn">Ouvrir courbe</button>
+                <button id="saveBtn">Enregistrer courbe</button>
+                <button id="exportBtn">Exporter en PNG</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
             </div>
 
             <!-- Offsets -->
-            <div class="card">
+            <div class="card" offsetControlsContainer>
                 <h2>Offsets</h2>
                 <div class="slider-group">
-                    <label for="offsetSlider1">Offset 1</label>
-                    <input type="range" id="offsetSlider1" min="-100" max="100" step="0.1">
+                    <button id="removeOffsetBtn">X</button>
+                    <input type="checkbox" id="toggleOffset1Cbx">
+                    <label for="offsetSlider1">Offset&nbsp;1</label>
+                    <input type="range" id="offsetSlider1" min="00" max="200" step="1">
                     <span id="offsetValue1">0</span>
                 </div>
                 <div class="slider-group">
-                    <label for="offsetSlider2">Offset 2</label>
-                    <input type="range" id="offsetSlider2" min="-100" max="100" step="0.1">
+                    <button id="removeOffsetBtn">X</button>
+                    <input type="checkbox" id="toggleOffset2Cbx">
+                    <label for="offsetSlider2">Offset&nbsp;2</label>
+                    <input type="range" id="offsetSlider2" min="00" max="200" step="1">
                     <span id="offsetValue2">0</span>
                 </div>
                 <div class="slider-group">
-                    <label for="offsetSlider3">Offset 3</label>
-                    <input type="range" id="offsetSlider3" min="-100" max="100" step="0.1">
+                    <button id="removeOffsetBtn">X</button>
+                    <input type="checkbox" id="toggleOffset3Cbx">
+                    <label for="offsetSlider3">Offset&nbsp;3</label>
+                    <input type="range" id="offsetSlider3" min="00" max="200" step="1">
                     <span id="offsetValue3">0</span>
                 </div>
-                <label>
+                <!-- <label>
                     <input type="checkbox" id="offsetCbx">
                     Afficher offsets
-                </label>
+                </label> -->
             </div>
 
             <!-- Options -->
-            <div class="card">
+            <!-- <div class="card">
                 <h2>Options</h2>
-                <label>
-                    <input type="checkbox" id="toggleHandlesCbx">
-                    Afficher poignées
-                </label>
-                <label>
-                    <input type="checkbox" id="toggleBackgroundCbx">
-                    Afficher fond
-                </label>
-            </div>
+
+            </div> -->
 
             <!-- Actions -->
             <div class="card">
                 <h2>Actions</h2>
-                <button id="deletePointBtn">Supprimer point sélectionné</button>
-                <button id="saveBtn">Sauvegarder courbe</button>
-                <button id="exportBtn">Exporter en PNG</button>
-                <input type="file" id="importFile" accept=".json">
+                <button id="deletePointBtn">Supprimer le point sélectionné</button>
+                <label>
+                    <input type="checkbox" id="toggleHandlesCbx">
+                    Afficher les poignées
+                </label>
+                <label>
+                    <input type="checkbox" id="toggleBackgroundCbx">
+                    Afficher le fond
+                </label>
             </div>
+
         </aside>
 
         <!-- Canvas -->
         <div id="canvasContainer">
-            <canvas id="canvas" width="800" height="600"></canvas>
+            <canvas id="canvas"></canvas>
         </div>
         <script type="module" src="./src/main.js"></script>
     </main>

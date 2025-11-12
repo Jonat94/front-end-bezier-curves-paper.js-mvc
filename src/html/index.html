@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur de Courbes</title>
+    <style>
+        /* ------------------------ */
+        /* --- Styles généraux --- */
+        /* ------------------------ */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            /* min-height: 100vh; */
+            font-size: 14px;
+        }
+
+        label-handles-checkbox {}
+
+        header {
+            background-color: #5a7ea2;
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 1240px;
+            margin: auto;
+            height: 65px;
+
+        }
+
+        /* ------------------------ */
+        /* --- Main centré --- */
+        /* ------------------------ */
+        main {
+            display: flex;
+            flex: 1;
+            justify-content: center;
+            /* centre horizontalement le contenu */
+            /* align-items: ; */
+            /* centre verticalement le contenu */
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        /* ------------------------ */
+        /* --- Barre latérale --- */
+        /* ------------------------ */
+        aside {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 0.8rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .horizontal {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            gap: 0.6em;
+        }
+
+        .curvebtn {
+            width: 115px;
+
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 1rem;
+            color: #2c3e50;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 0.2rem;
+        }
+
+        select,
+        input[type="range"],
+        button,
+        input[type="file"],
+        input[type="text"] {
+            /* width: 100%; */
+            padding: 0.3rem;
+            border-radius: 6px;
+            border: 1px solid #bdc3c7;
+            font-size: 0.85rem;
+        }
+
+        button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .remove-button {
+            background-color: #c64343;
+        }
+
+        .remove-button:hover {
+            background-color: #a73a3a;
+        }
+
+
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.85rem;
+            justify-content: center;
+        }
+
+        label-handles-checkbox {}
+
+        .handle-background {
+            width: 90px;
+        }
+
+        .label-handles-checkbox {
+            background-color: #eef1f2;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.1);
+        }
+
+        /* ------------------------ */
+        /* --- Canvas centré --- */
+        /* ------------------------ */
+        #canvasContainer {
+            display: flex;
+            justify-content: center;
+            /* centre horizontalement le canvas */
+            /* align-items: center; */
+            /* centre verticalement le canvas */
+            background-color: #e6ecf0;
+            border-radius: 10px;
+            padding: 0.8rem;
+        }
+
+        canvas {
+            border: 2px solid #34495e;
+            border-radius: 10px;
+            background-color: #fff;
+            width: 900px;
+            /* largeur fixe */
+            height: 650px;
+            /* hauteur fixe */
+        }
+
+        /* ------------------------ */
+        /* --- Sliders --- */
+        /* ------------------------ */
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .slider-group label {
+            flex: 1;
+            margin: 0;
+            font-size: 0.85rem;
+        }
+
+        .slider-group span {
+            width: 35px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        /* ------------------------
+        /* --- Responsive --- */
+        /* ------------------------ */
+        /* @media (max-width: 1000px) {
+            main {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            aside {
+                width: 90%;
+            }
+
+            canvas {
+                width: 900;
+                height: auto;
+            }
+        } */
+    </style>
+</head>
+
+<body>
+
+    <header>Éditeur de Courbes</header>
+
+    <main>
+        <!-- Barre latérale -->
+        <aside>
+            <!-- Courbes -->
+            <div class="card">
+                <h2>Courbes</h2>
+                <select id="curveSelect"></select>
+                <input type="text" id="curveName">
+
+                <button id="addCurveBtn">Ajouter une courbe</button>
+                <button id="saveBtn">Enregistrer la courbe</button>
+                <button id="importBtn">Ouvrir une courbe</button>
+
+                <button id="deleteBtn" class="remove-button">Supprimer la courbe</button>
+
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <h2>Actions</h2>
+                <button id="addOffsetBtn">Ajouter un offset</button>
+                <button id="deletePointBtn" class="remove-button">Supprimer le point sélectionné</button>
+                <label class="label-handles-checkbox">
+                    <input type="checkbox" id="toggleHandlesCbx">
+                    <span class="handle-background">Modifier la courbe</span>
+                    <input type="checkbox" id="toggleBackgroundCbx">
+                    <span class="handle-background">Afficher le fond</span>
+                </label>
+                <label>
+
+                </label>
+            </div>
+
+
+            <!-- Offsets -->
+            <div class="card" id="offsetControlsContainer">
+                <h2>Offsets</h2>
+                <!-- <div class="slider-group">
+                    <button id="removeOffsetBtn--" class="remove-button" title="Supprimer l'offset">X</button>
+                    <input type="checkbox" id="toggleOffset1Cbx--">
+                    <label for="offsetSlider1--">Offset&nbsp;1</label>
+                    <input type="range" id="offsetSlider--" min="00" max="200" step="1">
+                    <span id="offsetValue1--">0</span>
+                </div> -->
+                <!-- <label>
+                    <input type="checkbox" id="offsetCbx">
+                    Afficher offsets
+                </label> -->
+            </div>
+
+            <!-- Options -->
+            <!-- <div class="card">
+                <h2>Options</h2>
+
+            </div> -->
+
+
+
+            <div class="card">
+                <h2>Import / Export</h2>
+
+                <button id="exportBtn">Exporter en PNG</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </div>
+
+        </aside>
+
+        <!-- Canvas -->
+        <div id="canvasContainer">
+            <canvas id="canvas"></canvas>
+        </div>
+        <script type="module" src="./src/main.js?t=1762782379435"></script>
+    </main>
+
+</body>
+
+</html>
