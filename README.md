@@ -1,67 +1,66 @@
-# Éditeur de Courbes Bézier avec Offsets
+# 🎨 Bézier Curves Editor – MVC avec Paper.js & ClipperLib
 
-Un éditeur interactif de courbes Bézier en JavaScript utilisant **Paper.js** et **Clipper.js**, permettant de :
-
-- Créer, sélectionner et supprimer des courbes.
-- Ajouter et déplacer des points et poignées de contrôle.
-- Calculer et afficher jusqu’à 3 offsets par courbe.
-- Exporter les dessins en PNG ou JSON, et importer des courbes sauvegardées.
-- Personnaliser le nom de chaque courbe.
-
-> ⚡ Ce projet est également **un exemple concret de mise en œuvre du design pattern MVC (Model-View-Controller)** en JavaScript moderne.
+[🌐 Voir la démo en ligne](https://jonat94.github.io/front-end-bezier-curves-paper.js-mvc/)
 
 ---
 
-## Architecture MVC
+## 🚀 Description du projet
 
-- **Model (`DrawingModel.js`)** : gère les données des courbes, points et calculs d’offset.
-- **View (`ToolbarView.js`)** : interface utilisateur, sliders, checkboxes, boutons et canvas.
-- **Controller (`DrawingController.js`, `ToolController.js`)** : logique de liaison entre le modèle et la vue, interactions utilisateurs, gestion des événements.
+Application web interactive développée en **JavaScript (ES6)** mettant en œuvre le **modèle MVC**.  
+Elle permet de **créer, manipuler et visualiser des courbes de Bézier** et leurs **offsets** grâce à :
 
-Cette séparation permet de :
+- 🖊️ **Paper.js** pour le rendu vectoriel et la gestion des courbes.
+- ⚙️ **ClipperLib** pour le calcul précis des décalages géométriques (offsets).
+- 🧩 Une architecture **claire et modulaire (MVC)** favorisant la maintenance et l’apprentissage.
 
-- Distinguer clairement la **logique métier** (calculs des offsets) de la **présentation** (canvas, sliders) et de la **gestion des événements**.
-- Faciliter la maintenance et l’extension du projet.
-
----
-
-## Fonctionnalités
-
-### Gestion des courbes
-
-- Ajouter une nouvelle courbe avec un nom personnalisé.
-- Supprimer une courbe sélectionnée.
-- Sélectionner une courbe existante dans la liste déroulante.
-
-### Points de contrôle
-
-- Afficher ou cacher les points de contrôle (handles).
-- Déplacer les points et leurs poignées Bézier.
-- Supprimer un point sélectionné.
-
-### Offsets
-
-- Jusqu’à 3 offsets par courbe, avec sliders pour modifier la distance.
-- Activer/désactiver la visibilité de chaque offset.
-- Les offsets sont recalculés automatiquement lors de la modification de la courbe.
-
-### Export / Import
-
-- Exporter le dessin courant en image PNG.
-- Sauvegarder la courbe sélectionnée au format JSON.
-- Importer un fichier JSON pour ajouter une nouvelle courbe dans l’éditeur.
-
-### Canvas
-
-- Affichage du fond optionnel.
-- Déplacement complet de la courbe en cliquant et en glissant.
+Ce projet illustre à la fois mes **compétences en développement front-end** et ma **pédagogie** dans l’explication des concepts géométriques et architecturaux.
 
 ---
 
-## Installation
+## 🧠 Objectif professionnel
 
-1. Cloner le dépôt :
+🎯 Je cherche à :
+
+- **Intégrer une équipe de développement front-end** où je peux contribuer à des projets créatifs et techniques.
+- Ou **transmettre mon savoir** en enseignant la programmation JavaScript, le dessin vectoriel et l’architecture logicielle moderne.
+
+---
+
+## 🧩 Fonctionnalités principales
+
+- Création et édition de **courbes de Bézier** via des points et poignées interactifs.
+- Calcul dynamique des **offsets** (déports) avec remplissage visuel entre courbes.
+- Gestion multi-courbes et multi-offsets via une **interface contrôlable par sliders et cases à cocher**.
+- Export du canvas en **image PNG**.
+- Affichage optionnel des **handles**, du **fond** et des **niveaux d’offset**.
+
+---
+
+## 🏗️ Architecture MVC
+
+| Composant                           | Rôle                                                                          |
+| ----------------------------------- | ----------------------------------------------------------------------------- |
+| **Model (CurveProcessor)**          | Gestion et calculs géométriques (offsets, échantillonnage, filtrage).         |
+| **View (CanvasView & ToolbarView)** | Affichage graphique avec Paper.js et interface utilisateur HTML.              |
+| **Controller**                      | Coordination des événements entre modèle et vue (interactions, mises à jour). |
+
+Cette séparation claire rend le code **pédagogique, évolutif et réutilisable**.
+
+---
+
+## 🧰 Technologies utilisées
+
+- JavaScript (ES6 Modules)
+- [Paper.js](http://paperjs.org/)
+- [ClipperLib](https://github.com/junmer/clipper-lib)
+- HTML5 / CSS3
+- GitHub Pages (hébergement)
+
+---
+
+## ⚡ Installation & utilisation
 
 ```bash
-git clone <URL_DU_DEPOT>
+git clone https://github.com/Jonat94/front-end-bezier-curves-paper.js-mvc.git
+cd front-end-bezier-curves-paper.js-mvc
 ```

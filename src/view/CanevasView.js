@@ -19,7 +19,7 @@ export default class CanvasView {
     this.foregroundLayer = new paper.Layer();
 
     // Ajout du fond rasterisé
-    const backgroundRaster = new paper.Raster("/images/paper.jpg");
+    const backgroundRaster = new paper.Raster("./images/paper.jpg");
     backgroundRaster.position = paper.view.center;
     backgroundRaster.scale(0.4);
     backgroundRaster.sendToBack();
@@ -45,7 +45,8 @@ export default class CanvasView {
     //showOffsets = true,
     selectedItem = null,
     selectedCurveIndex = null,
-    fillColor = "rgba(0,150,255,0.2)"
+    fillColor = "rgba(0,150,255,0.2)",
+    hoveredItem
   ) {
     let offsetsVisibilityMap = this.generateOffsetsVisibilityMap(curves);
     this.clearForeground();
@@ -53,7 +54,7 @@ export default class CanvasView {
     curves.forEach((curve, curveIndex) => {
       const displayHandles = showHandles && curveIndex === selectedCurveIndex;
 
-      this.drawCurve(curve, displayHandles, selectedItem);
+      this.drawCurve(curve, displayHandles, selectedItem, hoveredItem);
 
       if (curve.offsetsData.length) {
         const offsetsVisible =
@@ -100,7 +101,7 @@ export default class CanvasView {
   // ---------------------------
   // Dessine une courbe et ses handles
   // ---------------------------
-  drawCurve(curve, showHandles = true, selectedItem = null) {
+  drawCurve(curve, showHandles = true, selectedItem = null, hoveredItem) {
     const path = new paper.Path({
       strokeColor: "#000",
       strokeWidth: curve.strokeWidth || 2,
@@ -117,7 +118,7 @@ export default class CanvasView {
 
       if (!showHandles) return;
 
-      this._drawHandleCircles(handle, selectedItem);
+      this._drawHandleCircles(handle, selectedItem, hoveredItem);
     });
 
     this._drawHandleLines(curve, showHandles);
@@ -126,9 +127,13 @@ export default class CanvasView {
   // ---------------------------
   // Dessine les cercles représentant les handles et points
   // ---------------------------
-  _drawHandleCircles(handle, selectedItem) {
+  _drawHandleCircles(handle, selectedItem, hoveredItem) {
     const mainColor =
-      selectedItem?.data?.id === handle.id ? "#1aac7eff" : "#c64343";
+      selectedItem?.data?.id === handle.id
+        ? "#1aac7eff"
+        : hoveredItem?.data?.id === handle.id
+        ? "#ffcc00" // couleur de surbrillance
+        : "#c64343";
 
     // Cercle central (point)
     this._makeCircle(

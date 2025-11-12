@@ -12,6 +12,8 @@ export default class DrawingController {
     this.handlesVisible = true; // Affichage des poignées
     this.backgroundVisible = false; // Affichage du fond (non utilisé ici)
     this.offsetVisible = true; // Affichage des offsets
+    this.hoveredItem = null;
+
     //this.offsetsVisibleByCurve = {}; // Visibilité des offsets par courbe
 
     // État du drag global
@@ -30,13 +32,14 @@ export default class DrawingController {
     tool.onMouseDown = (event) => this._handleMouseDown(event);
     tool.onMouseDrag = (event) => this._handleMouseDrag(event);
     tool.onMouseUp = () => this._handleMouseUp();
+    tool.onMouseMove = (event) => this._handleMouseMove(event);
   }
 
   // ---------------------------
   // Gère le clic souris
   // ---------------------------
   _handleMouseDown(event) {
-    const curve = this.model.curves[this.model.currentCurveIndex];
+    const curve = this.model.getCurrentCurve();
     if (!curve) return;
 
     const hitResult = paper.project.hitTest(event.point, {
@@ -77,6 +80,30 @@ export default class DrawingController {
   _handleMouseUp() {
     this.isDraggingCurve = false;
     this.model.computeAllOffsets();
+    this._renderCurves();
+  }
+
+  // ---------------------------
+  // Gère le survol de souris
+  // ---------------------------
+
+  _handleMouseMove(event) {
+    const hitResult = paper.project.hitTest(event.point, {
+      fill: true,
+      stroke: true,
+      tolerance: 5,
+    });
+
+    if (
+      hitResult &&
+      hitResult.item &&
+      ["circle", "bezier_in", "bezier_out"].includes(hitResult.item.data.type)
+    ) {
+      this.hoveredItem = hitResult.item;
+    } else {
+      this.hoveredItem = null;
+    }
+
     this._renderCurves();
   }
 
@@ -200,7 +227,8 @@ export default class DrawingController {
       this.handlesVisible,
       this.selectedItem,
       curveIndex,
-      "rgba(0,150,255,0.2)"
+      "rgba(0,150,255,0.2)",
+      this.hoveredItem
     );
   }
 
