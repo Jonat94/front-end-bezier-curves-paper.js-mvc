@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/mvc-drawing-app/",
+  base: "/front-end-bezier-curves-paper.js-mvc/",
 });

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "vite build && gh-pages -d dist"
   },
   "devDependencies": {
     "gh-pages": "^6.3.0",
@@ -15,12 +16,6 @@
   "dependencies": {
     "clipper-lib": "^6.4.2",
     "paper": "^0.12.18"
-  },
-  "homepage": "https://jonat94.github.io/mvc-drawing-app",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "deploy": "gh-pages -d dist"
   }
+ 
 }
