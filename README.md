@@ -1,3 +1,9 @@
+[![forthebadge](https://forthebadge.com/images/badges/cc-0.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/made-with-javascript.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/uses-css.svg)](https://forthebadge.com)
+
+<p align="center">
+  <img src="screenshot.png" width="600" alt="Aperçu de l'application">
+</p>
+
 # 🎨 Bézier Curves Editor – MVC avec Paper.js & ClipperLib
 
 [🌐 Voir la démo en ligne](https://jonat94.github.io/front-end-bezier-curves-paper.js-mvc/)
@@ -63,4 +69,6 @@ Cette séparation claire rend le code **pédagogique, évolutif et réutilisable
 ```bash
 git clone https://github.com/Jonat94/front-end-bezier-curves-paper.js-mvc.git
 cd front-end-bezier-curves-paper.js-mvc
+npm install
+nom run dev
 ```
