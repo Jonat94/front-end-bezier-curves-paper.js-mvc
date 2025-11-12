@@ -9,10 +9,9 @@ import CurveProcessor from "../services/CurveProcessor.js";
  */
 export default class CurveModel {
   constructor() {
-    this.processor = new CurveProcessor(1000, 2, 5);
     // Paramètres globaux de dessin et d’échantillonnage
     this.defaultStrokeWidth = 3;
-    this.offsetSampleStep = 5;
+    this.offsetSampleStep = 25;
     this.minOffsetPointSpacing = 4;
 
     // Données internes
@@ -25,7 +24,14 @@ export default class CurveModel {
     this.clipperScale = 500;
 
     // Valeurs d’offset par défaut pour chaque nouvelle courbe
-    this.defaultOffsets = [];
+    this.defaultOffsets = 20;
+
+    this.processor = new CurveProcessor(
+      this.clipperScale,
+      this.offsetSampleStep,
+      this.minOffsetPointSpacing
+    );
+
     this.createCurve();
   }
 
@@ -42,11 +48,7 @@ export default class CurveModel {
       name,
       handles: [],
       strokeWidth: this.defaultStrokeWidth,
-      offsetsData: this.defaultOffsets.map((value) => ({
-        offset: value,
-        points: [],
-        visible: true,
-      })),
+      offsetsData: [],
     };
     this.curves.push(newCurve);
     this.currentCurveIndex = this.curves.length - 1;
@@ -85,6 +87,7 @@ export default class CurveModel {
     const index = curve.handles.findIndex((h) => h.id === id);
     if (index >= 0) curve.handles.splice(index, 1);
 
+    curve.sampledValid = false;
     this.computeAllOffsets();
   }
 
@@ -99,7 +102,7 @@ export default class CurveModel {
       h.segment.x += dx;
       h.segment.y += dy;
     });
-
+    curve.sampledValid = false;
     this.computeAllOffsets();
   }
 
@@ -116,7 +119,11 @@ export default class CurveModel {
       let obj = { offset: offsetValue, points: [], visible: true };
       curve.offsetsData.push(obj);
     } else {
-      curve.offsetsData.push({ offset: 20, points: [], visible: true });
+      curve.offsetsData.push({
+        offset: this.defaultOffsets,
+        points: [],
+        visible: true,
+      });
     }
     this.computeAllOffsets();
   }
@@ -134,7 +141,7 @@ export default class CurveModel {
     });
   }
   /**
-   * Recalcule un seul offsets.
+   * Recalcule les offsets d'une courbe avec utilisation du cache d'echantillonage de la courbe.
    */
   computeOffset(curve) {
     curve.offsetsData.forEach((offset) =>

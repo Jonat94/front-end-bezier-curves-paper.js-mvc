@@ -8,7 +8,7 @@ export default class CurveProcessor {
    * @param {number} sample - Pas d’échantillonnage des courbes
    * @param {number} reduction - Distance minimale entre les points d’offset
    */
-  constructor(scale = 1000, sample = 2, reduction = 4) {
+  constructor(scale = 1000, sample = 2, reduction = 6) {
     this.clipperScale = scale;
     this.sampleStep = sample;
     this.minOffsetPointSpacing = reduction;
@@ -24,6 +24,12 @@ export default class CurveProcessor {
    * @param {Object} offsetData - Objet contenant la valeur d’offset et tableau points
    */
   computeSingleOffset(curve, offsetData) {
+    // Si pas d’échantillon valide, on le calcule une seule fois
+    if (!curve.sampledValid || !curve.sampledPoints) {
+      curve.sampledPoints = this.sampleCurve(curve);
+      curve.sampledValid = true;
+    }
+
     const sampledPoints = this.sampleCurve(curve);
     if (!sampledPoints || sampledPoints.length < 2) {
       curve.offsetsData.forEach(function (od) {
@@ -40,12 +46,12 @@ export default class CurveProcessor {
       return;
     }
 
-    let offsetPoints = this.convertClipperPointsToPaper(mainPath);
-    offsetPoints = this.removeClosePoints(
-      offsetPoints,
-      this.minOffsetPointSpacing
-    );
-    offsetData.points = offsetPoints;
+    offsetData.points = this.convertClipperPointsToPaper(mainPath);
+    // offsetPoints = this.removeClosePoints(
+    //   offsetPoints,
+    //   this.minOffsetPointSpacing
+    // );
+    //offsetData.points = offsetPoints;
 
     this.alignOffsetStart(curve, offsetData);
     this.trimOffsetPoints(curve, offsetData);

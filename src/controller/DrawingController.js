@@ -22,7 +22,6 @@ export default class DrawingController {
 
     // Gestion du rendu throttlé
     this.renderScheduled = false;
-    this.renderInterval = 60; // ms
 
     this._setupTool();
   }
@@ -135,10 +134,25 @@ export default class DrawingController {
     if (curve.handles.length < 2) return false;
 
     const tempPath = new paper.Path();
-    curve.handles.forEach((h) => tempPath.add(h.segment));
+    for (let i = 0; i < curve.handles.length - 1; i++) {
+      const h1 = curve.handles[i];
+      const h2 = curve.handles[i + 1];
+
+      const p1 = new paper.Point(h1.segment.x, h1.segment.y);
+      const p2 = new paper.Point(h2.segment.x, h2.segment.y);
+
+      const handleOut = new paper.Point(h1.handleOut.x, h1.handleOut.y);
+      const handleIn = new paper.Point(h2.handleIn.x, h2.handleIn.y);
+
+      // Ajoute un segment Bézier complet (cubic)
+      const segment1 = new paper.Segment(p1, handleOut, null);
+      const segment2 = new paper.Segment(p2, null, handleIn);
+      tempPath.add(segment1);
+      tempPath.add(segment2);
+    }
 
     const nearestPoint = tempPath.getNearestPoint(event.point);
-    if (nearestPoint && nearestPoint.getDistance(event.point) < 10) {
+    if (nearestPoint && nearestPoint.getDistance(event.point) < 7) {
       this.isDraggingCurve = true;
       this.lastMousePos = event.point;
       this.selectedItem = null;
@@ -226,20 +240,14 @@ export default class DrawingController {
   // Rend toutes les courbes
   // ---------------------------
   _renderCurves(curveIndex = this.model.currentCurveIndex) {
-    if (this.renderScheduled) return;
-    this.renderScheduled = true;
-
-    setTimeout(() => {
-      this.view.renderCurves(
-        this.model.curves,
-        this.handlesVisible,
-        this.selectedItem,
-        curveIndex,
-        "rgba(0,150,255,0.2)",
-        this.hoveredItem
-      );
-      this.renderScheduled = false;
-    }, 60);
+    this.view.renderCurves(
+      this.model.curves,
+      this.handlesVisible,
+      this.selectedItem,
+      curveIndex,
+      "rgba(0,150,255,0.2)",
+      this.hoveredItem
+    );
   }
 
   // ---------------------------
