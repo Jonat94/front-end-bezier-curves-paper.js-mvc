@@ -12,16 +12,16 @@ export default class CurveModel {
     // Paramètres globaux de dessin et d’échantillonnage
     this.defaultStrokeWidth = 3;
     this.offsetSampleStep = 15;
-    this.minOffsetPointSpacing = 7;
+    this.minOffsetPointSpacing = 5;
+
+    // Paramètres pour ClipperLib
+    this.clipperScale = 50;
 
     // Données internes
     this.curves = [];
     this.currentCurveIndex = -1;
     this.curveIdCounter = 0;
     this.handleIdCounter = 0;
-
-    // Paramètres pour ClipperLib
-    this.clipperScale = 500;
 
     // Valeurs d’offset par défaut pour chaque nouvelle courbe
     this.defaultOffsets = 20;
