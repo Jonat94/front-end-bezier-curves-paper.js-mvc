@@ -259,6 +259,7 @@ export default class CurveProcessor {
       if (p) sampledPoints.push(p);
     }
     path.remove();
-    return sampledPoints;
+    //return sampledPoints;
+    return this.removeClosePoints(sampledPoints, this.minOffsetPointSpacing);
   }
 }

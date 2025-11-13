@@ -177,7 +177,7 @@ export default class CanvasView {
   // Dessine un offset de courbe
   // ---------------------------
   drawOffset(offset) {
-    const path = new paper.Path({ strokeColor: "#1aac7eff", strokeWidth: 2 });
+    const path = new paper.Path({ strokeColor: "#c64343", strokeWidth: 2 });
     offset.points.forEach((pt) => path.add(new paper.Point(pt.x, pt.y)));
     path.sendToBack();
   }
