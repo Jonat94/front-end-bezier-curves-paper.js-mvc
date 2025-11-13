@@ -102,8 +102,17 @@ export default class CurveModel {
       h.segment.x += dx;
       h.segment.y += dy;
     });
+
+    // Déplace les offsets déjà calculés
+    curve.offsetsData.forEach((offset) => {
+      offset.points.forEach((pt) => {
+        pt.x += dx;
+        pt.y += dy;
+      });
+    });
+
     curve.sampledValid = false;
-    this.computeAllOffsets();
+    // this.computeAllOffsets();
   }
 
   /**
@@ -113,6 +122,7 @@ export default class CurveModel {
   addOffsetToCurrentCurve() {
     const curve = this.getCurrentCurve();
     if (!curve) return;
+
     if (curve.offsetsData.length > 0) {
       let offsetValue =
         curve.offsetsData[curve.offsetsData.length - 1].offset + 20;
